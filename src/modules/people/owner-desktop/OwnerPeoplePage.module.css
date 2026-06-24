@@ -1,0 +1,9 @@
+.hero { display:flex; justify-content:space-between; align-items:flex-end; gap:18px; padding:20px; border:1px solid var(--c360-line); border-radius:24px; background:linear-gradient(135deg, rgba(16,29,49,.96), rgba(8,18,33,.94)); margin-bottom:18px; }
+.hero p { margin:0; color:var(--c360-lemon); font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:950; }
+.hero h2 { margin:5px 0; font-size:24px; }
+.hero span { color:var(--c360-muted); }
+.hero strong { font-size:42px; color:#fff; }
+.grid { display:grid; grid-template-columns: 360px 1fr; gap:16px; align-items:start; }
+.formCard h2 { margin-top:0; }
+.form { display:grid; gap:12px; }
+@media (max-width: 980px) { .grid { grid-template-columns:1fr; } .hero { flex-direction:column; align-items:flex-start; } }

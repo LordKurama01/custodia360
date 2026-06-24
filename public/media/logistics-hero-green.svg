@@ -1,0 +1,81 @@
+<svg width="960" height="560" viewBox="0 0 960 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="960" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#07100D"/>
+      <stop offset="0.52" stop-color="#0B1628"/>
+      <stop offset="1" stop-color="#071826"/>
+    </linearGradient>
+    <linearGradient id="lemon" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#B7FF3C"/>
+      <stop offset="1" stop-color="#39D98A"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#F8FAFC" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#E8F0EA" stop-opacity="0.94"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#000000" flood-opacity="0.38"/>
+    </filter>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="960" height="560" rx="34" fill="url(#bg)"/>
+  <g opacity="0.16">
+    <path d="M0 392H960" stroke="white"/>
+    <path d="M0 320H960" stroke="white"/>
+    <path d="M0 248H960" stroke="white"/>
+    <path d="M0 176H960" stroke="white"/>
+    <path d="M146 0V560" stroke="white"/>
+    <path d="M292 0V560" stroke="white"/>
+    <path d="M438 0V560" stroke="white"/>
+    <path d="M584 0V560" stroke="white"/>
+    <path d="M730 0V560" stroke="white"/>
+    <path d="M876 0V560" stroke="white"/>
+  </g>
+  <path d="M70 462C188 382 286 435 386 336C488 235 578 222 704 164C790 124 849 102 914 88" stroke="#B7FF3C" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+  <path d="M76 454C187 364 280 432 380 323C476 220 570 214 697 148C781 104 848 89 910 73" stroke="#39D98A" stroke-width="2" stroke-dasharray="8 12" opacity="0.44"/>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="80" width="300" height="156" rx="20" fill="url(#panel)"/>
+    <rect x="96" y="106" width="68" height="68" rx="17" fill="#07100D"/>
+    <text x="130" y="147" text-anchor="middle" fill="#B7FF3C" font-size="23" font-family="Arial, sans-serif" font-weight="800">CLI</text>
+    <text x="186" y="124" fill="#07100D" font-size="16" font-family="Arial, sans-serif" font-weight="800">Solicitud recibida</text>
+    <text x="186" y="150" fill="#526071" font-size="13" font-family="Arial, sans-serif">Retiro · Bulto · Destino</text>
+    <rect x="186" y="174" width="128" height="20" rx="10" fill="#DFFFB0"/>
+    <text x="250" y="189" text-anchor="middle" fill="#31520F" font-size="11" font-family="Arial, sans-serif" font-weight="800">EN REVISIÓN</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="610" y="80" width="260" height="126" rx="20" fill="#101D31" stroke="#26364F"/>
+    <text x="636" y="116" fill="#F8FAFC" font-size="17" font-family="Arial, sans-serif" font-weight="800">Tarea asignada</text>
+    <text x="636" y="143" fill="#A8B3C4" font-size="13" font-family="Arial, sans-serif">Chofer · Operario · Evidencia</text>
+    <rect x="636" y="162" width="96" height="22" rx="11" fill="#153527"/>
+    <text x="684" y="178" text-anchor="middle" fill="#B7FF3C" font-size="11" font-family="Arial, sans-serif" font-weight="800">TAR-0091</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="292" y="306" width="392" height="118" rx="26" fill="#0F1C30" stroke="#26364F"/>
+    <rect x="320" y="336" width="98" height="38" rx="10" fill="url(#lemon)" opacity="0.88"/>
+    <rect x="434" y="336" width="176" height="38" rx="10" fill="#16263D"/>
+    <rect x="320" y="390" width="270" height="16" rx="8" fill="#07100D"/>
+    <text x="334" y="359" fill="#07100D" font-size="15" font-family="Arial, sans-serif" font-weight="900">JR</text>
+    <text x="456" y="360" fill="#DCE7F5" font-size="13" font-family="Arial, sans-serif" font-weight="800">Orden interna activa</text>
+  </g>
+
+  <g filter="url(#glow)">
+    <circle cx="78" cy="456" r="8" fill="#B7FF3C"/>
+    <circle cx="381" cy="324" r="8" fill="#B7FF3C"/>
+    <circle cx="708" cy="164" r="8" fill="#B7FF3C"/>
+    <circle cx="912" cy="88" r="8" fill="#B7FF3C"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="650" y="352" width="226" height="108" rx="20" fill="#F8FAFC"/>
+    <text x="674" y="386" fill="#07100D" font-size="15" font-family="Arial, sans-serif" font-weight="800">Guía cargada</text>
+    <text x="674" y="413" fill="#526071" font-size="12" font-family="Arial, sans-serif">GUI-000033 · Lista para cobrar</text>
+    <rect x="674" y="431" width="82" height="14" rx="7" fill="#39D98A" opacity="0.22"/>
+    <text x="715" y="443" text-anchor="middle" fill="#116B43" font-size="9" font-family="Arial, sans-serif" font-weight="800">VALIDADA</text>
+  </g>
+</svg>

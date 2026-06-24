@@ -1,0 +1,13 @@
+.topPanel { display:flex; justify-content:space-between; align-items:flex-end; gap:18px; margin-bottom:16px; padding:18px; border:1px solid var(--c360-line); border-radius:22px; background:linear-gradient(135deg, rgba(16,29,49,.96), rgba(8,18,33,.94)); }
+.topPanel p { margin:0; color:var(--c360-lemon); font-size:11px; font-weight:950; letter-spacing:.12em; text-transform:uppercase; }
+.topPanel h2 { margin:5px 0; font-size:23px; }
+.topPanel span { color:var(--c360-muted); }
+.toolbar { display:grid; grid-template-columns: 1fr 420px; gap: 14px; margin-bottom: 16px; align-items:end; }
+.tabs { display:flex; gap:8px; flex-wrap:wrap; }
+.tabs button { padding:10px 13px; border-radius:999px; background:rgba(255,255,255,.035); color:var(--c360-muted); border:1px solid var(--c360-line); font-weight:850; cursor:pointer; }
+.tabs button strong { color:#fff; font-size:12px; margin-left:5px; }
+.tabs .activeTab { color:#07100d; background:linear-gradient(135deg, var(--c360-lemon), #87d825); border-color:rgba(216,255,138,.42); }
+.tabs .activeTab strong { color:#07100d; }
+.actions { display:flex; gap:8px; flex-wrap:wrap; }
+.empty { padding:26px; color:var(--c360-muted); text-align:center; }
+@media (max-width: 980px) { .toolbar { grid-template-columns: 1fr; } .topPanel { flex-direction:column; align-items:flex-start; } }

@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { AppStateProvider } from "@/shared/state/AppStateProvider";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Custodia360",
   description: "Sistema privado de gestión operativa",

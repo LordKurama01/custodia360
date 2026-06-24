@@ -1,0 +1,100 @@
+.hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1.15rem;
+  border: 1px solid var(--c360-line);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(16, 29, 49, .96), rgba(6, 17, 31, .92));
+  box-shadow: var(--c360-shadow-soft);
+}
+
+.hero p {
+  margin: 0 0 .35rem;
+  color: var(--c360-lemon);
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.hero h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.8rem;
+  letter-spacing: -.04em;
+}
+
+.hero span {
+  color: var(--c360-muted);
+  line-height: 1.45;
+}
+
+.hero strong {
+  width: fit-content;
+  padding: .55rem .7rem;
+  border-radius: 999px;
+  color: #07100d;
+  background: var(--c360-lemon);
+}
+
+.success,
+.error {
+  margin-top: 1rem;
+  padding: .85rem 1rem;
+  border-radius: .8rem;
+  font-weight: 800;
+}
+
+.success {
+  color: #c6fbdc;
+  background: var(--c360-green-bg);
+  border: 1px solid rgba(57, 217, 138, .24);
+}
+
+.error {
+  color: #ffd4d6;
+  background: var(--c360-danger-bg);
+  border: 1px solid rgba(255, 90, 95, .25);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.formCard,
+.form,
+.profiles {
+  display: grid;
+  gap: 1rem;
+}
+
+.formCard h2,
+.profiles h2,
+.grid h2 {
+  margin: 0;
+  color: #fff;
+}
+
+.profiles {
+  margin-top: 1rem;
+}
+
+.profiles p {
+  color: var(--c360-muted);
+}
+
+@media (min-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .grid {
+    grid-template-columns: minmax(18rem, .38fr) 1fr;
+    align-items: start;
+  }
+}

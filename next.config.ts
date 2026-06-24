@@ -1,10 +1,10 @@
 ﻿import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",
   images: {
     unoptimized: true
   },
+  // TODO(produccion): endurecer build removiendo estos ignores cuando la Fase 1 quede estabilizada.
   trailingSlash: true,
   eslint: {
     ignoreDuringBuilds: true

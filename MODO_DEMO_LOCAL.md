@@ -1,46 +1,23 @@
-# Modo demo local — Custodia360
+# Modo demo local
 
-## Objetivo
-
-Mostrar el sistema sin Supabase real, usando datos demo guardados en el navegador.
+La demo permite mostrar Fase 1 sin Supabase real.
 
 ## Rutas
 
-- `/login`
-- `/owner/bultos`
-- `/consulta/demo`
-- `/consulta/estela`
-- `/consulta/matias`
-
-## Regla de organización
-
-El flujo principal es `/owner/bultos`. El resto de módulos queda más abajo como preparado/no principal.
-
-## Datos demo principales
-
-### Estela
-
-Operación: compra de 5 teléfonos.
-
-- 5 guías.
-- 5 destinatarios.
-- Pases asociados a cada guía.
-- Una guía Buspack pendiente de $57.000 para mostrar deuda de guía.
-- Guías pagadas en destino como informativas.
-
-### Matías
-
-Operación: pases pendientes.
-
-- Pase USD 80 ligado a guía Vía Cargo.
-- Pase USD 150 ligado a guía Correo Argentino.
-- Pase USD 200 ligado a guía Buspack.
-- Guía Buspack pendiente: $57.000.
-
-## Dólar demo
-
-```txt
-$1500
+```text
+/login/
+/owner/bultos/
+/consulta/demo/
 ```
 
-El equivalente en pesos se muestra al día de consulta. Si el pago se hace otro día, el valor puede cambiar según el dólar cargado.
+## Validación visual esperada
+
+- La pantalla principal es Control de Bultos / Seguimiento operativo.
+- En mobile no debe quedar como página larga protagonista.
+- Debe aparecer barra inferior fija con botón central elevado.
+- Los formularios de carga quedan abajo o en paneles.
+- Estados internos: Para retirar, Retirado, Depósito CD, Depósito A, Depósito B, Despachado.
+- Cliente ve: En preparación, En tránsito, Despachado.
+- Guías visibles y clickeables.
+- WhatsApp siempre muestra guía + pase + condición de pago.
+- App cliente separada en `/consulta/demo/`.

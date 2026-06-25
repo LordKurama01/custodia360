@@ -1,84 +1,64 @@
-# Custodia360 — Reestructura final operativa
+# Custodia360 — Fase 1 Control de Bultos
 
-Esta entrega deja como pantalla principal el seguimiento real de clientes, guías, pases, dólar, pagos y WhatsApp.
+Versión centrada en el seguimiento operativo de bultos.
 
-## Ruta principal
+## Rutas principales
 
-```txt
-/login
-/owner/bultos
-/consulta/demo
+```text
+/login/
+/owner/bultos/
+/consulta/demo/
 ```
 
-El login demo entra directo a `/owner/bultos`. La ruta `/owner/dashboard` redirige a `/owner/bultos` para que el sistema no mezcle el flujo principal con pantallas anteriores.
+`/owner/dashboard` redirige a `/owner/bultos`.
 
-## Flujo principal
+## Qué incluye
 
-```txt
-Cliente principal
-  → Operación / pedido
-    → Bultos
-    → Guías / pedidos del cliente
-    → Destinatarios
-    → Pases USD por guía
-    → Pagos / reintegros
-    → Resumen WhatsApp
-    → Portal cliente
-```
-
-## Qué queda como principal
-
-- Seguimiento por cliente.
-- Estados internos owner/empleado.
-- Estado simplificado para cliente.
+- App administrador/owner enfocada en Control de Bultos.
+- App cliente separada por consulta privada.
+- Dashboard mobile compacto.
+- Barra inferior mobile con 4 accesos + botón central elevado.
+- Clientes base.
+- Estados internos y estados visibles al cliente.
 - Guías múltiples por operación.
-- Cada guía con destinatario, DNI, empresa, valor, condición económica y detalle clickeable.
-- Pases en USD asociados a cada guía, con fecha y nota.
+- Guías clickeables con detalle.
+- Pases en USD ligados a cliente/guía/fecha.
 - Dólar del día para equivalente en pesos.
-- Guías pagadas por cliente/en destino como informativas.
-- Guías pendientes o pagadas por Jeremías como importes a resolver/cobrar.
-- Resumen de WhatsApp con guías siempre visibles.
+- Condiciones de guía: pagada por cliente/en destino, pendiente, a reintegrar, reintegrada.
+- Recargo automático 2% para Vía Cargo.
+- Resumen WhatsApp con guías, pases, dólar y saldo.
+- Documentación de invitación de un solo uso y correlativo CLI al activarse.
 
-## Estados
+## Comandos
 
-Owner/empleado ve:
-
-```txt
-Para retirar
-Retirado
-Depósito CD
-Depósito A
-Depósito B
-Despachado
+```bash
+pnpm install --no-frozen-lockfile
+pnpm typecheck
+pnpm build
+pnpm start
 ```
 
-Cliente ve:
+## Render
 
-```txt
-Para retirar / Retirado / Depósito CD → En preparación
-Depósito A / Depósito B → En tránsito
-Despachado → Despachado
-```
-
-## Módulos secundarios
-
-Las pantallas anteriores quedan separadas en la navegación como “Preparado / no principal”. No se eliminan, pero no son el corazón operativo de esta entrega.
-
-## Deploy Render
-
-```txt
 Build Command:
+
+```bash
 corepack enable && pnpm install --no-frozen-lockfile && pnpm build
+```
 
 Start Command:
+
+```bash
 ./node_modules/.bin/next start -p $PORT
 ```
 
-## Validación local
+## Variables demo
 
-```txt
-npm install
-npm run typecheck
+```env
+NEXT_PUBLIC_DEMO_MODE=true
+NEXT_PUBLIC_SUPABASE_URL=https://demo.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=demo
+SUPABASE_SERVICE_ROLE_KEY=demo
+INTERNAL_OWNER_EMAIL=demo@custodia360.local
+NEXT_PUBLIC_APP_URL=https://custodia360.onrender.com
 ```
-
-Typecheck validado correctamente en esta entrega.

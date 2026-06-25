@@ -124,7 +124,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
   const allShipments = data.operations.flatMap((operation) => operation.shipments);
   const destinationPaidGuides = allShipments.filter((shipment) => shipment.guide_payment_status === "pagada_por_cliente").length;
 
-  return <main className={styles.page}>
+  return <main id="inicio" className={styles.page}>
     <header className={styles.header}>
       <div>
         <span>Custodia360</span>
@@ -134,7 +134,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
       <strong>ID cliente: {data.client.id.slice(0, 8).toUpperCase()}</strong>
     </header>
 
-    <section className={styles.summary}>
+    <section id="resumen" className={styles.summary}>
       <div><span>Pedidos activos</span><strong>{data.operations.length}</strong></div>
       <div><span>Pases pendientes</span><strong>{moneyUsd(pendingUsd)}</strong></div>
       <div><span>Equivalente hoy</span><strong>{formatMoney(pendingUsd * DEFAULT_DOLLAR_RATE)}</strong></div>
@@ -143,7 +143,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
       <div><span>Dólar del día</span><strong>${DEFAULT_DOLLAR_RATE}</strong></div>
     </section>
 
-    <section className={styles.list}>
+    <section id="pedidos" className={styles.list}>
       {data.operations.map((operation) => {
         const visibleStatus = clientLogisticsLabels[operation.logistics_status];
         return <article key={operation.id} className={styles.card}>
@@ -162,7 +162,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
             <div><span>Estado financiero</span><strong>{financialLabels[operation.financial_status]}</strong></div>
           </div>
 
-          <div className={styles.payments}>
+          <div id="guias" className={styles.payments}>
             <h2>{operation.logistics_status === "despachado" ? "Guías cargadas" : "Guías / pedidos"}</h2>
             {operation.shipments.length ? operation.shipments.map((shipment, index) => <details key={`${operation.id}-${shipment.guide_number ?? index}`} className={styles.guideDetail}>
               <summary>
@@ -187,7 +187,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
             </details>) : <p>Sin guías cargadas todavía.</p>}
           </div>
 
-          <div className={styles.money}>
+          <div id="pagos" className={styles.money}>
             <div><span>Pagado ARS</span><strong>{formatMoney(Number(operation.paid_amount_ars ?? 0))}</strong></div>
             <div><span>Pagado USD</span><strong>{moneyUsd(Number(operation.paid_amount_usd ?? 0))}</strong></div>
             <div><span>Saldo estimado hoy</span><strong>{formatMoney(Number(operation.balance_amount ?? passArs(operation)))}</strong></div>
@@ -208,5 +208,13 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
         </article>;
       })}
     </section>
+    <nav className={styles.clientBottomNav} aria-label="Navegación cliente">
+      <a href="#inicio"><span>●</span><strong>Inicio</strong></a>
+      <a href="#pedidos"><span>▦</span><strong>Pedidos</strong></a>
+      <a href="#guias" className={styles.clientFab}><span>+</span><strong>Guías</strong></a>
+      <a href="#pagos"><span>$</span><strong>Pagos</strong></a>
+      <a href="https://wa.me/5493757653075" target="_blank" rel="noreferrer"><span>?</span><strong>Ayuda</strong></a>
+      <small>The Prestige Group</small>
+    </nav>
   </main>;
 }

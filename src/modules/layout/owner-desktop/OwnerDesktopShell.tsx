@@ -135,5 +135,28 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
       </header>
       <div className={styles.content}>{children}</div>
     </main>
+    <nav className={styles.mobileBottomNav} aria-label="Navegación principal móvil">
+      <Link href="/owner/bultos#seguimiento" className={pathname.startsWith("/owner/bultos") ? styles.mobileNavActive : ""}>
+        <span>●</span>
+        <strong>Seguimiento</strong>
+      </Link>
+      <Link href="/owner/bultos#guias" className="">
+        <span>▤</span>
+        <strong>Guías</strong>
+      </Link>
+      <Link href="/owner/bultos#nueva" className={styles.mobileFab} aria-label="Nueva carga">
+        <span>+</span>
+        <strong>Nueva</strong>
+      </Link>
+      <Link href="/owner/bultos#pases" className="">
+        <span>$</span>
+        <strong>Pases</strong>
+      </Link>
+      <Link href="/owner/clientes" className="">
+        <span>⋯</span>
+        <strong>Más</strong>
+      </Link>
+      <small>The Prestige Group</small>
+    </nav>
   </div>;
 }

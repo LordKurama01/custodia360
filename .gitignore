@@ -1,12 +1,23 @@
+﻿# dependencies
 node_modules
+
+# next
 .next
 out
-.env
-.env.local
-.DS_Store
-*.log
 
+# deploy local
+.netlify
 .vercel
 
-# Local Netlify folder
-.netlify
+# env
+.env
+.env.local
+.env.*.local
+
+# cache
+tsconfig.tsbuildinfo
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*

@@ -438,11 +438,11 @@ export function ControlBultosView() {
   };
 
   return <OwnerDesktopShell title="Seguimiento principal">
-    <section className={styles.hero}>
+    <section id="seguimiento" className={styles.hero}>
       <div>
-        <p>Operacion principal</p>
-        <h2>Clientes, guías, pases y saldos</h2>
-        <span>{demoMode ? "Demo local: cliente principal, guías, destinatarios, pases USD, dólar diario, saldos y portal cliente." : "Operación real: cliente principal, guías, destinatarios, pases USD, dólar diario, saldos y portal cliente."}</span>
+        <p>Control de bultos</p>
+        <h2>Seguimiento operativo</h2>
+        <span>{demoMode ? "Demo local: bultos, estados, guías, pases USD y WhatsApp." : "Operación real: bultos, estados, guías, pases USD y WhatsApp."}</span>
       </div>
       <div className={styles.roleBox}>
         <span>{demoMode ? "Demo" : "Usuario"}</span>
@@ -453,6 +453,13 @@ export function ControlBultosView() {
 
     {message ? <div className={styles.success}>{message}</div> : null}
     {error ? <div className={styles.error}>{error}</div> : null}
+
+    <section className={styles.mobileQuickActions} aria-label="Acciones rápidas">
+      <a href="#nueva">+ Bulto</a>
+      <a href="#guias">Guías</a>
+      <a href="#pases">Pases</a>
+      <a href="#whatsapp">WhatsApp</a>
+    </section>
 
     <section className={styles.kpis}>
       <Card className={styles.kpi}><span>Total bultos</span><strong>{kpis.totalPackages}</strong></Card>
@@ -478,7 +485,7 @@ export function ControlBultosView() {
       </div>
     </Card>
 
-    <Card className={styles.filters}>
+    <Card id="guias" className={styles.filters}>
       <Field label="Buscar">
         <Input value={filters.query} onChange={(event) => setFilters({ ...filters, query: event.target.value })} placeholder="Cliente, telefono, guia, proveedor..." />
       </Field>
@@ -559,7 +566,7 @@ export function ControlBultosView() {
         </Card>
       </div>
 
-      <div className={styles.mobileList}>
+      <div id="pases" className={styles.mobileList}>
         {filteredOperations.map((operation) => {
           const totals = calculateOperationTotals(operation);
           return <article key={operation.id} className={styles.operationCard}>
@@ -591,10 +598,10 @@ export function ControlBultosView() {
       </div>
     </> : null}
 
-    <section className={styles.lowerTools}>
+    <section id="nueva" className={styles.lowerTools}>
       <div className={styles.cardHead}>
-        <div><p>Carga y ajustes</p><h3>Alta rápida y nueva operación</h3></div>
-        <span>Herramientas secundarias: primero se muestra el seguimiento, abajo queda la carga.</span>
+        <div><p>Carga y ajustes</p><h3>Carga rápida de bultos</h3></div>
+        <span>Fase 1: solo clientes base, bultos, guías, pases y cobros simples.</span>
       </div>
     </section>
 
@@ -833,7 +840,7 @@ export function ControlBultosView() {
             <div className={styles.timeline}>
               <h4>Resumen WhatsApp</h4>
               <Textarea readOnly value={buildWhatsAppSummary(detailOperation)} />
-              <Button variant="secondary" onClick={() => copyWhatsAppSummary(detailOperation)}>Copiar resumen</Button>
+              <Button id="whatsapp" variant="secondary" onClick={() => copyWhatsAppSummary(detailOperation)}>Copiar resumen</Button>
             </div>
             <div className={styles.timeline}>
               <h4>Observaciones</h4>

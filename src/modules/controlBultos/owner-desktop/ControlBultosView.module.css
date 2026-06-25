@@ -1092,3 +1092,76 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* v10 flujo operativo: cards mobile limpias, bottom sheet y cuenta parcial */
+.mobileCardSummary,
+.mobileMoneySummary {
+  display: grid;
+  gap: .2rem;
+  padding: .58rem .65rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .8rem;
+  background: rgba(255, 255, 255, .035);
+}
+
+.mobileCardSummary strong,
+.mobileMoneySummary strong {
+  color: #fff;
+  font-size: .9rem;
+}
+
+.mobileCardSummary span,
+.mobileMoneySummary span,
+.mobileMoneySummary small {
+  color: var(--c360-muted);
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
+.mobileMoneySummary {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.mobileMoneySummary small {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+}
+
+.actionsCompact {
+  display: grid;
+  grid-template-columns: 1fr 1fr 44px;
+  gap: .4rem;
+}
+
+.actionsCompact button {
+  min-height: 2.25rem;
+  padding-inline: .35rem;
+  font-size: .72rem;
+}
+
+.quickActionList {
+  display: grid;
+  gap: .5rem;
+}
+
+.bottomSheet {
+  border-radius: 1.15rem 1.15rem .75rem .75rem;
+}
+
+@media (max-width: 767px) {
+  .operationCardHead {
+    align-items: flex-start;
+  }
+  .operationCardHead strong,
+  .operationCardHead span {
+    overflow-wrap: anywhere;
+  }
+  .cardFacts,
+  .moneyLine {
+    display: none;
+  }
+  .bottomSheet {
+    align-self: end;
+  }
+}

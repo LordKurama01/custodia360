@@ -62,3 +62,8 @@ SUPABASE_SERVICE_ROLE_KEY=demo
 INTERNAL_OWNER_EMAIL=demo@custodia360.local
 NEXT_PUBLIC_APP_URL=https://custodia360.onrender.com
 ```
+
+
+## v10 — Flujo operativo real
+
+Última iteración: landing simple, mesa de control reorganizada, mobile admin compacto, portal cliente corto, ficha cliente como planilla digital, cuenta corriente con pagos parciales/adelantos y guías clickeables. Ver `docs/V10_FLUJO_OPERATIVO_REAL.md`.

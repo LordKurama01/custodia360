@@ -2,7 +2,6 @@ import {
   DEFAULT_DOLLAR_RATE,
   calculateGuideCharge,
   clientLogisticsLabels,
-  financialLabels,
   guidePaymentLabels,
   paymentMethodLabels,
 } from "@/modules/controlBultos/types";
@@ -27,6 +26,7 @@ type PortalShipment = {
   guide_surcharge_percent?: number | null;
   guide_charge_amount?: number | null;
   pass_usd_amount?: number | null;
+  pass_paid_usd_amount?: number | null;
   pass_date?: string | null;
   pass_note?: string | null;
   dispatch_date: string | null;
@@ -79,35 +79,55 @@ function statusTone(status: string) {
   return styles.info;
 }
 
+function shipmentPassTotal(shipment: PortalShipment) {
+  return Number(shipment.pass_usd_amount || 0);
+}
+
+function shipmentPassPaid(shipment: PortalShipment) {
+  return Math.min(Number(shipment.pass_paid_usd_amount || 0), shipmentPassTotal(shipment));
+}
+
+function shipmentPassBalance(shipment: PortalShipment) {
+  return Math.max(shipmentPassTotal(shipment) - shipmentPassPaid(shipment), 0);
+}
+
 function operationPassUsd(operation: PortalOperation) {
-  const guidePassTotal = operation.shipments.reduce((sum, shipment) => sum + Number(shipment.pass_usd_amount || 0), 0);
+  const guidePassTotal = operation.shipments.reduce((sum, shipment) => sum + shipmentPassTotal(shipment), 0);
   return guidePassTotal > 0 ? guidePassTotal : Number(operation.pass_amount || 0);
 }
 
-function passArs(operation: PortalOperation) {
-  return operationPassUsd(operation) * DEFAULT_DOLLAR_RATE;
+function operationPendingUsd(operation: PortalOperation) {
+  const guideBalance = operation.shipments.reduce((sum, shipment) => sum + shipmentPassBalance(shipment), 0);
+  return guideBalance > 0 ? guideBalance : operation.financial_status === "pago_total" ? 0 : operationPassUsd(operation);
 }
 
 function pendingPassUsd(operations: PortalOperation[]) {
-  return operations
-    .filter((operation) => operation.financial_status !== "pago_total")
-    .reduce((sum, operation) => sum + operationPassUsd(operation), 0);
+  return operations.reduce((sum, operation) => sum + operationPendingUsd(operation), 0);
+}
+
+function paidPassUsd(operations: PortalOperation[]) {
+  return operations.reduce((sum, operation) => sum + operation.shipments.reduce((subtotal, shipment) => subtotal + shipmentPassPaid(shipment), 0), 0);
 }
 
 function guideChargeLabel(shipment: PortalShipment) {
   const charge = shipment.guide_charge_amount ?? calculateGuideCharge(shipment.company, Number(shipment.guide_amount || 0));
   const hasSurcharge = Number(shipment.guide_surcharge_percent || 0) > 0;
-  return hasSurcharge ? `${formatMoney(charge)} (incluye ${shipment.guide_surcharge_percent}%)` : formatMoney(charge);
+  return hasSurcharge ? `${formatMoney(charge)} incl. ${shipment.guide_surcharge_percent}%` : formatMoney(charge);
 }
 
 function guidePaymentDetail(shipment: PortalShipment) {
   const value = guideChargeLabel(shipment);
-  if (shipment.guide_payment_status === "pagada_por_cliente") return `Guía pagada por el cliente/en destino: ${value}`;
-  if (shipment.guide_payment_status === "pagada_por_jeremias") return `Guía pagada por Jeremías, a reintegrar: ${value}`;
-  if (shipment.guide_payment_status === "pendiente_reintegro") return `Guía pendiente de reintegro: ${value}`;
-  if (shipment.guide_payment_status === "reintegrada") return `Guía reintegrada: ${value}`;
-  if (Number(shipment.guide_amount || 0) > 0) return `Guía no pagada / pendiente: ${value}`;
-  return "Guía pendiente de valor";
+  if (shipment.guide_payment_status === "pagada_por_cliente") return `Paga en destino / cliente: ${value}`;
+  if (shipment.guide_payment_status === "pagada_por_jeremias") return `Pagada por Jeremías, a reintegrar: ${value}`;
+  if (shipment.guide_payment_status === "pendiente_reintegro") return `Pendiente de reintegro: ${value}`;
+  if (shipment.guide_payment_status === "reintegrada") return `Reintegrada: ${value}`;
+  if (Number(shipment.guide_amount || 0) > 0) return `Pendiente: ${value}`;
+  return "Pendiente de valor";
+}
+
+function whatsappHref(clientName: string) {
+  const text = encodeURIComponent(`Hola, soy ${clientName}. Quiero consultar por mi pedido en Custodia360.`);
+  return `https://wa.me/5493757653075?text=${text}`;
 }
 
 export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
@@ -117,106 +137,118 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
         <span>Custodia360</span>
         <h1>Consulta no encontrada</h1>
         <p>El código no existe, expiró o la operación no está visible para cliente.</p>
+        <a className={styles.primaryAction} href="https://wa.me/5493757653075" target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
       </section>
     </main>;
   }
 
   const pendingUsd = pendingPassUsd(data.operations);
+  const paidUsd = paidPassUsd(data.operations);
   const allShipments = data.operations.flatMap((operation) => operation.shipments);
-  const destinationPaidGuides = allShipments.filter((shipment) => shipment.guide_payment_status === "pagada_por_cliente").length;
+  const lastOperation = data.operations[0];
+  const visibleStatus = lastOperation ? clientLogisticsLabels[lastOperation.logistics_status] : "En preparación";
+  const lastUpdate = lastOperation?.operation_date ?? new Date().toISOString();
 
   return <main id="inicio" className={styles.page}>
-    <header className={styles.header}>
-      <div>
-        <div className={styles.portalBrand}><BrandLockup subtitle="Consulta privada" /></div>
-        <h1>{data.client.name}</h1>
-        <p>Portal por invitación: estado del pedido, guías despachadas, pases pendientes y contacto directo.</p>
-      </div>
-      <strong>Cliente {data.client.id.slice(0, 8).toUpperCase()}</strong>
+    <header className={styles.headerCompact}>
+      <div className={styles.portalBrand}><BrandLockup subtitle="Consulta privada" /></div>
+      <a className={styles.helpLink} href={whatsappHref(data.client.name)} target="_blank" rel="noreferrer">WhatsApp</a>
     </header>
 
-    <section id="resumen" className={styles.summary}>
-      <div><span>Pedidos</span><strong>{data.operations.length}</strong></div>
-      <div><span>Pases pendientes</span><strong>{moneyUsd(pendingUsd)}</strong></div>
-      <div><span>Equivalente hoy</span><strong>{formatMoney(pendingUsd * DEFAULT_DOLLAR_RATE)}</strong></div>
-      <div><span>Guías</span><strong>{allShipments.length}</strong></div>
-      <div><span>Guías destino</span><strong>{destinationPaidGuides}</strong></div>
-      <div><span>Dólar del día</span><strong>${DEFAULT_DOLLAR_RATE}</strong></div>
+    <section className={styles.heroStatus}>
+      <span className={`${styles.badge} ${statusTone(lastOperation?.logistics_status ?? "para_retirar")}`}>{visibleStatus}</span>
+      <h1>Hola, {data.client.name}</h1>
+      <p>{lastOperation?.logistics_status === "despachado" ? `Tu pedido está despachado. Tenés ${allShipments.length} guías disponibles.` : "Tu pedido está en seguimiento privado."}</p>
+      <div className={styles.heroMoney}>
+        <div><span>Pendiente actual</span><strong>{moneyUsd(pendingUsd)}</strong><small>{formatMoney(pendingUsd * DEFAULT_DOLLAR_RATE)} hoy</small></div>
+        <div><span>Guías</span><strong>{allShipments.length}</strong><small>Dólar ${DEFAULT_DOLLAR_RATE}</small></div>
+      </div>
+      <div className={styles.heroActions}>
+        <a className={styles.primaryAction} href="#guias">Ver guías</a>
+        <a className={styles.secondaryAction} href={whatsappHref(data.client.name)} target="_blank" rel="noreferrer">Consultar</a>
+      </div>
+      <small className={styles.updated}>Última actualización: {formatDate(lastUpdate)}</small>
     </section>
 
-    <section id="pedidos" className={styles.list}>
-      {data.operations.map((operation) => {
-        const visibleStatus = clientLogisticsLabels[operation.logistics_status];
-        return <article key={operation.id} className={styles.card}>
-          <div className={styles.cardHead}>
+    <section id="pedidos" className={styles.sectionCard}>
+      <div className={styles.sectionHead}>
+        <div><span>Pedido activo</span><h2>{lastOperation?.public_code ?? "Sin código"}</h2></div>
+        <strong>{data.operations.length} operación</strong>
+      </div>
+      {data.operations.map((operation) => <article key={operation.id} className={styles.orderRow}>
+        <div>
+          <strong>{operation.provider_name}</strong>
+          <span>{formatDate(operation.operation_date)} · {operation.package_count} bultos · {operation.shipments.length} guías</span>
+        </div>
+        <span className={`${styles.badge} ${statusTone(operation.logistics_status)}`}>{clientLogisticsLabels[operation.logistics_status]}</span>
+      </article>)}
+    </section>
+
+    <section id="guias" className={styles.sectionCard}>
+      <div className={styles.sectionHead}>
+        <div><span>Guías disponibles</span><h2>Tocá cada guía para ver detalle</h2></div>
+        <strong>{allShipments.length}</strong>
+      </div>
+      <div className={styles.guideList}>
+        {allShipments.length ? data.operations.flatMap((operation) => operation.shipments.map((shipment, index) => <details key={`${operation.id}-${shipment.guide_number ?? index}`} className={styles.guideDetail}>
+          <summary>
             <div>
-              <strong>{operation.public_code}</strong>
-              <span>{formatDate(operation.operation_date)} - {operation.provider_name}</span>
+              <strong>{shipment.guide_number ?? `Guía ${index + 1}`}</strong>
+              <span>{shipment.company ?? "Empresa pendiente"} · {shipment.recipient_name ?? "Destinatario pendiente"}</span>
             </div>
-            <span className={`${styles.badge} ${statusTone(operation.logistics_status)}`}>{visibleStatus}</span>
+            <b>Ver</b>
+          </summary>
+          <div className={styles.detailGrid}>
+            <div><span>Destinatario</span><strong>{shipment.recipient_name ?? "Sin cargar"}</strong></div>
+            <div><span>DNI / CUIT</span><strong>{shipment.recipient_identity_number ?? "Sin cargar"}</strong></div>
+            <div><span>Empresa</span><strong>{shipment.company ?? "Sin cargar"}</strong></div>
+            <div><span>Fecha despacho</span><strong>{formatDate(shipment.dispatch_date ?? undefined)}</strong></div>
+            <div><span>Destino</span><strong>{shipment.destination_detail ?? "Sin cargar"}</strong></div>
+            <div><span>Condición guía</span><strong>{guidePaymentLabels[shipment.guide_payment_status]}</strong></div>
+            <div><span>Resumen guía</span><strong>{guidePaymentDetail(shipment)}</strong></div>
+            <div><span>Pase</span><strong>{moneyUsd(shipmentPassTotal(shipment))}</strong></div>
+            <div><span>Pagado</span><strong>{moneyUsd(shipmentPassPaid(shipment))}</strong></div>
+            <div><span>Saldo</span><strong>{moneyUsd(shipmentPassBalance(shipment))}</strong></div>
           </div>
-
-          <div className={styles.grid}>
-            <div><span>Cantidad</span><strong>{operation.package_count} bultos</strong></div>
-            <div><span>Pases USD</span><strong>{moneyUsd(operationPassUsd(operation))}</strong></div>
-            <div><span>Equivalente hoy</span><strong>{formatMoney(passArs(operation))}</strong></div>
-            <div><span>Estado financiero</span><strong>{financialLabels[operation.financial_status]}</strong></div>
+          <div className={styles.guideActions}>
+            <a href={whatsappHref(data.client.name)} target="_blank" rel="noreferrer">Consultar guía</a>
           </div>
-
-          <div id="guias" className={styles.payments}>
-            <h2>{operation.logistics_status === "despachado" ? "Despachado · guías disponibles" : "Guías / pedidos"}</h2>
-            {operation.logistics_status === "despachado" ? <p className={styles.guideHint}>Tocá cada guía para ver destinatario, domicilio, valor, pase y condición de pago.</p> : null}
-            {operation.shipments.length ? operation.shipments.map((shipment, index) => <details key={`${operation.id}-${shipment.guide_number ?? index}`} className={styles.guideDetail}>
-              <summary>
-                <strong>{shipment.guide_number ?? `Guía ${index + 1}`}</strong>
-                <span>{shipment.company ?? "Empresa pendiente"} · {shipment.recipient_name ?? "Destinatario pendiente"}</span>
-              </summary>
-              <div className={styles.grid}>
-                <div><span>Destinatario</span><strong>{shipment.recipient_name ?? "Sin cargar"}</strong></div>
-                <div><span>DNI / CUIT</span><strong>{shipment.recipient_identity_number ?? "Sin cargar"}</strong></div>
-                <div><span>Empresa</span><strong>{shipment.company ?? "Sin cargar"}</strong></div>
-                <div><span>Fecha despacho</span><strong>{formatDate(shipment.dispatch_date ?? undefined)}</strong></div>
-                <div><span>Valor declarado / guía</span><strong>{formatMoney(Number(shipment.guide_amount || 0))}</strong></div>
-                <div><span>Total guía cliente</span><strong>{guideChargeLabel(shipment)}</strong></div>
-                <div><span>Pase USD</span><strong>{moneyUsd(Number(shipment.pass_usd_amount || 0))}</strong></div>
-                <div><span>Pase hoy</span><strong>{formatMoney(Number(shipment.pass_usd_amount || 0) * DEFAULT_DOLLAR_RATE)}</strong></div>
-                <div><span>Fecha pase</span><strong>{formatDate(shipment.pass_date ?? undefined)}</strong></div>
-                <div><span>Condición guía</span><strong>{guidePaymentLabels[shipment.guide_payment_status]}</strong></div>
-                <div><span>Resumen guía</span><strong>{guidePaymentDetail(shipment)}</strong></div>
-              </div>
-              <p>{shipment.destination_detail ?? "Sin observación de destino."}</p>
-              {shipment.pass_note ? <p>{shipment.pass_note}</p> : null}
-            </details>) : <p>Sin guías cargadas todavía.</p>}
-          </div>
-
-          <div id="pagos" className={styles.money}>
-            <div><span>Pagado ARS</span><strong>{formatMoney(Number(operation.paid_amount_ars ?? 0))}</strong></div>
-            <div><span>Pagado USD</span><strong>{moneyUsd(Number(operation.paid_amount_usd ?? 0))}</strong></div>
-            <div><span>Saldo estimado hoy</span><strong>{formatMoney(Number(operation.balance_amount ?? passArs(operation)))}</strong></div>
-          </div>
-
-          <div className={styles.payments}>
-            <h2>Pagos visibles</h2>
-            {operation.payments.length ? operation.payments.map((payment, index) => <div key={`${operation.id}-${index}`}>
-              <strong>{payment.concept}</strong>
-              <span>{paymentMethodLabels[payment.method]} - {payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)}</span>
-            </div>) : <p>Sin pagos registrados.</p>}
-          </div>
-
-          <div className={styles.note}>
-            <span>Observaciones</span>
-            <p>{operation.note ?? "Sin observaciones visibles."}</p>
-          </div>
-        </article>;
-      })}
+        </details>)) : <p className={styles.empty}>Todavía no hay guías cargadas.</p>}
+      </div>
     </section>
+
+    <section id="pagos" className={styles.sectionCard}>
+      <div className={styles.sectionHead}>
+        <div><span>Cuenta actual</span><h2>Saldo y pagos visibles</h2></div>
+      </div>
+      <div className={styles.accountSummary}>
+        <div><span>Pendiente</span><strong>{moneyUsd(pendingUsd)}</strong><small>{formatMoney(pendingUsd * DEFAULT_DOLLAR_RATE)} hoy</small></div>
+        <div><span>Pagado</span><strong>{moneyUsd(paidUsd)}</strong><small>Registrado en pases</small></div>
+      </div>
+      <details className={styles.accordion}>
+        <summary>Ver pagos registrados</summary>
+        {data.operations.some((operation) => operation.payments.length) ? data.operations.flatMap((operation) => operation.payments.map((payment, index) => <div key={`${operation.id}-${index}`} className={styles.paymentRow}>
+          <strong>{payment.concept}</strong>
+          <span>{paymentMethodLabels[payment.method]} · {payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)}</span>
+        </div>)) : <p className={styles.empty}>Sin pagos visibles registrados.</p>}
+      </details>
+      <p className={styles.disclaimer}>El equivalente en pesos puede variar según el dólar del día.</p>
+    </section>
+
+    <section id="ayuda" className={styles.sectionCard}>
+      <div className={styles.sectionHead}>
+        <div><span>Ayuda</span><h2>Consulta directa</h2></div>
+      </div>
+      <p className={styles.empty}>Si no tenés código, no encontrás una guía o necesitás confirmar algo, escribí directo por WhatsApp.</p>
+      <a className={styles.primaryAction} href={whatsappHref(data.client.name)} target="_blank" rel="noreferrer">Hablar por WhatsApp</a>
+    </section>
+
     <nav className={styles.clientBottomNav} aria-label="Navegación cliente">
       <a href="#inicio"><span>●</span><strong>Inicio</strong></a>
       <a href="#pedidos"><span>▦</span><strong>Pedidos</strong></a>
-      <a href="#guias" className={styles.clientFab}><span>+</span><strong>Guías</strong></a>
+      <a href="#guias"><span>⌁</span><strong>Guías</strong></a>
       <a href="#pagos"><span>$</span><strong>Pagos</strong></a>
-      <a href="https://wa.me/5493757653075" target="_blank" rel="noreferrer"><span>?</span><strong>Ayuda</strong></a>
-      <small>The Prestige Group</small>
+      <a href="#ayuda"><span>?</span><strong>Ayuda</strong></a>
     </nav>
   </main>;
 }

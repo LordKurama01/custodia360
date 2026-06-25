@@ -62,6 +62,8 @@ type AccountPass = {
   company: string;
   recipient: string;
   amountUsd: number;
+  paidUsd: number;
+  balanceUsd: number;
   status: "pendiente" | "pagado" | "parcial" | "anulado";
   date?: string | null;
 };
@@ -197,6 +199,8 @@ function movementLabel(movement: SpecialMovement) {
 function createPassItem(operation: ControlOperation, shipment: ControlShipment): AccountPass | null {
   const amountUsd = toNumber(shipment.pass_usd_amount);
   if (amountUsd <= 0) return null;
+  const paidUsd = shipmentPassStatus(shipment) === "pagado" ? amountUsd : Math.min(toNumber(shipment.pass_paid_usd_amount), amountUsd);
+  const balanceUsd = Math.max(amountUsd - paidUsd, 0);
   return {
     id: shipment.id,
     operationId: operation.id,
@@ -206,7 +210,9 @@ function createPassItem(operation: ControlOperation, shipment: ControlShipment):
     company: shipment.company ?? "Sin empresa",
     recipient: shipment.recipient_name ?? operation.clients?.name ?? "Cliente",
     amountUsd,
-    status: shipmentPassStatus(shipment),
+    paidUsd,
+    balanceUsd,
+    status: balanceUsd <= 0.01 ? "pagado" : paidUsd > 0 ? "parcial" : shipmentPassStatus(shipment),
     date: shipment.pass_date,
   };
 }
@@ -238,7 +244,7 @@ function buildClientAccounts(operations: ControlOperation[]): ClientAccount[] {
       const pass = createPassItem(operation, shipment);
       if (pass) {
         if (pass.status === "pagado") account.paidPasses.push(pass);
-        if (pass.status !== "pagado" && pass.status !== "anulado") account.pendingPasses.push(pass);
+        if (pass.status !== "pagado" && pass.status !== "anulado" && pass.balanceUsd > 0) account.pendingPasses.push(pass);
       }
 
       if (["pagada_por_jeremias", "pendiente_reintegro"].includes(shipment.guide_payment_status)) {
@@ -262,7 +268,7 @@ function buildClientAccounts(operations: ControlOperation[]): ClientAccount[] {
 
   return Array.from(map.values()).map((account) => ({
     ...account,
-    passUsdPending: account.pendingPasses.reduce((sum, item) => sum + item.amountUsd, 0),
+    passUsdPending: account.pendingPasses.reduce((sum, item) => sum + item.balanceUsd, 0),
     guideArsPending: account.guideReimbursements.reduce((sum, item) => sum + item.amountArs, 0),
     specialArsPending: account.specialPending.reduce((sum, item) => item.currency === "ARS" ? sum + item.amount : sum, 0),
     payments: account.payments.sort((a, b) => new Date(b.paid_at).getTime() - new Date(a.paid_at).getTime()),
@@ -276,7 +282,7 @@ function buildAccountWhatsApp(account: ClientAccount) {
     `Dólar tomado hoy: $${DEFAULT_DOLLAR_RATE}`,
     "",
     "Pases pendientes:",
-    ...(account.pendingPasses.length ? account.pendingPasses.map((item) => `- ${item.guideNumber} · ${item.company} · ${moneyUsd(item.amountUsd)} · hoy ${formatMoney(item.amountUsd * DEFAULT_DOLLAR_RATE)}`) : ["- Sin pases pendientes"]),
+    ...(account.pendingPasses.length ? account.pendingPasses.map((item) => `- ${item.guideNumber} · ${item.company} · saldo ${moneyUsd(item.balanceUsd)} · hoy ${formatMoney(item.balanceUsd * DEFAULT_DOLLAR_RATE)}`) : ["- Sin pases pendientes"]),
     "",
     `Total pases pendientes: ${moneyUsd(account.passUsdPending)}`,
     `Equivalente hoy: ${formatMoney(account.passUsdPending * DEFAULT_DOLLAR_RATE)}`,
@@ -315,6 +321,7 @@ export function ControlBultosView() {
   const [specialOperation, setSpecialOperation] = useState<ControlOperation | null>(null);
   const [specialForm, setSpecialForm] = useState<SpecialMovementInput>(emptySpecialMovementForm());
   const [detailOperation, setDetailOperation] = useState<ControlOperation | null>(null);
+  const [actionsOperation, setActionsOperation] = useState<ControlOperation | null>(null);
   const [focusedOperationId, setFocusedOperationId] = useState<string | null>(null);
   const [filters, setFilters] = useState({ query: "", logistics_status: "", financial_status: "" });
 
@@ -397,7 +404,7 @@ export function ControlBultosView() {
   const selectedClient = data.clients.find((client) => client.id === operationForm.client_id);
   const draftTotal = calculateOperationDraftTotal(operationForm);
   const paymentPassOptions = paymentOperation ? paymentOperation.operation_shipments.map((shipment) => createPassItem(paymentOperation, shipment)).filter((item): item is AccountPass => !!item && item.status !== "pagado" && item.status !== "anulado") : [];
-  const selectedPassTotalUsd = paymentPassOptions.filter((item) => selectedPassIds.includes(item.id)).reduce((sum, item) => sum + item.amountUsd, 0);
+  const selectedPassTotalUsd = paymentPassOptions.filter((item) => selectedPassIds.includes(item.id)).reduce((sum, item) => sum + item.balanceUsd, 0);
   const selectedPassTotalArs = selectedPassTotalUsd * DEFAULT_DOLLAR_RATE;
 
   const openQuickPanel = (panel: QuickPanel) => {
@@ -616,13 +623,13 @@ export function ControlBultosView() {
   return <OwnerDesktopShell title="Mesa de control">
     <section id="seguimiento" className={styles.topBar}>
       <div>
-        <p>Pizarrón digital</p>
-        <h2>Mesa operativa</h2>
-        <span>{demoMode ? "Demo" : "Operación real"} · dólar hoy ${DEFAULT_DOLLAR_RATE} · cada fila lleva a la ficha cliente, guías y cuenta corriente.</span>
+        <p>Flujo de trabajo</p>
+        <h2>Mesa de control</h2>
+        <span>{demoMode ? "Demo" : "Operación real"} · dólar hoy ${DEFAULT_DOLLAR_RATE} · clientes, bultos, guías, cuenta corriente y próxima acción.</span>
       </div>
       <div className={styles.topActions}>
-        <Button variant="secondary" onClick={() => setActiveTab("cuentas")}>Clientes / planillas</Button>
-        <Button onClick={() => openQuickPanel("operacion")}>+ Cargar movimiento</Button>
+        <Button variant="secondary" onClick={() => setActiveTab("cuentas")}>Clientes</Button>
+        <Button onClick={() => openQuickPanel("operacion")}>+ Nuevo movimiento</Button>
       </div>
     </section>
 
@@ -699,27 +706,24 @@ export function ControlBultosView() {
             return <article key={operation.id} className={styles.operationCard}>
               <div className={styles.operationCardHead}>
                 <div>
-                  <strong>{operation.public_code}</strong>
-                  <span>{operation.clients?.name ?? "Sin cliente"} · {operation.provider_name}</span>
+                  <strong>{operation.clients?.name ?? "Sin cliente"}</strong>
+                  <span>{operation.public_code} · {operation.provider_name}</span>
                 </div>
                 <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}>{logisticsLabels[operation.logistics_status]}</span>
               </div>
-              <div className={styles.cardFacts}>
-                <span>{operation.package_count} bultos</span>
-                <span>{operation.operation_shipments.length} guías</span>
-                <span>Cliente ve: {clientLogisticsLabels[operation.logistics_status]}</span>
-                <span>Cuenta: {financialLabels[operation.financial_status]}</span>
+              <div className={styles.mobileCardSummary}>
+                <strong>{operation.package_count} bultos · {operation.operation_shipments.length} guías</strong>
+                <span>Cliente ve {clientLogisticsLabels[operation.logistics_status]} · Cuenta {financialLabels[operation.financial_status]}</span>
               </div>
-              <div className={styles.moneyLine}>
-                <div><span>Pases operación</span><strong>{moneyUsd(totals.passAmount)}</strong></div>
-                <div><span>Pendiente cliente</span><strong>{canSeeMoney ? moneyUsd(account?.passUsdPending ?? 0) : "-"}</strong></div>
-                <div><span>Guías</span><strong>{guideNumbers(operation)}</strong></div>
+              <div className={styles.mobileMoneySummary}>
+                <span>Pendiente</span>
+                <strong>{canSeeMoney ? moneyUsd(account?.passUsdPending ?? 0) : "-"}</strong>
+                <small>{guideNumbers(operation)}</small>
               </div>
-              <div className={styles.actions}>
-                <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Ficha</Button>
+              <div className={styles.actionsCompact}>
+                <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Ver</Button>
                 <Button variant="secondary" onClick={() => startPayment(operation)} disabled={!canCollect}>Cobrar</Button>
-                <Button variant="ghost" onClick={() => startShipment(operation)} disabled={!canEdit}>Guía</Button>
-                <Button variant="ghost" onClick={() => copyWhatsAppOperation(operation)}>WhatsApp</Button>
+                <Button variant="ghost" onClick={() => setActionsOperation(operation)}>...</Button>
               </div>
             </article>;
           }) : <Card className={styles.empty}>No hay operaciones para estos filtros.</Card>}
@@ -758,8 +762,8 @@ export function ControlBultosView() {
     {activeTab === "cuentas" && !loading ? <section className={styles.accountsGrid}>
       <div className={styles.accountList}>
         <div className={styles.accountListTitle}>
-          <strong>Clientes / planillas</strong>
-          <span>La cuenta corriente nace en cada cliente.</span>
+          <strong>Clientes</strong>
+          <span>Planilla digital por cliente: movimientos, guías, pagos parciales y saldo.</span>
         </div>
         {accounts.map((account) => <button key={account.clientId} className={`${styles.accountRow} ${selectedAccount?.clientId === account.clientId ? styles.accountActive : ""}`} onClick={() => setSelectedAccountId(account.clientId)}>
           <span>{account.clientName}</span>
@@ -775,7 +779,7 @@ export function ControlBultosView() {
             <span>Movimientos, guías, pases, pagos y adelantos del cliente en una sola vista.</span>
           </div>
           <div className={styles.clientSheetActions}>
-            <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startPayment(selectedAccount.operations[0])} disabled={!canCollect || !selectedAccount.operations[0]}>Registrar pago</Button>
+            <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startPayment(selectedAccount.operations[0])} disabled={!canCollect || !selectedAccount.operations[0]}>Pago / adelanto</Button>
             <Button variant="ghost" onClick={() => copyWhatsAppAccount(selectedAccount)}>WhatsApp</Button>
           </div>
         </div>
@@ -818,8 +822,8 @@ export function ControlBultosView() {
           <div className={styles.ledger}>
             <h4>Pases abiertos</h4>
             {selectedAccount.pendingPasses.length ? selectedAccount.pendingPasses.map((item) => <div key={item.id} className={styles.ledgerItem}>
-              <div><strong>{item.guideNumber}</strong><span>{item.provider} · {item.company}</span></div>
-              <b>{moneyUsd(item.amountUsd)}</b>
+              <div><strong>{item.guideNumber}</strong><span>{item.provider} · {item.company} · pagado {moneyUsd(item.paidUsd)}</span></div>
+              <b>{moneyUsd(item.balanceUsd)}</b>
             </div>) : <p>Sin pases pendientes.</p>}
           </div>
           <div className={styles.ledger}>
@@ -922,8 +926,8 @@ export function ControlBultosView() {
             setSelectedPassIds(ids);
             syncPaymentAmount(ids);
           }} />
-          <span>{item.guideNumber} · {item.company}</span>
-          <strong>{moneyUsd(item.amountUsd)}</strong>
+          <span>{item.guideNumber} · {item.company} · pagado {moneyUsd(item.paidUsd)}</span>
+          <strong>Saldo {moneyUsd(item.balanceUsd)}</strong>
         </label>) : <p>Esta operación no tiene pases pendientes.</p>}
       </div>
       <div className={styles.accountTotals}>
@@ -936,7 +940,7 @@ export function ControlBultosView() {
       </div>
       <Field label="Nota"><Textarea value={paymentForm.note ?? ""} onChange={(event) => setPaymentForm({ ...paymentForm, note: event.target.value })} /></Field>
       {paymentOperation.operation_shipments.some((shipment) => shipment.guide_payment_status === "pendiente_reintegro") ? <label className={styles.checkRow}><input type="checkbox" checked={!!paymentForm.markGuideReimbursed} onChange={(event) => setPaymentForm({ ...paymentForm, markGuideReimbursed: event.target.checked })} /><span>Marcar guías a reintegrar como reintegradas</span></label> : null}
-      <div className={styles.formFooter}><span>El pago queda en historial y, si seleccionaste pases, esos pases se cierran.</span><Button onClick={submitPayment} disabled={saving}>Registrar pago</Button></div>
+      <div className={styles.formFooter}><span>El pago queda en historial. Si el monto no cubre todo, el pase queda parcial con saldo abierto.</span><Button onClick={submitPayment} disabled={saving}>Registrar pago</Button></div>
     </section></div> : null}
 
     {quickPanel === "especial" && specialOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
@@ -952,6 +956,18 @@ export function ControlBultosView() {
       </div>
       <Field label="Observación"><Textarea value={specialForm.note ?? ""} onChange={(event) => setSpecialForm({ ...specialForm, note: event.target.value })} placeholder="Ej: proveedor no acepta USDT; Jeremías lleva/transfiere el dinero" /></Field>
       <div className={styles.formFooter}><span>Queda como ítem excepcional dentro de la cuenta corriente.</span><Button onClick={submitSpecialMovement} disabled={saving}>Guardar movimiento</Button></div>
+    </section></div> : null}
+
+
+    {actionsOperation ? <div className={styles.panelOverlay}><section className={`${styles.panel} ${styles.bottomSheet}`}>
+      <div className={styles.panelHead}><div><p>Acciones rápidas</p><h3>{actionsOperation.clients?.name ?? actionsOperation.public_code}</h3></div><button type="button" onClick={() => setActionsOperation(null)}>Cerrar</button></div>
+      <div className={styles.quickActionList}>
+        <Button variant="secondary" onClick={() => { setDetailOperation(actionsOperation); setActionsOperation(null); }}>Ver ficha y guías</Button>
+        <Button variant="secondary" onClick={() => { startShipment(actionsOperation); setActionsOperation(null); }} disabled={!canEdit}>Nueva guía</Button>
+        <Button variant="ghost" onClick={() => { copyWhatsAppOperation(actionsOperation); setActionsOperation(null); }}>Enviar WhatsApp</Button>
+        <Button variant="ghost" onClick={() => { copyClientLink(actionsOperation); setActionsOperation(null); }}>Copiar link cliente</Button>
+        <Button variant="ghost" onClick={() => { startSpecial(actionsOperation); setActionsOperation(null); }}>Movimiento especial</Button>
+      </div>
     </section></div> : null}
 
     {detailOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
@@ -980,6 +996,8 @@ export function ControlBultosView() {
             <div><span>Condición guía</span><strong>{guidePaymentLabels[shipment.guide_payment_status]}</strong></div>
             <div><span>Pase USD</span><strong>{moneyUsd(toNumber(shipment.pass_usd_amount))}</strong></div>
             <div><span>Estado pase</span><strong>{shipmentPassStatus(shipment)}</strong></div>
+            <div><span>Pagado del pase</span><strong>{moneyUsd(toNumber(shipment.pass_paid_usd_amount))}</strong></div>
+            <div><span>Saldo del pase</span><strong>{moneyUsd(Math.max(toNumber(shipment.pass_usd_amount) - toNumber(shipment.pass_paid_usd_amount), 0))}</strong></div>
           </div>
         </details>) : <p>Sin guías cargadas.</p>}
       </div>

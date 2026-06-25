@@ -20,7 +20,7 @@ const operationSelect = `
   operation_payments(*)
 `;
 
-const demoStorageKey = "custodia360:control-bultos-demo:v9-flow-final";
+const demoStorageKey = "custodia360:control-bultos-demo:v10-flujo-operativo";
 
 function requireNoError(error: { message: string } | null, fallback: string) {
   if (error) throw new Error(error.message || fallback);
@@ -165,6 +165,8 @@ function getDemoSeed(): ControlBultosData {
           recipient_identity_number: "33.547.272",
           destination_detail: "Retira Matías por indicación de Estela.",
           pass_usd_amount: 80,
+          pass_paid_usd_amount: 50,
+          pass_payment_status: "parcial",
           pass_date: today,
           pass_note: "Pase asociado a guía VC-10253.",
           guide_cost_amount: 57000,
@@ -189,6 +191,8 @@ function getDemoSeed(): ControlBultosData {
           recipient_identity_number: "31.111.111",
           destination_detail: "Entrega a cliente de Estela.",
           pass_usd_amount: 150,
+          pass_paid_usd_amount: 80,
+          pass_payment_status: "parcial",
           pass_date: today,
           pass_note: "Pase asociado a guía BP-10254.",
           guide_cost_amount: 38000,
@@ -213,6 +217,8 @@ function getDemoSeed(): ControlBultosData {
           recipient_identity_number: "29.222.222",
           destination_detail: "Entrega a tercero autorizado.",
           pass_usd_amount: 200,
+          pass_paid_usd_amount: 0,
+          pass_payment_status: "pendiente",
           pass_date: today,
           pass_note: "Pase asociado a guía CE-10255.",
           guide_cost_amount: 42000,
@@ -237,6 +243,8 @@ function getDemoSeed(): ControlBultosData {
           recipient_identity_number: "30.333.333",
           destination_detail: "Entrega a cuarto destinatario.",
           pass_usd_amount: 70,
+          pass_paid_usd_amount: 70,
+          pass_payment_status: "pagado",
           pass_date: today,
           pass_note: "Pase asociado a guía CA-10256.",
           guide_cost_amount: 26000,
@@ -261,6 +269,8 @@ function getDemoSeed(): ControlBultosData {
           recipient_identity_number: "32.444.444",
           destination_detail: "Guía no pagada / pendiente para mostrar en WhatsApp.",
           pass_usd_amount: 50,
+          pass_paid_usd_amount: 0,
+          pass_payment_status: "pendiente",
           pass_date: today,
           pass_note: "Pase asociado a guía BP-10257.",
           guide_cost_amount: 57000,
@@ -314,6 +324,8 @@ function getDemoSeed(): ControlBultosData {
           recipient_identity_number: "33.547.272",
           destination_detail: "Guía paga en destino.",
           pass_usd_amount: 80,
+          pass_paid_usd_amount: 50,
+          pass_payment_status: "parcial",
           pass_date: today,
           pass_note: "Pase variable cargado manualmente.",
           guide_cost_amount: 50000,
@@ -338,6 +350,8 @@ function getDemoSeed(): ControlBultosData {
           recipient_identity_number: "33.547.272",
           destination_detail: "Pase asociado a esta guía.",
           pass_usd_amount: 150,
+          pass_paid_usd_amount: 80,
+          pass_payment_status: "parcial",
           pass_date: today,
           pass_note: "Pase variable cargado manualmente.",
           guide_cost_amount: 30000,
@@ -362,6 +376,8 @@ function getDemoSeed(): ControlBultosData {
           recipient_identity_number: "33.547.272",
           destination_detail: "Guía pendiente: $57.000 Buspack.",
           pass_usd_amount: 200,
+          pass_paid_usd_amount: 0,
+          pass_payment_status: "pendiente",
           pass_date: today,
           pass_note: "Pase variable cargado manualmente.",
           guide_cost_amount: 57000,
@@ -661,6 +677,7 @@ export async function saveShipment(input: ShipmentInput) {
         destination_detail: cleanText(input.destination_detail ?? ""),
         guide_cost_amount: guideAmount,
         pass_usd_amount: Number(input.pass_usd_amount || 0),
+        pass_paid_usd_amount: 0,
         pass_date: input.pass_date || todayIso(),
         pass_note: cleanText(input.pass_note ?? ""),
         pass_payment_status: "pendiente" as const,
@@ -730,19 +747,28 @@ export async function createPayment(input: PaymentInput) {
         created_at: nowIso(),
       };
       const selectedPassIds = input.selectedPassIds ?? [];
+      let remainingUsdToApply = input.currency === "USD" ? Number(input.amount || 0) : Number(input.amount || 0) / DEFAULT_DOLLAR_RATE;
       const nextShipments = operation.operation_shipments.map((shipment) => {
         const withGuideStatus = input.markGuideReimbursed && shipment.guide_payment_status === "pendiente_reintegro"
           ? { ...shipment, guide_payment_status: "reintegrada" as const }
           : shipment;
-        if (selectedPassIds.includes(shipment.id)) {
-          return {
-            ...withGuideStatus,
-            pass_payment_status: "pagado" as const,
-            pass_paid_at: nowIso(),
-            pass_payment_id: payment.id,
-          };
-        }
-        return withGuideStatus;
+        if (!selectedPassIds.includes(shipment.id)) return withGuideStatus;
+
+        const passTotal = Number(shipment.pass_usd_amount || 0);
+        const alreadyPaid = Number(shipment.pass_paid_usd_amount || 0);
+        const openBalance = Math.max(passTotal - alreadyPaid, 0);
+        const appliedUsd = Math.min(openBalance, Math.max(remainingUsdToApply, 0));
+        remainingUsdToApply = Math.max(remainingUsdToApply - appliedUsd, 0);
+        const nextPaid = roundMoney(alreadyPaid + appliedUsd);
+        const nextBalance = roundMoney(Math.max(passTotal - nextPaid, 0));
+
+        return {
+          ...withGuideStatus,
+          pass_paid_usd_amount: nextPaid,
+          pass_payment_status: nextBalance <= 0.01 ? "pagado" as const : nextPaid > 0 ? "parcial" as const : "pendiente" as const,
+          pass_paid_at: nextPaid > 0 ? nowIso() : shipment.pass_paid_at ?? null,
+          pass_payment_id: nextPaid > 0 ? payment.id : shipment.pass_payment_id ?? null,
+        };
       });
       const nextSpecialMovements = (operation.special_movements ?? []).map((movement) => {
         const shouldClose = input.note?.includes(movement.id);

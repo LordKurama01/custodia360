@@ -1,181 +1,181 @@
 .page {
   min-height: 100vh;
   padding: 1rem;
+  padding-bottom: 7.4rem;
   color: var(--c360-ink);
   background:
-    linear-gradient(135deg, rgba(3, 10, 19, .96), rgba(8, 21, 37, .98)),
-    var(--c360-bg);
+    radial-gradient(circle at 18% -12%, rgba(154, 255, 0, .10), transparent 30%),
+    linear-gradient(135deg, rgba(3, 10, 19, .97), rgba(8, 21, 37, .99));
 }
 
-.header,
+.headerCompact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .8rem;
+}
+
+.portalBrand {
+  display: inline-flex;
+  width: fit-content;
+}
+
+.helpLink,
+.primaryAction,
+.secondaryAction,
+.guideActions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.45rem;
+  padding: 0 .9rem;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 950;
+}
+
+.helpLink,
+.secondaryAction,
+.guideActions a {
+  color: var(--c360-ink-2);
+  border: 1px solid var(--c360-line);
+  background: rgba(255, 255, 255, .04);
+}
+
+.primaryAction {
+  color: #07100d;
+  background: var(--c360-lemon);
+  box-shadow: 0 14px 30px rgba(154, 255, 0, .16);
+}
+
+.heroStatus,
+.sectionCard,
 .notFound {
   display: grid;
-  gap: 1rem;
-  padding: 1.1rem;
+  gap: .85rem;
+  margin-top: .75rem;
+  padding: .9rem;
   border: 1px solid var(--c360-line);
-  border-radius: 1rem;
-  background: linear-gradient(180deg, rgba(16, 29, 49, .96), rgba(8, 18, 33, .97));
+  border-radius: 1.05rem;
+  background: linear-gradient(180deg, rgba(16, 29, 49, .96), rgba(8, 18, 33, .98));
   box-shadow: var(--c360-shadow-soft);
 }
 
-.header span,
-.notFound span {
-  color: var(--c360-lemon);
-  font-size: .75rem;
-  font-weight: 950;
-  letter-spacing: .1em;
-  text-transform: uppercase;
+.notFound {
+  min-height: 70vh;
+  align-content: center;
 }
 
-.header h1,
-.notFound h1 {
+.heroStatus h1,
+.notFound h1,
+.sectionHead h2 {
   margin: 0;
   color: #fff;
-  font-size: 1.9rem;
   letter-spacing: -.04em;
 }
 
-.header p,
-.notFound p {
+.heroStatus h1 { font-size: 1.55rem; }
+.sectionHead h2 { font-size: 1rem; }
+.notFound h1 { font-size: 1.8rem; }
+
+.heroStatus p,
+.notFound p,
+.empty,
+.disclaimer {
   margin: 0;
   color: var(--c360-muted);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
-.header strong {
-  width: fit-content;
-  padding: .55rem .7rem;
-  border-radius: 999px;
-  color: #07100d;
-  background: var(--c360-lemon);
-}
-
-.summary,
-.list {
+.heroMoney,
+.accountSummary,
+.detailGrid {
   display: grid;
-  gap: .85rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
 }
 
-.summary {
-  grid-template-columns: 1fr;
-}
-
-.summary div,
-.card {
+.heroMoney div,
+.accountSummary div,
+.detailGrid div {
+  display: grid;
+  gap: .18rem;
+  padding: .62rem;
   border: 1px solid var(--c360-line);
-  border-radius: 1rem;
-  background: linear-gradient(180deg, rgba(16, 29, 49, .96), rgba(8, 18, 33, .97));
-  box-shadow: var(--c360-shadow-soft);
-}
-
-.summary div {
-  display: grid;
-  gap: .35rem;
-  padding: 1rem;
-}
-
-.summary span,
-.grid span,
-.money span,
-.note span {
-  color: var(--c360-muted);
-  font-size: .78rem;
-  font-weight: 800;
-}
-
-.summary strong,
-.grid strong,
-.money strong {
-  color: #fff;
-}
-
-.card {
-  display: grid;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.cardHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: .8rem;
-}
-
-.cardHead strong {
-  display: block;
-  color: #fff;
-  font-size: 1.05rem;
-}
-
-.cardHead span {
-  color: var(--c360-muted);
-}
-
-.grid,
-.money {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: .65rem;
-}
-
-.grid div,
-.money div,
-.payments,
-.note {
-  padding: .75rem;
-  border-radius: .8rem;
-  border: 1px solid var(--c360-line);
+  border-radius: .75rem;
   background: rgba(255, 255, 255, .035);
 }
 
-.grid div,
-.money div {
-  display: grid;
-  gap: .25rem;
-}
-
-.payments {
-  display: grid;
-  gap: .6rem;
-}
-
-.payments h2,
-.payments p,
-.note p {
-  margin: 0;
-}
-
-.payments h2 {
-  color: #fff;
-  font-size: 1rem;
-}
-
-.payments p,
-.note p {
+.heroMoney span,
+.accountSummary span,
+.detailGrid span,
+.sectionHead span {
   color: var(--c360-muted);
-  line-height: 1.5;
+  font-size: .68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .05em;
 }
 
-.payments div {
+.heroMoney strong,
+.accountSummary strong,
+.detailGrid strong {
+  color: #fff;
+  font-size: .94rem;
+  overflow-wrap: anywhere;
+}
+
+.heroMoney small,
+.accountSummary small,
+.updated {
+  color: var(--c360-muted);
+  font-size: .74rem;
+}
+
+.heroActions {
   display: grid;
-  gap: .2rem;
-  padding-bottom: .6rem;
-  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
 }
 
-.payments div:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+.sectionHead,
+.orderRow,
+.guideDetail summary,
+.paymentRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
 }
 
-.payments strong {
+.sectionHead strong {
+  color: var(--c360-lemon);
+  font-size: .85rem;
+}
+
+.orderRow,
+.paymentRow {
+  padding: .65rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .75rem;
+  background: rgba(255, 255, 255, .035);
+}
+
+.orderRow strong,
+.paymentRow strong,
+.guideDetail summary strong {
   color: #fff;
 }
 
-.payments span {
+.orderRow span,
+.paymentRow span,
+.guideDetail summary span {
+  display: block;
+  margin-top: .15rem;
   color: var(--c360-muted);
+  font-size: .78rem;
+  line-height: 1.32;
 }
 
 .badge {
@@ -186,291 +186,120 @@
   padding: .25rem .6rem;
   border-radius: 999px;
   border: 1px solid transparent;
-  font-size: .76rem;
-  font-weight: 900;
+  font-size: .74rem;
+  font-weight: 950;
+  white-space: nowrap;
 }
 
-.info {
-  color: #bfdbfe;
-  background: var(--c360-blue-bg);
-  border-color: rgba(116, 169, 255, .24);
-}
+.info { color: #bfdbfe; background: var(--c360-blue-bg); border-color: rgba(116, 169, 255, .24); }
+.ok { color: #c6fbdc; background: var(--c360-green-bg); border-color: rgba(57, 217, 138, .25); }
+.warn { color: #ffe6ad; background: var(--c360-warn-bg); border-color: rgba(217, 154, 33, .28); }
 
-.ok {
-  color: #c6fbdc;
-  background: var(--c360-green-bg);
-  border-color: rgba(57, 217, 138, .25);
-}
-
-.warn {
-  color: #ffe6ad;
-  background: var(--c360-warn-bg);
-  border-color: rgba(217, 154, 33, .28);
-}
-
-@media (min-width: 768px) {
-  .page {
-    padding: 1.5rem;
-  }
-
-  .header {
-    grid-template-columns: 1fr auto;
-    align-items: center;
-  }
-
-  .summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .grid,
-  .money {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1120px) {
-  .page {
-    padding: 2rem;
-  }
-
-  .list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.guideList {
+  display: grid;
+  gap: .5rem;
 }
 
 .guideDetail {
   display: grid;
-  gap: .75rem;
-  padding: .75rem;
+  gap: .7rem;
+  padding: .7rem;
   border: 1px solid var(--c360-line);
   border-radius: .85rem;
   background: rgba(255, 255, 255, .035);
 }
 
 .guideDetail summary {
-  display: grid;
-  gap: .2rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.guideDetail summary::-webkit-details-marker {
+  display: none;
+}
+
+.guideDetail summary b {
+  color: #07100d;
+  background: var(--c360-lemon);
+  border-radius: 999px;
+  padding: .28rem .55rem;
+  font-size: .7rem;
+}
+
+.guideActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.accordion {
+  padding: .72rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .8rem;
+  background: rgba(255, 255, 255, .035);
+}
+
+.accordion summary {
   cursor: pointer;
   color: #fff;
-  font-weight: 900;
-}
-
-.guideDetail summary span {
-  color: var(--c360-muted);
-  font-weight: 700;
-}
-
-.guideDetail p {
-  margin: 0;
-  color: var(--c360-muted);
-  line-height: 1.45;
+  font-weight: 950;
 }
 
 .clientBottomNav {
-  display: none;
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 45;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  padding: 9px 8px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(6, 17, 31, .96), rgba(3, 10, 19, .98));
+  box-shadow: 0 22px 70px rgba(0, 0, 0, .55);
+  backdrop-filter: blur(22px);
 }
 
-@media (max-width: 767px) {
-  .page {
-    padding: .8rem .8rem 7.6rem;
-  }
-
-  .header {
-    padding: .95rem;
-    border-radius: 1rem;
-  }
-
-  .header h1,
-  .notFound h1 {
-    font-size: 1.45rem;
-  }
-
-  .header p {
-    font-size: .86rem;
-  }
-
-  .header strong {
-    padding: .45rem .6rem;
-    font-size: .75rem;
-  }
-
-  .summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .55rem;
-  }
-
-  .summary div {
-    min-height: 4.35rem;
-    padding: .72rem;
-  }
-
-  .summary span,
-  .grid span,
-  .money span,
-  .note span {
-    font-size: .68rem;
-  }
-
-  .summary strong,
-  .grid strong,
-  .money strong {
-    font-size: .92rem;
-  }
-
-  .list {
-    gap: .7rem;
-  }
-
-  .card {
-    gap: .72rem;
-    padding: .85rem;
-    border-radius: 1rem;
-  }
-
-  .cardHead strong {
-    font-size: .95rem;
-  }
-
-  .cardHead span {
-    font-size: .76rem;
-  }
-
-  .grid,
-  .money {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .48rem;
-  }
-
-  .grid div,
-  .money div,
-  .payments,
-  .note {
-    padding: .62rem;
-    border-radius: .72rem;
-  }
-
-  .payments h2 {
-    font-size: .92rem;
-  }
-
-  .guideDetail summary {
-    display: grid;
-    gap: .1rem;
-  }
-
-  .clientBottomNav {
-    position: fixed;
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    z-index: 45;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    align-items: end;
-    gap: 4px;
-    padding: 9px 8px 13px;
-    border: 1px solid rgba(255, 255, 255, .12);
-    border-radius: 24px;
-    background: linear-gradient(180deg, rgba(6, 17, 31, .96), rgba(3, 10, 19, .98));
-    box-shadow: 0 22px 70px rgba(0, 0, 0, .55);
-    backdrop-filter: blur(22px);
-  }
-
-  .clientBottomNav a {
-    min-height: 48px;
-    display: grid;
-    place-items: center;
-    gap: 3px;
-    color: rgba(235, 243, 255, .66);
-    font-size: 10px;
-    font-weight: 900;
-    border-radius: 16px;
-  }
-
-  .clientBottomNav a span {
-    width: 24px;
-    height: 24px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    color: rgba(235, 243, 255, .78);
-    background: rgba(255, 255, 255, .045);
-    border: 1px solid rgba(255, 255, 255, .07);
-    font-size: 13px;
-    line-height: 1;
-  }
-
-  .clientBottomNav a strong {
-    font-size: 10px;
-    line-height: 1;
-  }
-
-  .clientBottomNav .clientFab {
-    min-height: 64px;
-    transform: translateY(-18px);
-    color: #fff;
-  }
-
-  .clientBottomNav .clientFab span {
-    width: 56px;
-    height: 56px;
-    color: #07100d;
-    background: radial-gradient(circle at 25% 20%, #f6ff90, var(--c360-lemon) 48%, #5ef3a4);
-    border: 1px solid rgba(255, 255, 255, .32);
-    font-size: 30px;
-    font-weight: 950;
-    box-shadow: 0 18px 36px rgba(183, 255, 60, .28);
-  }
-
-  .clientBottomNav small {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 2px;
-    color: rgba(235, 243, 255, .32);
-    text-align: center;
-    font-size: 8px;
-    letter-spacing: .08em;
-    pointer-events: none;
-  }
+.clientBottomNav a {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  color: rgba(235, 243, 255, .66);
+  font-size: 10px;
+  font-weight: 900;
+  border-radius: 16px;
 }
 
-.portalBrand {
-  display: inline-flex;
-  align-items: center;
-  gap: .6rem;
-  width: fit-content;
+.clientBottomNav a span {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: rgba(235, 243, 255, .78);
+  background: rgba(255, 255, 255, .045);
+  border: 1px solid rgba(255, 255, 255, .07);
+  font-size: 13px;
 }
 
-.portalBrand img {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  object-fit: cover;
-  box-shadow: 0 0 24px rgba(154, 255, 0, .18);
+.clientBottomNav a strong {
+  font-size: 10px;
+  line-height: 1;
 }
 
-@media (max-width: 767px) {
-  .portalBrand img {
-    width: 30px;
-    height: 30px;
+@media (min-width: 768px) {
+  .page { padding: 1.5rem; padding-bottom: 2rem; }
+  .heroStatus, .sectionCard, .notFound { max-width: 880px; margin-left: auto; margin-right: auto; padding: 1.1rem; }
+  .heroStatus h1 { font-size: 2rem; }
+  .clientBottomNav { display: none; }
+}
+
+@media (max-width: 420px) {
+  .heroMoney,
+  .accountSummary,
+  .detailGrid {
+    grid-template-columns: 1fr;
   }
-}
-
-/* v8 brand lockup inside client portal */
-.portalBrand {
-  display: inline-flex;
-  width: fit-content;
-  margin-bottom: .25rem;
-}
-
-.portalBrand > img,
-.portalBrand > span {
-  display: none;
-}
-
-.guideHint {
-  margin: -.2rem 0 .2rem !important;
-  color: var(--c360-muted) !important;
-  font-size: .82rem;
 }

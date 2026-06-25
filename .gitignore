@@ -1,23 +1,12 @@
-﻿# dependencies
-node_modules
-
-# next
+﻿node_modules
 .next
 out
-
-# deploy local
 .netlify
 .vercel
-
-# env
 .env
 .env.local
 .env.*.local
-
-# cache
 tsconfig.tsbuildinfo
-
-# logs
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*

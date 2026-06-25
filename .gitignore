@@ -1,12 +1,12 @@
-﻿node_modules
+node_modules
 .next
 out
-.netlify
-.vercel
 .env
 .env.local
-.env.*.local
-tsconfig.tsbuildinfo
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
+.DS_Store
+*.log
+
+.vercel
+
+# Local Netlify folder
+.netlify

@@ -12,13 +12,38 @@ import type {
 } from "@/infrastructure/supabase/types";
 
 export type ControlClient = ClientRow;
-export type ControlShipment = OperationShipmentRow;
-export type ControlPayment = OperationPaymentRow;
+export type PassPaymentStatus = "pendiente" | "parcial" | "pagado" | "anulado";
+
+export type ControlShipment = OperationShipmentRow & {
+  pass_payment_status?: PassPaymentStatus;
+  pass_paid_at?: string | null;
+  pass_payment_id?: string | null;
+};
+export type ControlPayment = OperationPaymentRow & { selected_pass_ids?: string[] };
+
+export type SpecialMovementType = "pago_proveedor" | "adelanto_jeremias" | "dinero_recibido" | "mercaderia_agotada" | "devolucion" | "aplicado_otra_compra";
+export type SpecialMovementStatus = "pendiente" | "pagado_proveedor" | "mercaderia_confirmada" | "mercaderia_agotada" | "a_devolver" | "aplicado_otra_compra" | "reintegrado" | "cerrado";
+
+export type SpecialMovement = {
+  id: string;
+  operation_id: string;
+  client_id: string;
+  type: SpecialMovementType;
+  status: SpecialMovementStatus;
+  provider_name: string;
+  amount: number;
+  currency: Currency;
+  money_source: "cliente_envio" | "jeremias_adelanto";
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type ControlOperation = OperationRow & {
   clients: Pick<ClientRow, "id" | "name" | "phone" | "default_price_per_package" | "private_code"> | null;
   operation_shipments: ControlShipment[];
   operation_payments: ControlPayment[];
+  special_movements?: SpecialMovement[];
 };
 
 export type ControlBultosData = {
@@ -74,6 +99,20 @@ export type PaymentInput = {
   amount: number;
   note?: string;
   markGuideReimbursed?: boolean;
+  selectedPassIds?: string[];
+  dollarRate?: number;
+};
+
+export type SpecialMovementInput = {
+  operation_id: string;
+  client_id: string;
+  type: SpecialMovementType;
+  status: SpecialMovementStatus;
+  provider_name: string;
+  amount: number;
+  currency: Currency;
+  money_source: "cliente_envio" | "jeremias_adelanto";
+  note?: string;
 };
 
 export type OperationTotals = {

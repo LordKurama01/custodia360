@@ -9,19 +9,29 @@ import { OwnerDesktopShell } from "@/modules/layout/owner-desktop/OwnerDesktopSh
 import { Button } from "@/shared/components/Button";
 import { Card } from "@/shared/components/Card";
 import { Field, Input, Select, Textarea } from "@/shared/components/Fields";
-import { DataTable } from "@/shared/components/Table";
 import { formatDate, formatMoney } from "@/shared/lib/format";
 import { calculateOperationDraftTotal, calculateOperationTotals, toNumber } from "../lib/calculations";
 import {
   createOperation,
   createPayment,
   createQuickClient,
+  createSpecialMovement,
   getControlBultosData,
   saveShipment,
   updateLogisticsStatus,
   updateOperation,
 } from "../services/controlBultos.service";
-import type { ClientQuickInput, ControlBultosData, ControlOperation, OperationFormInput, PaymentInput, ShipmentInput } from "../types";
+import type {
+  ClientQuickInput,
+  ControlBultosData,
+  ControlOperation,
+  ControlShipment,
+  OperationFormInput,
+  PaymentInput,
+  ShipmentInput,
+  SpecialMovement,
+  SpecialMovementInput,
+} from "../types";
 import {
   DEFAULT_DOLLAR_RATE,
   calculateGuideCharge,
@@ -38,6 +48,38 @@ import {
 import styles from "./ControlBultosView.module.css";
 
 const today = () => new Date().toISOString().slice(0, 10);
+const accountOpenStatuses = new Set(["pendiente", "pagado_proveedor", "a_devolver", "mercaderia_agotada"]);
+
+type MainTab = "seguimiento" | "cuentas" | "guias" | "mas";
+type QuickPanel = "cliente" | "operacion" | "guia" | "pago" | "especial" | null;
+
+type AccountPass = {
+  id: string;
+  operationId: string;
+  operationCode: string;
+  provider: string;
+  guideNumber: string;
+  company: string;
+  recipient: string;
+  amountUsd: number;
+  status: "pendiente" | "pagado" | "parcial" | "anulado";
+  date?: string | null;
+};
+
+type ClientAccount = {
+  clientId: string;
+  clientName: string;
+  phone: string | null;
+  operations: ControlOperation[];
+  pendingPasses: AccountPass[];
+  paidPasses: AccountPass[];
+  guideReimbursements: Array<{ id: string; operationCode: string; guideNumber: string; company: string; amountArs: number }>;
+  specialPending: SpecialMovement[];
+  payments: ControlOperation["operation_payments"];
+  passUsdPending: number;
+  guideArsPending: number;
+  specialArsPending: number;
+};
 
 const emptyClientForm: ClientQuickInput = {
   name: "",
@@ -83,12 +125,28 @@ function emptyShipmentForm(operationId = ""): ShipmentInput {
 function emptyPaymentForm(operationId = ""): PaymentInput {
   return {
     operation_id: operationId,
-    concept: "Pago de pases",
+    concept: "Pago de cuenta corriente",
     method: "efectivo_pesos",
     currency: "ARS",
     amount: 0,
     note: "",
     markGuideReimbursed: false,
+    selectedPassIds: [],
+    dollarRate: DEFAULT_DOLLAR_RATE,
+  };
+}
+
+function emptySpecialMovementForm(operation?: ControlOperation | null): SpecialMovementInput {
+  return {
+    operation_id: operation?.id ?? "",
+    client_id: operation?.client_id ?? "",
+    type: "adelanto_jeremias",
+    status: "pendiente",
+    provider_name: "",
+    amount: 0,
+    currency: "ARS",
+    money_source: "jeremias_adelanto",
+    note: "",
   };
 }
 
@@ -97,74 +155,143 @@ function moneyUsd(value: number) {
 }
 
 function statusClass(status: LogisticsStatus | GuidePaymentStatus | string) {
-  if (status === "despachado" || status === "pago_total" || status === "reintegrada" || status === "pagada_por_cliente") return styles.ok;
-  if (status === "pendiente_reintegro" || status === "pendiente" || status === "para_retirar") return styles.warn;
-  if (status === "retirado" || status === "cd" || status === "deposito_a" || status === "deposito_b" || status === "pago_parcial") return styles.info;
+  if (["despachado", "pago_total", "reintegrada", "pagada_por_cliente", "pagado", "cerrado", "reintegrado"].includes(status)) return styles.ok;
+  if (["pendiente_reintegro", "pendiente", "para_retirar", "pagada_por_jeremias"].includes(status)) return styles.warn;
+  if (["retirado", "cd", "deposito_a", "deposito_b", "pago_parcial", "parcial", "pagado_proveedor"].includes(status)) return styles.info;
   return styles.neutral;
 }
 
 function guideNumbers(operation: ControlOperation) {
-  return operation.operation_shipments.length
-    ? operation.operation_shipments.map((shipment) => shipment.guide_number || "Sin número").join(", ")
-    : "Sin guías";
+  if (!operation.operation_shipments.length) return "Sin guías";
+  const list = operation.operation_shipments.map((shipment) => shipment.guide_number || "Sin número");
+  return list.length > 2 ? `${list.slice(0, 2).join(", ")} +${list.length - 2}` : list.join(", ");
 }
 
 function guideChargeLabel(company: string | null | undefined, amount: number) {
   const charge = calculateGuideCharge(company, amount);
   if ((company ?? "").toLowerCase().includes("vía cargo") || (company ?? "").toLowerCase().includes("via cargo")) {
-    return `${formatMoney(charge)} (incluye 2%)`;
+    return `${formatMoney(charge)} incl. 2%`;
   }
   return formatMoney(charge);
 }
 
-function buildGuideWhatsAppLine(shipment: ControlOperation["operation_shipments"][number], index: number) {
-  const guideNumber = shipment.guide_number ?? "Sin guía";
-  const company = shipment.company ?? "Sin empresa";
-  const recipient = shipment.recipient_name ? `Destinatario: ${shipment.recipient_name}` : "Destinatario pendiente";
-  const guideValue = guideChargeLabel(shipment.company, Number(shipment.guide_amount || 0));
-  const passUsd = Number(shipment.pass_usd_amount || 0);
-  const passText = passUsd > 0 ? `Pase: ${moneyUsd(passUsd)} / hoy ${formatMoney(passUsd * DEFAULT_DOLLAR_RATE)}` : "Pase: sin cargar";
-
-  let paymentText = "Guía pendiente de pago";
-  if (shipment.guide_payment_status === "pagada_por_cliente") {
-    paymentText = `Guía pagada por el cliente / en destino: ${guideValue}`;
-  } else if (shipment.guide_payment_status === "pagada_por_jeremias") {
-    paymentText = `Guía pagada por Jeremías, a reintegrar: ${guideValue}`;
-  } else if (shipment.guide_payment_status === "pendiente_reintegro") {
-    paymentText = `Guía pendiente de reintegro: ${guideValue}`;
-  } else if (shipment.guide_payment_status === "reintegrada") {
-    paymentText = `Guía reintegrada: ${guideValue}`;
-  } else if (Number(shipment.guide_amount || 0) > 0) {
-    paymentText = `Guía no pagada / pendiente: ${guideValue}`;
-  }
-
-  return `${index + 1}) Guía ${guideNumber} - ${company} - ${recipient} - ${passText} - ${paymentText}`;
+function shipmentPassStatus(shipment: ControlShipment): AccountPass["status"] {
+  if (shipment.pass_payment_status === "pagado") return "pagado";
+  if (shipment.pass_payment_status === "parcial") return "parcial";
+  if (shipment.pass_payment_status === "anulado") return "anulado";
+  return "pendiente";
 }
 
-function buildWhatsAppSummary(operation: ControlOperation) {
-  const totals = calculateOperationTotals(operation);
-  const hasDestinationPaidGuides = operation.operation_shipments.some((shipment) => shipment.guide_payment_status === "pagada_por_cliente");
-  const hasChargeableGuides = operation.operation_shipments.some((shipment) => shipment.guide_payment_status !== "pagada_por_cliente" && Number(shipment.guide_amount || 0) > 0);
+function movementLabel(movement: SpecialMovement) {
+  const labels: Record<SpecialMovement["type"], string> = {
+    pago_proveedor: "Pago a proveedor",
+    adelanto_jeremias: "Adelanto Jeremías",
+    dinero_recibido: "Dinero recibido",
+    mercaderia_agotada: "Mercadería agotada",
+    devolucion: "Devolución",
+    aplicado_otra_compra: "Aplicado a otra compra",
+  };
+  return labels[movement.type] ?? "Movimiento especial";
+}
+
+function createPassItem(operation: ControlOperation, shipment: ControlShipment): AccountPass | null {
+  const amountUsd = toNumber(shipment.pass_usd_amount);
+  if (amountUsd <= 0) return null;
+  return {
+    id: shipment.id,
+    operationId: operation.id,
+    operationCode: operation.public_code,
+    provider: operation.provider_name,
+    guideNumber: shipment.guide_number ?? "Sin guía",
+    company: shipment.company ?? "Sin empresa",
+    recipient: shipment.recipient_name ?? operation.clients?.name ?? "Cliente",
+    amountUsd,
+    status: shipmentPassStatus(shipment),
+    date: shipment.pass_date,
+  };
+}
+
+function buildClientAccounts(operations: ControlOperation[]): ClientAccount[] {
+  const map = new Map<string, ClientAccount>();
+
+  operations.forEach((operation) => {
+    const clientId = operation.client_id;
+    const account = map.get(clientId) ?? {
+      clientId,
+      clientName: operation.clients?.name ?? "Sin cliente",
+      phone: operation.clients?.phone ?? null,
+      operations: [],
+      pendingPasses: [],
+      paidPasses: [],
+      guideReimbursements: [],
+      specialPending: [],
+      payments: [],
+      passUsdPending: 0,
+      guideArsPending: 0,
+      specialArsPending: 0,
+    };
+
+    account.operations.push(operation);
+    account.payments.push(...operation.operation_payments);
+
+    operation.operation_shipments.forEach((shipment) => {
+      const pass = createPassItem(operation, shipment);
+      if (pass) {
+        if (pass.status === "pagado") account.paidPasses.push(pass);
+        if (pass.status !== "pagado" && pass.status !== "anulado") account.pendingPasses.push(pass);
+      }
+
+      if (["pagada_por_jeremias", "pendiente_reintegro"].includes(shipment.guide_payment_status)) {
+        const amountArs = calculateGuideCharge(shipment.company, toNumber(shipment.guide_amount));
+        account.guideReimbursements.push({
+          id: shipment.id,
+          operationCode: operation.public_code,
+          guideNumber: shipment.guide_number ?? "Sin guía",
+          company: shipment.company ?? "Sin empresa",
+          amountArs,
+        });
+      }
+    });
+
+    (operation.special_movements ?? []).forEach((movement) => {
+      if (accountOpenStatuses.has(movement.status)) account.specialPending.push(movement);
+    });
+
+    map.set(clientId, account);
+  });
+
+  return Array.from(map.values()).map((account) => ({
+    ...account,
+    passUsdPending: account.pendingPasses.reduce((sum, item) => sum + item.amountUsd, 0),
+    guideArsPending: account.guideReimbursements.reduce((sum, item) => sum + item.amountArs, 0),
+    specialArsPending: account.specialPending.reduce((sum, item) => item.currency === "ARS" ? sum + item.amount : sum, 0),
+    payments: account.payments.sort((a, b) => new Date(b.paid_at).getTime() - new Date(a.paid_at).getTime()),
+  })).sort((a, b) => (b.passUsdPending + b.guideArsPending / DEFAULT_DOLLAR_RATE + b.specialArsPending / DEFAULT_DOLLAR_RATE) - (a.passUsdPending + a.guideArsPending / DEFAULT_DOLLAR_RATE + a.specialArsPending / DEFAULT_DOLLAR_RATE));
+}
+
+function buildAccountWhatsApp(account: ClientAccount) {
   const lines = [
-    `Hola ${operation.clients?.name ?? ""}, te paso el resumen actualizado.`,
+    `Hola ${account.clientName}, te paso tu resumen actualizado.`,
     "",
-    `Pedido: ${operation.public_code}`,
-    `Estado: ${clientLogisticsLabels[operation.logistics_status]}`,
-    `Dólar tomado al día de hoy: $${DEFAULT_DOLLAR_RATE}`,
+    `Dólar tomado hoy: $${DEFAULT_DOLLAR_RATE}`,
     "",
-    `Pases pendientes: USD ${operation.pass_amount}`,
-    `Equivalente hoy: ${formatMoney(totals.passAmountArs)}`,
+    "Pases pendientes:",
+    ...(account.pendingPasses.length ? account.pendingPasses.map((item) => `- ${item.guideNumber} · ${item.company} · ${moneyUsd(item.amountUsd)} · hoy ${formatMoney(item.amountUsd * DEFAULT_DOLLAR_RATE)}`) : ["- Sin pases pendientes"]),
     "",
-    "Guías / pedidos:",
-    ...operation.operation_shipments.map(buildGuideWhatsAppLine),
-    "",
-    `Total pases al día de hoy: ${formatMoney(totals.passAmountArs)}`,
-    hasChargeableGuides ? `Guías pendientes / a reintegrar: ${formatMoney(totals.guideToCharge)}` : "",
-    hasChargeableGuides ? `Total estimado hoy: ${formatMoney(totals.passAmountArs + totals.guideToCharge)}` : "",
-    hasDestinationPaidGuides ? "Las guías pagadas por el cliente/en destino quedan informadas, pero no están sumadas al saldo." : "",
-    "El equivalente en pesos puede actualizarse si cambia el dólar al momento del pago.",
+    `Total pases pendientes: ${moneyUsd(account.passUsdPending)}`,
+    `Equivalente hoy: ${formatMoney(account.passUsdPending * DEFAULT_DOLLAR_RATE)}`,
   ];
-  return lines.filter(Boolean).join("\n");
+
+  if (account.guideReimbursements.length) {
+    lines.push("", "Guías a reintegrar:", ...account.guideReimbursements.map((item) => `- ${item.guideNumber} · ${item.company} · ${formatMoney(item.amountArs)}`), `Total guías: ${formatMoney(account.guideArsPending)}`);
+  }
+
+  if (account.specialPending.length) {
+    lines.push("", "Movimientos especiales:", ...account.specialPending.map((item) => `- ${movementLabel(item)} · ${item.provider_name} · ${item.currency === "ARS" ? formatMoney(item.amount) : moneyUsd(item.amount)} · estado ${item.status.replaceAll("_", " ")}`));
+  }
+
+  lines.push("", `Total adicional ARS: ${formatMoney(account.guideArsPending + account.specialArsPending)}`, "Aclaración: el equivalente en pesos puede variar según el dólar al momento del pago.");
+  return lines.join("\n");
 }
 
 export function ControlBultosView() {
@@ -174,21 +301,21 @@ export function ControlBultosView() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<MainTab>("seguimiento");
+  const [quickPanel, setQuickPanel] = useState<QuickPanel>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [selectedPassIds, setSelectedPassIds] = useState<string[]>([]);
   const [clientForm, setClientForm] = useState<ClientQuickInput>(emptyClientForm);
   const [operationForm, setOperationForm] = useState<OperationFormInput>(emptyOperationForm());
   const [shipmentOperation, setShipmentOperation] = useState<ControlOperation | null>(null);
   const [shipmentForm, setShipmentForm] = useState<ShipmentInput>(emptyShipmentForm());
   const [paymentOperation, setPaymentOperation] = useState<ControlOperation | null>(null);
   const [paymentForm, setPaymentForm] = useState<PaymentInput>(emptyPaymentForm());
+  const [specialOperation, setSpecialOperation] = useState<ControlOperation | null>(null);
+  const [specialForm, setSpecialForm] = useState<SpecialMovementInput>(emptySpecialMovementForm());
   const [detailOperation, setDetailOperation] = useState<ControlOperation | null>(null);
-  const [filters, setFilters] = useState({
-    query: "",
-    logistics_status: "",
-    financial_status: "",
-    date: "",
-    shipping_company: "",
-  });
+  const [filters, setFilters] = useState({ query: "", logistics_status: "", financial_status: "" });
 
   const demoMode = isDemoMode();
   const canEdit = canEditOperations(profile?.role);
@@ -198,7 +325,6 @@ export function ControlBultosView() {
   const load = async () => {
     setLoading(true);
     setError("");
-
     try {
       if (isDemoMode()) {
         setProfile(demoProfile);
@@ -213,9 +339,7 @@ export function ControlBultosView() {
       const loaded = await getControlBultosData();
       setData(loaded);
       const firstClient = loaded.clients[0];
-      if (!operationForm.client_id && firstClient) {
-        setOperationForm(emptyOperationForm(firstClient.id, toNumber(firstClient.default_price_per_package)));
-      }
+      if (!operationForm.client_id && firstClient) setOperationForm(emptyOperationForm(firstClient.id, toNumber(firstClient.default_price_per_package)));
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No se pudo cargar Control de Bultos.");
     } finally {
@@ -228,61 +352,71 @@ export function ControlBultosView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const applyHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (hash === "cuentas") setActiveTab("cuentas");
+      if (hash === "guias") setActiveTab("guias");
+      if (hash === "mas") setActiveTab("mas");
+      if (hash === "seguimiento" || !hash) setActiveTab("seguimiento");
+      if (hash === "nueva") openQuickPanel("operacion");
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.clients.length]);
+
   const filteredOperations = useMemo(() => {
     const query = filters.query.trim().toLowerCase();
     return data.operations.filter((operation) => {
       const shipmentText = operation.operation_shipments.map((shipment) => [shipment.company, shipment.guide_number, shipment.recipient_name, shipment.recipient_identity_number].join(" ")).join(" ");
-      const haystack = [
-        operation.public_code,
-        operation.clients?.name,
-        operation.clients?.phone,
-        operation.provider_name,
-        shipmentText,
-        operation.note,
-      ].join(" ").toLowerCase();
-
+      const specialText = (operation.special_movements ?? []).map((movement) => [movement.provider_name, movement.note].join(" ")).join(" ");
+      const haystack = [operation.public_code, operation.clients?.name, operation.clients?.phone, operation.provider_name, shipmentText, specialText, operation.note].join(" ").toLowerCase();
       return (!query || haystack.includes(query))
         && (!filters.logistics_status || operation.logistics_status === filters.logistics_status)
-        && (!filters.financial_status || operation.financial_status === filters.financial_status)
-        && (!filters.date || operation.operation_date === filters.date)
-        && (!filters.shipping_company || operation.operation_shipments.some((shipment) => (shipment.company ?? "").toLowerCase().includes(filters.shipping_company.toLowerCase())));
+        && (!filters.financial_status || operation.financial_status === filters.financial_status);
     });
   }, [data.operations, filters]);
 
-  const kpis = useMemo(() => {
-    return data.operations.reduce((acc, operation) => {
-      const totals = calculateOperationTotals(operation);
-      acc.totalPackages += operation.package_count;
-      acc.passUsd += toNumber(operation.pass_amount);
-      acc.balance += totals.balanceArs;
-      if (operation.logistics_status === "para_retirar") acc.pendingPickup += 1;
-      if (operation.logistics_status === "despachado") acc.dispatched += 1;
-      acc.guideReimbursements += operation.operation_shipments
-        .filter((shipment) => shipment.guide_payment_status === "pendiente_reintegro")
-        .reduce((sum, shipment) => sum + toNumber(shipment.guide_amount), 0);
-      return acc;
-    }, { totalPackages: 0, passUsd: 0, pendingPickup: 0, dispatched: 0, balance: 0, guideReimbursements: 0 });
-  }, [data.operations]);
+  const accounts = useMemo(() => buildClientAccounts(data.operations), [data.operations]);
+  const selectedAccount = accounts.find((account) => account.clientId === selectedAccountId) ?? accounts[0] ?? null;
 
-  const draftTotal = calculateOperationDraftTotal(operationForm);
+  const kpis = useMemo(() => {
+    return accounts.reduce((acc, account) => {
+      acc.passUsd += account.passUsdPending;
+      acc.guideArs += account.guideArsPending;
+      acc.specialArs += account.specialArsPending;
+      acc.pendingPasses += account.pendingPasses.length;
+      return acc;
+    }, { passUsd: 0, guideArs: 0, specialArs: 0, pendingPasses: 0 });
+  }, [accounts]);
 
   const selectedClient = data.clients.find((client) => client.id === operationForm.client_id);
+  const draftTotal = calculateOperationDraftTotal(operationForm);
+  const paymentPassOptions = paymentOperation ? paymentOperation.operation_shipments.map((shipment) => createPassItem(paymentOperation, shipment)).filter((item): item is AccountPass => !!item && item.status !== "pagado" && item.status !== "anulado") : [];
+  const selectedPassTotalUsd = paymentPassOptions.filter((item) => selectedPassIds.includes(item.id)).reduce((sum, item) => sum + item.amountUsd, 0);
+  const selectedPassTotalArs = selectedPassTotalUsd * DEFAULT_DOLLAR_RATE;
+
+  const openQuickPanel = (panel: QuickPanel) => {
+    setQuickPanel(panel);
+    if (panel === "cliente") setClientForm(emptyClientForm);
+    if (panel === "operacion") {
+      const firstClient = data.clients[0];
+      setEditingId(null);
+      setOperationForm(emptyOperationForm(firstClient?.id ?? "", toNumber(firstClient?.default_price_per_package)));
+    }
+  };
 
   const submitClient = async () => {
-    if (!clientForm.name.trim()) {
-      setError("El nombre del cliente es obligatorio.");
-      return;
-    }
-
+    if (!clientForm.name.trim()) return setError("El nombre del cliente es obligatorio.");
     setSaving(true);
     setError("");
-
     try {
       const client = await createQuickClient(clientForm);
       setMessage(`Cliente creado: ${client.name}`);
-      setClientForm(emptyClientForm);
+      setQuickPanel(null);
       await load();
-      setOperationForm(emptyOperationForm(client.id, toNumber(client.default_price_per_package)));
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "No se pudo crear el cliente.");
     } finally {
@@ -294,23 +428,21 @@ export function ControlBultosView() {
     if (!canEdit) return setError("Tu rol no permite crear o editar operaciones.");
     if (!operationForm.client_id) return setError("Selecciona un cliente.");
     if (!operationForm.provider_name.trim()) return setError("El local/proveedor es obligatorio.");
-
     setSaving(true);
     setError("");
-
     try {
       if (editingId) {
         await updateOperation(editingId, operationForm);
-        setMessage("Operacion actualizada.");
+        setMessage("Operación actualizada.");
       } else {
         await createOperation(operationForm);
-        setMessage("Operacion creada.");
+        setMessage("Operación creada.");
       }
       setEditingId(null);
-      setOperationForm(emptyOperationForm(operationForm.client_id, selectedClient?.default_price_per_package ?? 0));
+      setQuickPanel(null);
       await load();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo guardar la operacion.");
+      setError(submitError instanceof Error ? submitError.message : "No se pudo guardar la operación.");
     } finally {
       setSaving(false);
     }
@@ -329,49 +461,71 @@ export function ControlBultosView() {
       pass_amount: toNumber(operation.pass_amount),
       visible_to_client: operation.visible_to_client,
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setQuickPanel("operacion");
   };
 
   const startShipment = (operation: ControlOperation) => {
     setShipmentOperation(operation);
     setShipmentForm(emptyShipmentForm(operation.id));
+    setQuickPanel("guia");
   };
 
   const startPayment = (operation: ControlOperation) => {
     setPaymentOperation(operation);
-    setPaymentForm(emptyPaymentForm(operation.id));
+    const form = emptyPaymentForm(operation.id);
+    setPaymentForm(form);
+    setSelectedPassIds([]);
+    setQuickPanel("pago");
+  };
+
+  const startSpecial = (operation: ControlOperation) => {
+    setSpecialOperation(operation);
+    setSpecialForm(emptySpecialMovementForm(operation));
+    setQuickPanel("especial");
   };
 
   const submitShipment = async () => {
     if (!shipmentOperation) return;
-    if (!canEdit) return setError("Tu rol no permite cargar guias.");
-
+    if (!canEdit) return setError("Tu rol no permite cargar guías.");
     setSaving(true);
     setError("");
-
     try {
       await saveShipment(shipmentForm);
-      setMessage("Guia guardada.");
+      setMessage("Guía guardada.");
       setShipmentOperation(null);
+      setQuickPanel(null);
       await load();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo guardar la guia.");
+      setError(submitError instanceof Error ? submitError.message : "No se pudo guardar la guía.");
     } finally {
       setSaving(false);
     }
   };
 
+  const syncPaymentAmount = (ids: string[], currency = paymentForm.currency) => {
+    const usd = paymentPassOptions.filter((item) => ids.includes(item.id)).reduce((sum, item) => sum + item.amountUsd, 0);
+    const amount = currency === "USD" ? usd : usd * DEFAULT_DOLLAR_RATE;
+    setPaymentForm((current) => ({ ...current, selectedPassIds: ids, currency, amount: amount || current.amount }));
+  };
+
   const submitPayment = async () => {
     if (!paymentOperation) return;
     if (!canCollect) return setError("Tu rol no permite cargar pagos.");
-
+    const amount = paymentForm.amount || (paymentForm.currency === "USD" ? selectedPassTotalUsd : selectedPassTotalArs);
+    if (!amount || amount <= 0) return setError("El monto debe ser mayor a cero.");
     setSaving(true);
     setError("");
-
     try {
-      await createPayment(paymentForm);
-      setMessage("Pago cargado.");
+      await createPayment({
+        ...paymentForm,
+        amount,
+        selectedPassIds,
+        dollarRate: DEFAULT_DOLLAR_RATE,
+        note: [paymentForm.note, selectedPassIds.length ? `Pases cancelados: ${selectedPassIds.join(", ")}` : ""].filter(Boolean).join(" | "),
+      });
+      setMessage(selectedPassIds.length ? `Pago cargado. Pases cancelados: ${selectedPassIds.length}.` : "Pago cargado.");
       setPaymentOperation(null);
+      setQuickPanel(null);
       await load();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "No se pudo cargar el pago.");
@@ -380,23 +534,45 @@ export function ControlBultosView() {
     }
   };
 
+  const submitSpecialMovement = async () => {
+    if (!specialOperation) return;
+    if (!canEdit) return setError("Tu rol no permite cargar movimientos especiales.");
+    setSaving(true);
+    setError("");
+    try {
+      await createSpecialMovement(specialForm);
+      setMessage("Movimiento especial cargado.");
+      setSpecialOperation(null);
+      setQuickPanel(null);
+      await load();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "No se pudo cargar el movimiento especial.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const copyClientLink = async (operation: ControlOperation) => {
-    const code = operation.public_code;
-    const url = `${window.location.origin}/consulta/${code}`;
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(`${window.location.origin}/consulta/${operation.public_code}`);
     setMessage("Link de consulta copiado.");
   };
 
-  const copyWhatsAppSummary = async (operation: ControlOperation) => {
-    await navigator.clipboard.writeText(buildWhatsAppSummary(operation));
-    setMessage("Resumen para WhatsApp copiado.");
+  const copyWhatsAppOperation = async (operation: ControlOperation) => {
+    const account = accounts.find((item) => item.clientId === operation.client_id);
+    if (!account) return;
+    await navigator.clipboard.writeText(buildAccountWhatsApp(account));
+    setMessage("Resumen de cuenta corriente copiado.");
+  };
+
+  const copyWhatsAppAccount = async (account: ClientAccount) => {
+    await navigator.clipboard.writeText(buildAccountWhatsApp(account));
+    setMessage("Resumen de cuenta corriente copiado.");
   };
 
   const changeStatus = async (operationId: string, value: LogisticsStatus) => {
     if (!canEdit) return setError("Tu rol no permite cambiar estados.");
     setSaving(true);
     setError("");
-
     try {
       await updateLogisticsStatus(operationId, value);
       await load();
@@ -409,446 +585,274 @@ export function ControlBultosView() {
 
   const onOperationClientChange = (clientId: string) => {
     const client = data.clients.find((item) => item.id === clientId);
-    setOperationForm((current) => ({
-      ...current,
-      client_id: clientId,
-      price_per_package: toNumber(client?.default_price_per_package),
-    }));
+    setOperationForm((current) => ({ ...current, client_id: clientId, price_per_package: toNumber(client?.default_price_per_package) }));
   };
 
   const onShipmentPaidByChange = (paidBy: GuidePaidBy) => {
-    const status: GuidePaymentStatus = paidBy === "jeremias"
-      ? "pendiente_reintegro"
-      : paidBy === "cliente"
-        ? "pagada_por_cliente"
-        : "pendiente";
-    setShipmentForm((current) => ({
-      ...current,
-      paid: paidBy !== "pendiente",
-      guide_paid_by: paidBy,
-      guide_payment_status: status,
-      amount: current.amount || current.guide_amount,
-    }));
+    const status: GuidePaymentStatus = paidBy === "jeremias" ? "pendiente_reintegro" : paidBy === "cliente" ? "pagada_por_cliente" : "pendiente";
+    setShipmentForm((current) => ({ ...current, paid: paidBy !== "pendiente", guide_paid_by: paidBy, guide_payment_status: status, amount: current.amount || current.guide_amount }));
   };
 
   const onPaymentMethodChange = (method: PaymentMethod, target: "payment" | "shipment") => {
     const currency = paymentMethodOptions.find((item) => item.value === method)?.currency ?? "ARS";
-    if (target === "payment") setPaymentForm((current) => ({ ...current, method, currency }));
+    if (target === "payment") {
+      setPaymentForm((current) => ({ ...current, method, currency }));
+      syncPaymentAmount(selectedPassIds, currency);
+    }
     if (target === "shipment") setShipmentForm((current) => ({ ...current, method, currency }));
   };
 
-  return <OwnerDesktopShell title="Seguimiento principal">
-    <section id="seguimiento" className={styles.hero}>
+  return <OwnerDesktopShell title="Seguimiento">
+    <section id="seguimiento" className={styles.topBar}>
       <div>
-        <p>Control de bultos</p>
-        <h2>Seguimiento operativo</h2>
-        <span>{demoMode ? "Demo local: bultos, estados, guías, pases USD y WhatsApp." : "Operación real: bultos, estados, guías, pases USD y WhatsApp."}</span>
+        <p>Control de bultos + cuenta corriente</p>
+        <h2>Operación del día</h2>
+        <span>{demoMode ? "Demo local" : "Operación real"} · Dólar hoy ${DEFAULT_DOLLAR_RATE} · {profile?.full_name ?? profile?.email ?? "Owner"}</span>
       </div>
-      <div className={styles.roleBox}>
-        <span>{demoMode ? "Demo" : "Usuario"}</span>
-        <strong>{profile?.full_name ?? profile?.email ?? "Validando sesion"}</strong>
-        <small>{demoMode ? "Los cambios quedan guardados en este navegador" : profile?.role ? `Rol: ${profile.role}` : "Perfil requerido para operar"}</small>
-      </div>
+      <Button onClick={() => openQuickPanel("operacion")}>+ Nueva</Button>
     </section>
 
     {message ? <div className={styles.success}>{message}</div> : null}
     {error ? <div className={styles.error}>{error}</div> : null}
 
-    <section className={styles.mobileQuickActions} aria-label="Acciones rápidas">
-      <a href="#nueva">+ Bulto</a>
-      <a href="#guias">Guías</a>
-      <a href="#pases">Pases</a>
-      <a href="#whatsapp">WhatsApp</a>
+    <nav className={styles.appTabs} aria-label="Navegación operativa">
+      <button className={activeTab === "seguimiento" ? styles.activeTab : ""} onClick={() => setActiveTab("seguimiento")}>Seguimiento</button>
+      <button id="cuentas" className={activeTab === "cuentas" ? styles.activeTab : ""} onClick={() => setActiveTab("cuentas")}>Cuentas</button>
+      <button className={styles.fabTab} onClick={() => openQuickPanel("operacion")}>+</button>
+      <button id="guias" className={activeTab === "guias" ? styles.activeTab : ""} onClick={() => setActiveTab("guias")}>Guías</button>
+      <button className={activeTab === "mas" ? styles.activeTab : ""} onClick={() => setActiveTab("mas")}>Más</button>
+    </nav>
+
+    <section className={styles.kpiStrip}>
+      <Card className={styles.kpi}><span>Pases pendientes</span><strong>{canSeeMoney ? moneyUsd(kpis.passUsd) : "-"}</strong><small>{canSeeMoney ? formatMoney(kpis.passUsd * DEFAULT_DOLLAR_RATE) : ""}</small></Card>
+      <Card className={styles.kpi}><span>Guías reintegro</span><strong>{canSeeMoney ? formatMoney(kpis.guideArs) : "-"}</strong><small>{kpis.pendingPasses} pases abiertos</small></Card>
+      <Card className={styles.kpi}><span>Mov. especiales</span><strong>{canSeeMoney ? formatMoney(kpis.specialArs) : "-"}</strong><small>Proveedor / adelantos</small></Card>
     </section>
 
-    <section className={styles.kpis}>
-      <Card className={styles.kpi}><span>Total bultos</span><strong>{kpis.totalPackages}</strong></Card>
-      <Card className={styles.kpi}><span>Para retirar</span><strong>{kpis.pendingPickup}</strong></Card>
-      <Card className={styles.kpi}><span>Despachados</span><strong>{kpis.dispatched}</strong></Card>
-      <Card className={styles.kpi}><span>Pases pendientes</span><strong>{canSeeMoney ? moneyUsd(kpis.passUsd) : "-"}</strong></Card>
-      <Card className={styles.kpi}><span>Equiv. hoy</span><strong>{canSeeMoney ? formatMoney(kpis.passUsd * DEFAULT_DOLLAR_RATE) : "-"}</strong></Card>
-      <Card className={styles.kpi}><span>Guias a reintegrar</span><strong>{canSeeMoney ? formatMoney(kpis.guideReimbursements) : "-"}</strong></Card>
-    </section>
-
-    <Card className={styles.flowCard}>
-      <div className={styles.cardHead}>
-        <div><p>Seguimiento claro</p><h3>Estados internos y vista cliente</h3></div>
-        <strong>Dólar demo: ${DEFAULT_DOLLAR_RATE}</strong>
+    <Card className={styles.searchCard}>
+      <Input value={filters.query} onChange={(event) => setFilters({ ...filters, query: event.target.value })} placeholder="Buscar cliente, guía, bulto o proveedor" />
+      <div className={styles.filterChips}>
+        <button onClick={() => setFilters({ ...filters, logistics_status: "", financial_status: "" })}>Todos</button>
+        {logisticsStatusOptions.slice(0, 6).map((option) => <button key={option.value} className={filters.logistics_status === option.value ? styles.chipActive : ""} onClick={() => setFilters({ ...filters, logistics_status: option.value })}>{option.label}</button>)}
       </div>
-      <div className={styles.statusMap}>
-        <span>Para retirar → Cliente ve En preparación</span>
-        <span>Retirado → Cliente ve En preparación</span>
-        <span>Depósito CD → Cliente ve En preparación</span>
-        <span>Depósito A → Cliente ve En tránsito</span>
-        <span>Depósito B → Cliente ve En tránsito</span>
-        <span>Despachado → Cliente ve guías clickeables</span>
-      </div>
-    </Card>
-
-    <Card id="guias" className={styles.filters}>
-      <Field label="Buscar">
-        <Input value={filters.query} onChange={(event) => setFilters({ ...filters, query: event.target.value })} placeholder="Cliente, telefono, guia, proveedor..." />
-      </Field>
-      <Field label="Estado logistico">
-        <Select value={filters.logistics_status} onChange={(event) => setFilters({ ...filters, logistics_status: event.target.value })}>
-          <option value="">Todos</option>
-          {logisticsStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-        </Select>
-      </Field>
-      <Field label="Estado financiero">
-        <Select value={filters.financial_status} onChange={(event) => setFilters({ ...filters, financial_status: event.target.value })}>
-          <option value="">Todos</option>
-          {financialStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-        </Select>
-      </Field>
-      <Field label="Fecha">
-        <Input type="date" value={filters.date} onChange={(event) => setFilters({ ...filters, date: event.target.value })} />
-      </Field>
-      <Field label="Empresa envio">
-        <Input value={filters.shipping_company} onChange={(event) => setFilters({ ...filters, shipping_company: event.target.value })} placeholder="Via Cargo, OCA..." />
-      </Field>
     </Card>
 
     {loading ? <Card className={styles.empty}>Cargando operaciones...</Card> : null}
 
-    {!loading && filteredOperations.length === 0 ? <Card className={styles.empty}>No hay operaciones para los filtros seleccionados.</Card> : null}
-
-    {!loading && filteredOperations.length > 0 ? <>
-      <div className={styles.desktopTable}>
-        <Card pad={false}>
-          <DataTable>
-            <thead>
-              <tr>
-                <th>Operacion</th>
-                <th>Cliente</th>
-                <th>Bultos</th>
-                <th>Logistica</th>
-                <th>Guia</th>
-                <th>Finanzas</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOperations.map((operation) => {
-                const totals = calculateOperationTotals(operation);
-                return <tr key={operation.id}>
-                  <td><strong>{operation.public_code}</strong><br /><small>{formatDate(operation.operation_date)} - {operation.provider_name}</small><br /><small>Cliente ve: {clientLogisticsLabels[operation.logistics_status]}</small></td>
-                  <td>{operation.clients?.name ?? "Sin cliente"}<br /><small>{operation.clients?.phone ?? "Sin telefono"}</small></td>
-                  <td><strong>{operation.package_count}</strong><br /><small>{formatMoney(totals.totalPackages)}</small></td>
-                  <td>
-                    {canEdit ? <Select value={operation.logistics_status} onChange={(event) => changeStatus(operation.id, event.target.value as LogisticsStatus)} disabled={saving}>
-                      {logisticsStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                    </Select> : <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}>{logisticsLabels[operation.logistics_status]}</span>}
-                  </td>
-                  <td>
-                    <strong>{operation.operation_shipments.length} guía(s)</strong><br />
-                    <small>{guideNumbers(operation)}</small><br />
-                    {operation.operation_shipments.slice(0, 2).map((shipment) => <span key={shipment.id} className={`${styles.badge} ${statusClass(shipment.guide_payment_status)}`}>{guidePaymentLabels[shipment.guide_payment_status]}</span>)}
-                  </td>
-                  <td>
-                    <span className={`${styles.badge} ${statusClass(operation.financial_status)}`}>{financialLabels[operation.financial_status]}</span><br />
-                    <small>Pases {moneyUsd(totals.passAmount)} / hoy {formatMoney(totals.passAmountArs)}</small><br />
-                    <small>Saldo {formatMoney(totals.balanceArs)} {totals.paidUsd ? ` / ${moneyUsd(totals.paidUsd)} pagado` : ""}</small>
-                  </td>
-                  <td>
-                    <div className={styles.actions}>
-                      <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Ficha</Button>
-                      <Button variant="ghost" onClick={() => startEdit(operation)} disabled={!canEdit}>Editar</Button>
-                      <Button variant="ghost" onClick={() => startShipment(operation)} disabled={!canEdit}>Guia</Button>
-                      <Button variant="ghost" onClick={() => startPayment(operation)} disabled={!canCollect}>Pago</Button>
-                      <Button variant="ghost" onClick={() => copyClientLink(operation)}>Link</Button>
-                    </div>
-                  </td>
-                </tr>;
-              })}
-            </tbody>
-          </DataTable>
-        </Card>
-      </div>
-
-      <div id="pases" className={styles.mobileList}>
-        {filteredOperations.map((operation) => {
+    {activeTab === "seguimiento" && !loading ? <section className={styles.contentGrid}>
+      <div className={styles.operationList}>
+        {filteredOperations.length ? filteredOperations.map((operation) => {
           const totals = calculateOperationTotals(operation);
+          const account = accounts.find((item) => item.clientId === operation.client_id);
           return <article key={operation.id} className={styles.operationCard}>
             <div className={styles.operationCardHead}>
               <div>
                 <strong>{operation.public_code}</strong>
-                <span>{operation.clients?.name ?? "Sin cliente"}</span>
+                <span>{operation.clients?.name ?? "Sin cliente"} · {operation.provider_name}</span>
               </div>
               <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}>{logisticsLabels[operation.logistics_status]}</span>
             </div>
-            <div className={styles.mobileFacts}>
+            <div className={styles.cardFacts}>
               <span>{operation.package_count} bultos</span>
-              <span>{operation.provider_name}</span>
-              <span>{operation.operation_shipments.length} guía(s)</span>
-              <span>{guideNumbers(operation)}</span>
+              <span>{operation.operation_shipments.length} guías</span>
+              <span>Cliente ve: {clientLogisticsLabels[operation.logistics_status]}</span>
+              <span>Cuenta: {financialLabels[operation.financial_status]}</span>
             </div>
-            <div className={styles.mobileMoney}>
-              <span>Pases {moneyUsd(totals.passAmount)}</span>
-              <strong>Hoy {formatMoney(totals.passAmountArs)}</strong>
+            <div className={styles.moneyLine}>
+              <div><span>Pases operación</span><strong>{moneyUsd(totals.passAmount)}</strong></div>
+              <div><span>Pendiente cliente</span><strong>{canSeeMoney ? moneyUsd(account?.passUsdPending ?? 0) : "-"}</strong></div>
+              <div><span>Guías</span><strong>{guideNumbers(operation)}</strong></div>
             </div>
             <div className={styles.actions}>
               <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Ficha</Button>
-              <Button variant="ghost" onClick={() => startShipment(operation)} disabled={!canEdit}>Guia</Button>
-              <Button variant="ghost" onClick={() => startPayment(operation)} disabled={!canCollect}>Pago</Button>
-              <Button variant="ghost" onClick={() => copyClientLink(operation)}>Link</Button>
+              <Button variant="secondary" onClick={() => startPayment(operation)} disabled={!canCollect}>Cobrar</Button>
+              <Button variant="ghost" onClick={() => startShipment(operation)} disabled={!canEdit}>Guía</Button>
+              <Button variant="ghost" onClick={() => copyWhatsAppOperation(operation)}>WhatsApp</Button>
             </div>
           </article>;
-        })}
+        }) : <Card className={styles.empty}>No hay operaciones para estos filtros.</Card>}
       </div>
-    </> : null}
+    </section> : null}
 
-    <section id="nueva" className={styles.lowerTools}>
-      <div className={styles.cardHead}>
-        <div><p>Carga y ajustes</p><h3>Carga rápida de bultos</h3></div>
-        <span>Fase 1: solo clientes base, bultos, guías, pases y cobros simples.</span>
+    {activeTab === "cuentas" && !loading ? <section className={styles.accountsGrid}>
+      <div className={styles.accountList}>
+        {accounts.map((account) => <button key={account.clientId} className={`${styles.accountRow} ${selectedAccount?.clientId === account.clientId ? styles.accountActive : ""}`} onClick={() => setSelectedAccountId(account.clientId)}>
+          <span>{account.clientName}</span>
+          <strong>{moneyUsd(account.passUsdPending)}</strong>
+          <small>{account.pendingPasses.length} pases · {formatMoney(account.guideArsPending + account.specialArsPending)} ARS</small>
+        </button>)}
       </div>
-    </section>
-
-    <section className={styles.setupGrid}>
-      <Card className={styles.formCard}>
+      {selectedAccount ? <Card className={styles.accountDetail}>
         <div className={styles.cardHead}>
-          <div>
-            <p>Alta rapida</p>
-            <h3>Cliente</h3>
-          </div>
+          <div><p>Cuenta corriente</p><h3>{selectedAccount.clientName}</h3></div>
+          <Button variant="secondary" onClick={() => copyWhatsAppAccount(selectedAccount)}>WhatsApp</Button>
         </div>
-        <div className={styles.formGrid}>
-          <Field label="Nombre">
-            <Input value={clientForm.name} onChange={(event) => setClientForm({ ...clientForm, name: event.target.value })} placeholder="Cliente / marca" disabled={!canEdit || saving} />
-          </Field>
-          <Field label="Telefono">
-            <Input value={clientForm.phone} onChange={(event) => setClientForm({ ...clientForm, phone: event.target.value })} placeholder="+54..." disabled={!canEdit || saving} />
-          </Field>
-          <Field label="Valor habitual por bulto">
-            <Input type="number" min="0" value={clientForm.default_price_per_package} onChange={(event) => setClientForm({ ...clientForm, default_price_per_package: Number(event.target.value || 0) })} disabled={!canEdit || saving} />
-          </Field>
-          <Field label="Notas">
-            <Input value={clientForm.notes ?? ""} onChange={(event) => setClientForm({ ...clientForm, notes: event.target.value })} placeholder="Condiciones, direccion, aviso..." disabled={!canEdit || saving} />
-          </Field>
+        <div className={styles.accountTotals}>
+          <div><span>Pases pendientes</span><strong>{moneyUsd(selectedAccount.passUsdPending)}</strong><small>{formatMoney(selectedAccount.passUsdPending * DEFAULT_DOLLAR_RATE)}</small></div>
+          <div><span>Guías a reintegrar</span><strong>{formatMoney(selectedAccount.guideArsPending)}</strong><small>{selectedAccount.guideReimbursements.length} guías</small></div>
+          <div><span>Movimientos especiales</span><strong>{formatMoney(selectedAccount.specialArsPending)}</strong><small>{selectedAccount.specialPending.length} abiertos</small></div>
         </div>
-        <Button onClick={submitClient} disabled={!canEdit || saving}>Crear cliente</Button>
+        <div className={styles.ledger}>
+          <h4>Pases abiertos</h4>
+          {selectedAccount.pendingPasses.length ? selectedAccount.pendingPasses.map((item) => <div key={item.id} className={styles.ledgerItem}>
+            <div><strong>{item.guideNumber}</strong><span>{item.provider} · {item.company}</span></div>
+            <b>{moneyUsd(item.amountUsd)}</b>
+          </div>) : <p>Sin pases pendientes.</p>}
+        </div>
+        {selectedAccount.guideReimbursements.length ? <div className={styles.ledger}>
+          <h4>Guías a reintegrar</h4>
+          {selectedAccount.guideReimbursements.map((item) => <div key={item.id} className={styles.ledgerItem}><div><strong>{item.guideNumber}</strong><span>{item.operationCode} · {item.company}</span></div><b>{formatMoney(item.amountArs)}</b></div>)}
+        </div> : null}
+        {selectedAccount.specialPending.length ? <div className={styles.ledger}>
+          <h4>Movimientos especiales</h4>
+          {selectedAccount.specialPending.map((item) => <div key={item.id} className={styles.ledgerItem}><div><strong>{movementLabel(item)}</strong><span>{item.provider_name} · {item.status.replaceAll("_", " ")}</span></div><b>{item.currency === "ARS" ? formatMoney(item.amount) : moneyUsd(item.amount)}</b></div>)}
+        </div> : null}
+        <div className={styles.ledger}>
+          <h4>Historial de pagos</h4>
+          {selectedAccount.payments.length ? selectedAccount.payments.slice(0, 6).map((payment) => <div key={payment.id} className={styles.ledgerItem}><div><strong>{formatDate(payment.paid_at)}</strong><span>{payment.concept} · {paymentMethodLabels[payment.method]}</span></div><b>{payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)}</b></div>) : <p>Sin pagos registrados.</p>}
+        </div>
+      </Card> : null}
+    </section> : null}
+
+    {activeTab === "guias" && !loading ? <section className={styles.guideGrid}>
+      {filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).map(({ operation, shipment }) => <Card key={shipment.id} className={styles.guideCard}>
+        <div className={styles.operationCardHead}>
+          <div><strong>{shipment.guide_number ?? "Sin guía"}</strong><span>{operation.clients?.name ?? "Sin cliente"} · {shipment.company ?? "Sin empresa"}</span></div>
+          <span className={`${styles.badge} ${statusClass(shipment.guide_payment_status)}`}>{guidePaymentLabels[shipment.guide_payment_status]}</span>
+        </div>
+        <div className={styles.cardFacts}>
+          <span>Destinatario: {shipment.recipient_name ?? "Sin cargar"}</span>
+          <span>Valor real: {formatMoney(toNumber(shipment.guide_amount))}</span>
+          <span>Total cliente: {guideChargeLabel(shipment.company, toNumber(shipment.guide_amount))}</span>
+          <span>Pase: {moneyUsd(toNumber(shipment.pass_usd_amount))}</span>
+        </div>
+        <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Abrir detalle</Button>
+      </Card>)}
+    </section> : null}
+
+    {activeTab === "mas" ? <section className={styles.moreGrid}>
+      <Card className={styles.flowCard}>
+        <div className={styles.cardHead}><div><p>Estados visibles</p><h3>Cliente no ve la cocina interna</h3></div></div>
+        <div className={styles.statusMap}>{logisticsStatusOptions.map((option) => <span key={option.value}>{option.label} → {option.clientLabel}</span>)}</div>
       </Card>
-
-      <Card className={styles.formCard}>
-        <div className={styles.cardHead}>
-          <div>
-            <p>{editingId ? "Edicion" : "Nueva operacion"}</p>
-            <h3>{editingId ? "Editar bultos" : "Crear operacion"}</h3>
-          </div>
-          {editingId ? <Button variant="ghost" onClick={() => { setEditingId(null); setOperationForm(emptyOperationForm(operationForm.client_id, selectedClient?.default_price_per_package ?? 0)); }}>Cancelar</Button> : null}
+      <Card className={styles.flowCard}>
+        <div className={styles.cardHead}><div><p>Acciones rápidas</p><h3>Carga controlada</h3></div></div>
+        <div className={styles.quickGrid}>
+          <Button onClick={() => openQuickPanel("cliente")}>Crear cliente</Button>
+          <Button onClick={() => openQuickPanel("operacion")}>Nueva operación</Button>
+          <Button variant="secondary" onClick={() => filteredOperations[0] && startSpecial(filteredOperations[0])}>Movimiento especial</Button>
         </div>
-        <div className={styles.formGrid}>
-          <Field label="Cliente">
-            <Select value={operationForm.client_id} onChange={(event) => onOperationClientChange(event.target.value)} disabled={!canEdit || saving}>
-              <option value="">Seleccionar cliente</option>
-              {data.clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
-            </Select>
-          </Field>
-          <Field label="Local / proveedor">
-            <Input value={operationForm.provider_name} onChange={(event) => setOperationForm({ ...operationForm, provider_name: event.target.value })} placeholder="Local, proveedor o deposito" disabled={!canEdit || saving} />
-          </Field>
-          <Field label="Fecha">
-            <Input type="date" value={operationForm.operation_date} onChange={(event) => setOperationForm({ ...operationForm, operation_date: event.target.value })} disabled={!canEdit || saving} />
-          </Field>
-          <Field label="Cantidad de bultos">
-            <Input type="number" min="1" value={operationForm.package_count} onChange={(event) => setOperationForm({ ...operationForm, package_count: Number(event.target.value || 1) })} disabled={!canEdit || saving} />
-          </Field>
-          <Field label="Valor por bulto">
-            <Input type="number" min="0" value={operationForm.price_per_package} onChange={(event) => setOperationForm({ ...operationForm, price_per_package: Number(event.target.value || 0) })} disabled={!canEdit || saving} />
-          </Field>
-          <Field label="Pase USD total / referencia">
-            <Input type="number" min="0" value={operationForm.pass_amount} onChange={(event) => setOperationForm({ ...operationForm, pass_amount: Number(event.target.value || 0) })} disabled={!canEdit || saving} />
-          </Field>
-          <Field label="Estado logistico">
-            <Select value={operationForm.logistics_status} onChange={(event) => setOperationForm({ ...operationForm, logistics_status: event.target.value as LogisticsStatus })} disabled={!canEdit || saving}>
-              {logisticsStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </Select>
-          </Field>
-          <Field label="Visible cliente">
-            <Select value={operationForm.visible_to_client ? "si" : "no"} onChange={(event) => setOperationForm({ ...operationForm, visible_to_client: event.target.value === "si" })} disabled={!canEdit || saving}>
-              <option value="si">Si</option>
-              <option value="no">No</option>
-            </Select>
-          </Field>
-        </div>
-        <Field label="Observaciones internas / visibles si corresponde">
-          <Textarea value={operationForm.note} onChange={(event) => setOperationForm({ ...operationForm, note: event.target.value })} disabled={!canEdit || saving} />
-        </Field>
-        <div className={styles.formFooter}>
-          <span>Total estimado hoy: <strong>{formatMoney(draftTotal)}</strong></span>
-          <Button onClick={submitOperation} disabled={!canEdit || saving}>{editingId ? "Guardar cambios" : "Crear operacion"}</Button>
-        </div>
+        <small>The Prestige Group · firma discreta</small>
       </Card>
-    </section>
+    </section> : null}
 
+    {quickPanel === "cliente" ? <div className={styles.panelOverlay}><section className={styles.panel}>
+      <div className={styles.panelHead}><div><p>Cliente</p><h3>Alta rápida</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.formGrid}>
+        <Field label="Nombre"><Input value={clientForm.name} onChange={(event) => setClientForm({ ...clientForm, name: event.target.value })} disabled={!canEdit || saving} /></Field>
+        <Field label="WhatsApp"><Input value={clientForm.phone} onChange={(event) => setClientForm({ ...clientForm, phone: event.target.value })} disabled={!canEdit || saving} /></Field>
+        <Field label="Valor habitual por bulto"><Input type="number" min="0" value={clientForm.default_price_per_package} onChange={(event) => setClientForm({ ...clientForm, default_price_per_package: Number(event.target.value || 0) })} disabled={!canEdit || saving} /></Field>
+      </div>
+      <Field label="Observaciones"><Textarea value={clientForm.notes ?? ""} onChange={(event) => setClientForm({ ...clientForm, notes: event.target.value })} disabled={!canEdit || saving} /></Field>
+      <Button onClick={submitClient} disabled={!canEdit || saving}>Crear cliente</Button>
+    </section></div> : null}
 
+    {quickPanel === "operacion" ? <div className={styles.panelOverlay}><section className={styles.panel}>
+      <div className={styles.panelHead}><div><p>{editingId ? "Editar" : "Nueva"}</p><h3>{editingId ? "Editar operación" : "Nueva operación"}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.formGrid}>
+        <Field label="Cliente"><Select value={operationForm.client_id} onChange={(event) => onOperationClientChange(event.target.value)} disabled={!canEdit || saving}><option value="">Seleccionar</option>{data.clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</Select></Field>
+        <Field label="Proveedor / local"><Input value={operationForm.provider_name} onChange={(event) => setOperationForm({ ...operationForm, provider_name: event.target.value })} disabled={!canEdit || saving} /></Field>
+        <Field label="Fecha"><Input type="date" value={operationForm.operation_date} onChange={(event) => setOperationForm({ ...operationForm, operation_date: event.target.value })} disabled={!canEdit || saving} /></Field>
+        <Field label="Bultos"><Input type="number" min="1" value={operationForm.package_count} onChange={(event) => setOperationForm({ ...operationForm, package_count: Number(event.target.value || 1) })} disabled={!canEdit || saving} /></Field>
+        <Field label="Pase USD referencia"><Input type="number" min="0" value={operationForm.pass_amount} onChange={(event) => setOperationForm({ ...operationForm, pass_amount: Number(event.target.value || 0) })} disabled={!canEdit || saving} /></Field>
+        <Field label="Estado"><Select value={operationForm.logistics_status} onChange={(event) => setOperationForm({ ...operationForm, logistics_status: event.target.value as LogisticsStatus })} disabled={!canEdit || saving}>{logisticsStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>
+      </div>
+      <Field label="Observaciones"><Textarea value={operationForm.note} onChange={(event) => setOperationForm({ ...operationForm, note: event.target.value })} disabled={!canEdit || saving} /></Field>
+      <div className={styles.formFooter}><span>Total estimado hoy: <strong>{formatMoney(draftTotal)}</strong></span><Button onClick={submitOperation} disabled={!canEdit || saving}>{editingId ? "Guardar" : "Crear"}</Button></div>
+    </section></div> : null}
 
-    {shipmentOperation ? <div className={styles.panelOverlay}>
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>
-          <div><p>Cargar guia</p><h3>{shipmentOperation.public_code}</h3></div>
-          <button type="button" onClick={() => setShipmentOperation(null)}>Cerrar</button>
-        </div>
-        <div className={styles.formGrid}>
-          <Field label="Empresa de envio">
-            <Select value={shipmentForm.company} onChange={(event) => setShipmentForm({ ...shipmentForm, company: event.target.value })}>
-              <option value="">Seleccionar</option>
-              {transportCompanyOptions.map((company) => <option key={company} value={company}>{company}</option>)}
-            </Select>
-          </Field>
-          <Field label="Numero de guia / pedido cliente">
-            <Input value={shipmentForm.guide_number} onChange={(event) => setShipmentForm({ ...shipmentForm, guide_number: event.target.value })} />
-          </Field>
-          <Field label="Destinatario final">
-            <Input value={shipmentForm.recipient_name ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, recipient_name: event.target.value })} placeholder="Ej: Matías" />
-          </Field>
-          <Field label="DNI / identidad destinatario">
-            <Input value={shipmentForm.recipient_identity_number ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, recipient_identity_number: event.target.value })} placeholder="33.547.272" />
-          </Field>
-          <Field label="Valor real de guía">
-            <Input type="number" min="0" value={shipmentForm.guide_amount} onChange={(event) => setShipmentForm({ ...shipmentForm, guide_amount: Number(event.target.value || 0), amount: Number(event.target.value || 0) })} />
-          </Field>
-          <Field label="Pase USD asociado">
-            <Input type="number" min="0" value={shipmentForm.pass_usd_amount ?? 0} onChange={(event) => setShipmentForm({ ...shipmentForm, pass_usd_amount: Number(event.target.value || 0) })} />
-          </Field>
-          <Field label="Fecha del pase">
-            <Input type="date" value={shipmentForm.pass_date ?? today()} onChange={(event) => setShipmentForm({ ...shipmentForm, pass_date: event.target.value || null })} />
-          </Field>
-          <Field label="Destino / instrucción">
-            <Input value={shipmentForm.destination_detail ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, destination_detail: event.target.value })} placeholder="Entrega a tercero, dirección o aclaración" />
-          </Field>
-          <Field label="Nota del pase">
-            <Input value={shipmentForm.pass_note ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, pass_note: event.target.value })} placeholder="Ej: pase especial por cantidad / día / vendedor" />
-          </Field>
-          <Field label="Fecha despacho">
-            <Input type="date" value={shipmentForm.dispatch_date ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, dispatch_date: event.target.value || null })} />
-          </Field>
-          <Field label="Condición de la guía">
-            <Select value={shipmentForm.paid ? "si" : "no"} onChange={(event) => setShipmentForm({ ...shipmentForm, paid: event.target.value === "si", guide_paid_by: event.target.value === "si" ? shipmentForm.guide_paid_by : "pendiente", guide_payment_status: event.target.value === "si" ? shipmentForm.guide_payment_status : "pendiente" })}>
-              <option value="no">Pendiente / se paga en destino</option>
-              <option value="si">Ya fue pagada</option>
-            </Select>
-          </Field>
-          {shipmentForm.paid ? <Field label="Quien pago">
-            <Select value={shipmentForm.guide_paid_by} onChange={(event) => onShipmentPaidByChange(event.target.value as GuidePaidBy)}>
-              <option value="pendiente">Seleccionar</option>
-              <option value="jeremias">Jeremías</option>
-              <option value="cliente">Cliente / en destino</option>
-            </Select>
-          </Field> : null}
-          {shipmentForm.paid ? <Field label="Metodo">
-            <Select value={shipmentForm.method} onChange={(event) => onPaymentMethodChange(event.target.value as PaymentMethod, "shipment")}>
-              {paymentMethodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </Select>
-          </Field> : null}
-          {shipmentForm.paid ? <Field label="Monto pagado">
-            <Input type="number" min="0" value={shipmentForm.amount ?? 0} onChange={(event) => setShipmentForm({ ...shipmentForm, amount: Number(event.target.value || 0) })} />
-          </Field> : null}
-        </div>
-        <div className={styles.formFooter}>
-          <span>{shipmentForm.guide_paid_by === "jeremias" ? "La guía suma como reintegro. El pase USD queda ligado a esta guía." : shipmentForm.guide_paid_by === "cliente" ? "La guía queda informada y no suma al saldo. El pase USD sí queda para cobrar al cliente." : "La guía queda informativa o pendiente. El pase USD queda asociado a la guía."}</span>
-          <Button onClick={submitShipment} disabled={saving}>Guardar guia</Button>
-        </div>
-      </section>
-    </div> : null}
+    {quickPanel === "guia" && shipmentOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
+      <div className={styles.panelHead}><div><p>Cargar guía</p><h3>{shipmentOperation.public_code}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.formGrid}>
+        <Field label="Empresa"><Select value={shipmentForm.company} onChange={(event) => setShipmentForm({ ...shipmentForm, company: event.target.value })}><option value="">Seleccionar</option>{transportCompanyOptions.map((company) => <option key={company} value={company}>{company}</option>)}</Select></Field>
+        <Field label="Número guía"><Input value={shipmentForm.guide_number} onChange={(event) => setShipmentForm({ ...shipmentForm, guide_number: event.target.value })} /></Field>
+        <Field label="Destinatario"><Input value={shipmentForm.recipient_name ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, recipient_name: event.target.value })} /></Field>
+        <Field label="DNI / CUIT"><Input value={shipmentForm.recipient_identity_number ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, recipient_identity_number: event.target.value })} /></Field>
+        <Field label="Valor real guía"><Input type="number" min="0" value={shipmentForm.guide_amount} onChange={(event) => setShipmentForm({ ...shipmentForm, guide_amount: Number(event.target.value || 0), amount: Number(event.target.value || 0) })} /></Field>
+        <Field label="Pase USD"><Input type="number" min="0" value={shipmentForm.pass_usd_amount ?? 0} onChange={(event) => setShipmentForm({ ...shipmentForm, pass_usd_amount: Number(event.target.value || 0) })} /></Field>
+        <Field label="Fecha pase"><Input type="date" value={shipmentForm.pass_date ?? today()} onChange={(event) => setShipmentForm({ ...shipmentForm, pass_date: event.target.value || null })} /></Field>
+        <Field label="Condición guía"><Select value={shipmentForm.paid ? "si" : "no"} onChange={(event) => setShipmentForm({ ...shipmentForm, paid: event.target.value === "si", guide_paid_by: event.target.value === "si" ? shipmentForm.guide_paid_by : "pendiente", guide_payment_status: event.target.value === "si" ? shipmentForm.guide_payment_status : "pendiente" })}><option value="no">Pendiente / destino</option><option value="si">Ya fue pagada</option></Select></Field>
+        {shipmentForm.paid ? <Field label="Quién pagó"><Select value={shipmentForm.guide_paid_by} onChange={(event) => onShipmentPaidByChange(event.target.value as GuidePaidBy)}><option value="pendiente">Seleccionar</option><option value="jeremias">Jeremías</option><option value="cliente">Cliente / destino</option></Select></Field> : null}
+      </div>
+      <Field label="Destino / instrucción"><Textarea value={shipmentForm.destination_detail ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, destination_detail: event.target.value })} /></Field>
+      <div className={styles.formFooter}><span>Vía Cargo suma 2% automático. El pase queda en cuenta corriente.</span><Button onClick={submitShipment} disabled={saving}>Guardar guía</Button></div>
+    </section></div> : null}
 
-    {paymentOperation ? <div className={styles.panelOverlay}>
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>
-          <div><p>Cargar pago</p><h3>{paymentOperation.public_code}</h3></div>
-          <button type="button" onClick={() => setPaymentOperation(null)}>Cerrar</button>
-        </div>
-        <div className={styles.formGrid}>
-          <Field label="Concepto">
-            <Input value={paymentForm.concept} onChange={(event) => setPaymentForm({ ...paymentForm, concept: event.target.value })} />
-          </Field>
-          <Field label="Metodo">
-            <Select value={paymentForm.method} onChange={(event) => onPaymentMethodChange(event.target.value as PaymentMethod, "payment")}>
-              {paymentMethodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </Select>
-          </Field>
-          <Field label="Moneda">
-            <Select value={paymentForm.currency} onChange={(event) => setPaymentForm({ ...paymentForm, currency: event.target.value as Currency })}>
-              <option value="ARS">ARS</option>
-              <option value="USD">USD</option>
-            </Select>
-          </Field>
-          <Field label="Monto">
-            <Input type="number" min="0" value={paymentForm.amount} onChange={(event) => setPaymentForm({ ...paymentForm, amount: Number(event.target.value || 0) })} />
-          </Field>
-        </div>
-        <Field label="Nota">
-          <Textarea value={paymentForm.note ?? ""} onChange={(event) => setPaymentForm({ ...paymentForm, note: event.target.value })} />
-        </Field>
-        {paymentOperation.operation_shipments.some((shipment) => shipment.guide_payment_status === "pendiente_reintegro") ? <label className={styles.checkbox}>
-          <input type="checkbox" checked={!!paymentForm.markGuideReimbursed} onChange={(event) => setPaymentForm({ ...paymentForm, markGuideReimbursed: event.target.checked })} />
-          Marcar guia como reintegrada
-        </label> : null}
-        <div className={styles.formFooter}>
-          <span>Los pagos de pases se controlan en USD. El equivalente en pesos se calcula con el dólar vigente al momento de cobrar.</span>
-          <Button onClick={submitPayment} disabled={saving}>Cargar pago</Button>
-        </div>
-      </section>
-    </div> : null}
+    {quickPanel === "pago" && paymentOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
+      <div className={styles.panelHead}><div><p>Cobrar</p><h3>{paymentOperation.clients?.name ?? paymentOperation.public_code}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.ledger}>
+        <h4>Seleccionar pases pagados</h4>
+        {paymentPassOptions.length ? paymentPassOptions.map((item) => <label key={item.id} className={styles.checkRow}>
+          <input type="checkbox" checked={selectedPassIds.includes(item.id)} onChange={(event) => {
+            const ids = event.target.checked ? [...selectedPassIds, item.id] : selectedPassIds.filter((id) => id !== item.id);
+            setSelectedPassIds(ids);
+            syncPaymentAmount(ids);
+          }} />
+          <span>{item.guideNumber} · {item.company}</span>
+          <strong>{moneyUsd(item.amountUsd)}</strong>
+        </label>) : <p>Esta operación no tiene pases pendientes.</p>}
+      </div>
+      <div className={styles.accountTotals}>
+        <div><span>Seleccionado</span><strong>{moneyUsd(selectedPassTotalUsd)}</strong><small>{formatMoney(selectedPassTotalArs)}</small></div>
+      </div>
+      <div className={styles.formGrid}>
+        <Field label="Método"><Select value={paymentForm.method} onChange={(event) => onPaymentMethodChange(event.target.value as PaymentMethod, "payment")}>{paymentMethodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>
+        <Field label="Moneda"><Select value={paymentForm.currency} onChange={(event) => syncPaymentAmount(selectedPassIds, event.target.value as Currency)}><option value="ARS">ARS</option><option value="USD">USD</option></Select></Field>
+        <Field label="Monto"><Input type="number" min="0" value={paymentForm.amount} onChange={(event) => setPaymentForm({ ...paymentForm, amount: Number(event.target.value || 0) })} /></Field>
+      </div>
+      <Field label="Nota"><Textarea value={paymentForm.note ?? ""} onChange={(event) => setPaymentForm({ ...paymentForm, note: event.target.value })} /></Field>
+      {paymentOperation.operation_shipments.some((shipment) => shipment.guide_payment_status === "pendiente_reintegro") ? <label className={styles.checkRow}><input type="checkbox" checked={!!paymentForm.markGuideReimbursed} onChange={(event) => setPaymentForm({ ...paymentForm, markGuideReimbursed: event.target.checked })} /><span>Marcar guías a reintegrar como reintegradas</span></label> : null}
+      <div className={styles.formFooter}><span>El pago queda en historial y, si seleccionaste pases, esos pases se cierran.</span><Button onClick={submitPayment} disabled={saving}>Registrar pago</Button></div>
+    </section></div> : null}
 
-    {detailOperation ? <div className={styles.panelOverlay}>
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>
-          <div><p>Ficha operativa</p><h3>{detailOperation.public_code}</h3></div>
-          <button type="button" onClick={() => setDetailOperation(null)}>Cerrar</button>
-        </div>
-        {(() => {
-          const totals = calculateOperationTotals(detailOperation);
-          return <>
-            <div className={styles.detailGrid}>
-              <div><span>Cliente principal</span><strong>{detailOperation.clients?.name ?? "-"}</strong></div>
-              <div><span>Proveedor / operación</span><strong>{detailOperation.provider_name}</strong></div>
-              <div><span>Bultos</span><strong>{detailOperation.package_count}</strong></div>
-              <div><span>Estado interno</span><strong>{logisticsLabels[detailOperation.logistics_status]}</strong></div>
-              <div><span>Cliente ve</span><strong>{clientLogisticsLabels[detailOperation.logistics_status]}</strong></div>
-              <div><span>Link cliente</span><strong>/consulta/{detailOperation.public_code}</strong></div>
-              <div><span>Pases USD</span><strong>{moneyUsd(totals.passAmount)}</strong></div>
-              <div><span>Equivalente hoy</span><strong>{formatMoney(totals.passAmountArs)}</strong></div>
-            </div>
-            <div className={styles.timeline}>
-              <h4>Guías del despacho / pedidos del cliente</h4>
-              {detailOperation.operation_shipments.length ? detailOperation.operation_shipments.map((shipment) => <details key={shipment.id} className={styles.guideDetail}>
-                <summary>{shipment.guide_number ?? "Sin número"} — {shipment.company ?? "Sin empresa"}</summary>
-                <div className={styles.detailGrid}>
-                  <div><span>Destinatario</span><strong>{shipment.recipient_name ?? "Sin cargar"}</strong></div>
-                  <div><span>DNI / identidad</span><strong>{shipment.recipient_identity_number ?? "Sin cargar"}</strong></div>
-                  <div><span>Valor real guía</span><strong>{formatMoney(Number(shipment.guide_amount || 0))}</strong></div>
-                  <div><span>Total guía cliente</span><strong>{guideChargeLabel(shipment.company, Number(shipment.guide_amount || 0))}</strong></div>
-                  <div><span>Pase USD</span><strong>{moneyUsd(Number(shipment.pass_usd_amount || 0))}</strong></div>
-                  <div><span>Pase hoy</span><strong>{formatMoney(Number(shipment.pass_usd_amount || 0) * DEFAULT_DOLLAR_RATE)}</strong></div>
-                  <div><span>Fecha pase</span><strong>{formatDate(shipment.pass_date ?? undefined)}</strong></div>
-                  <div><span>Estado guía</span><strong>{guidePaymentLabels[shipment.guide_payment_status]}</strong></div>
-                  <div><span>Fecha despacho</span><strong>{formatDate(shipment.dispatch_date ?? undefined)}</strong></div>
-                </div>
-                <p>{shipment.destination_detail ?? "Sin instrucción adicional."}</p>
-                {shipment.pass_note ? <p><strong>Nota pase:</strong> {shipment.pass_note}</p> : null}
-              </details>) : <p>Sin guías cargadas.</p>}
-            </div>
-            <div className={styles.timeline}>
-              <h4>Pagos cargados</h4>
-              {detailOperation.operation_payments.length ? detailOperation.operation_payments.map((payment) => <div key={payment.id}>
-                <strong>{payment.concept}</strong>
-                <span>{paymentMethodLabels[payment.method]} - {payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)}</span>
-              </div>) : <p>Sin pagos cargados.</p>}
-            </div>
-            <div className={styles.timeline}>
-              <h4>Resumen WhatsApp</h4>
-              <Textarea readOnly value={buildWhatsAppSummary(detailOperation)} />
-              <Button id="whatsapp" variant="secondary" onClick={() => copyWhatsAppSummary(detailOperation)}>Copiar resumen</Button>
-            </div>
-            <div className={styles.timeline}>
-              <h4>Observaciones</h4>
-              <p>{detailOperation.note ?? "Sin observaciones."}</p>
-            </div>
-          </>;
-        })()}
-      </section>
-    </div> : null}
+    {quickPanel === "especial" && specialOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
+      <div className={styles.panelHead}><div><p>Movimiento especial</p><h3>{specialOperation.clients?.name ?? specialOperation.public_code}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.formGrid}>
+        <Field label="Tipo"><Select value={specialForm.type} onChange={(event) => setSpecialForm({ ...specialForm, type: event.target.value as SpecialMovementInput["type"] })}><option value="adelanto_jeremias">Adelanto Jeremías</option><option value="pago_proveedor">Pago a proveedor</option><option value="dinero_recibido">Dinero recibido del cliente</option><option value="mercaderia_agotada">Mercadería agotada</option><option value="devolucion">Devolución</option><option value="aplicado_otra_compra">Aplicado a otra compra</option></Select></Field>
+        <Field label="Proveedor / tienda"><Input value={specialForm.provider_name} onChange={(event) => setSpecialForm({ ...specialForm, provider_name: event.target.value })} placeholder="Atacado UZA" /></Field>
+        <Field label="Quién puso la plata"><Select value={specialForm.money_source} onChange={(event) => setSpecialForm({ ...specialForm, money_source: event.target.value as SpecialMovementInput["money_source"] })}><option value="jeremias_adelanto">Jeremías adelantó</option><option value="cliente_envio">Cliente envió primero</option></Select></Field>
+        <Field label="Estado"><Select value={specialForm.status} onChange={(event) => setSpecialForm({ ...specialForm, status: event.target.value as SpecialMovementInput["status"] })}><option value="pendiente">Pendiente</option><option value="pagado_proveedor">Pagado al proveedor</option><option value="mercaderia_confirmada">Mercadería confirmada</option><option value="mercaderia_agotada">Mercadería agotada</option><option value="a_devolver">A devolver</option><option value="aplicado_otra_compra">Aplicado a otra compra</option><option value="reintegrado">Reintegrado</option><option value="cerrado">Cerrado</option></Select></Field>
+        <Field label="Moneda"><Select value={specialForm.currency} onChange={(event) => setSpecialForm({ ...specialForm, currency: event.target.value as Currency })}><option value="ARS">ARS</option><option value="USD">USD</option></Select></Field>
+        <Field label="Monto"><Input type="number" min="0" value={specialForm.amount} onChange={(event) => setSpecialForm({ ...specialForm, amount: Number(event.target.value || 0) })} /></Field>
+      </div>
+      <Field label="Observación"><Textarea value={specialForm.note ?? ""} onChange={(event) => setSpecialForm({ ...specialForm, note: event.target.value })} placeholder="Ej: proveedor no acepta USDT; Jeremías lleva/transfiere el dinero" /></Field>
+      <div className={styles.formFooter}><span>Queda como ítem excepcional dentro de la cuenta corriente.</span><Button onClick={submitSpecialMovement} disabled={saving}>Guardar movimiento</Button></div>
+    </section></div> : null}
+
+    {detailOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
+      <div className={styles.panelHead}><div><p>Ficha</p><h3>{detailOperation.public_code}</h3></div><button type="button" onClick={() => setDetailOperation(null)}>Cerrar</button></div>
+      <div className={styles.detailGrid}>
+        <div><span>Cliente</span><strong>{detailOperation.clients?.name ?? "-"}</strong></div>
+        <div><span>Proveedor</span><strong>{detailOperation.provider_name}</strong></div>
+        <div><span>Estado interno</span><strong>{logisticsLabels[detailOperation.logistics_status]}</strong></div>
+        <div><span>Cliente ve</span><strong>{clientLogisticsLabels[detailOperation.logistics_status]}</strong></div>
+        <div><span>Link cliente</span><strong>/consulta/{detailOperation.public_code}</strong></div>
+      </div>
+      <div className={styles.ledger}>
+        <h4>Guías y pases</h4>
+        {detailOperation.operation_shipments.length ? detailOperation.operation_shipments.map((shipment) => <details key={shipment.id} className={styles.guideDetail}>
+          <summary>{shipment.guide_number ?? "Sin número"} — {shipment.company ?? "Sin empresa"}</summary>
+          <div className={styles.detailGrid}>
+            <div><span>Destinatario</span><strong>{shipment.recipient_name ?? "Sin cargar"}</strong></div>
+            <div><span>Valor real</span><strong>{formatMoney(toNumber(shipment.guide_amount))}</strong></div>
+            <div><span>Total cliente</span><strong>{guideChargeLabel(shipment.company, toNumber(shipment.guide_amount))}</strong></div>
+            <div><span>Pase USD</span><strong>{moneyUsd(toNumber(shipment.pass_usd_amount))}</strong></div>
+            <div><span>Estado guía</span><strong>{guidePaymentLabels[shipment.guide_payment_status]}</strong></div>
+            <div><span>Estado pase</span><strong>{shipmentPassStatus(shipment)}</strong></div>
+          </div>
+        </details>) : <p>Sin guías cargadas.</p>}
+      </div>
+      <div className={styles.actions}><Button variant="secondary" onClick={() => startPayment(detailOperation)}>Cobrar</Button><Button variant="ghost" onClick={() => startShipment(detailOperation)}>Agregar guía</Button><Button variant="ghost" onClick={() => startSpecial(detailOperation)}>Movimiento especial</Button><Button variant="ghost" onClick={() => copyClientLink(detailOperation)}>Copiar link</Button></div>
+    </section></div> : null}
   </OwnerDesktopShell>;
 }

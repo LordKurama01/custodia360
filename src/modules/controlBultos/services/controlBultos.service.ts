@@ -9,6 +9,7 @@ import type {
   OperationFormInput,
   PaymentInput,
   ShipmentInput,
+  SpecialMovementInput,
 } from "../types";
 import { DEFAULT_DOLLAR_RATE, calculateGuideCharge, isViaCargo } from "../types";
 
@@ -54,6 +55,7 @@ function normalizeOperation(operation: ControlOperation): ControlOperation {
     ...operation,
     operation_shipments: operation.operation_shipments ?? [],
     operation_payments: operation.operation_payments ?? [],
+    special_movements: operation.special_movements ?? [],
   };
 }
 
@@ -270,6 +272,7 @@ function getDemoSeed(): ControlBultosData {
         },
       ],
       operation_payments: [],
+      special_movements: [],
     }),
     recalculateOperation({
       id: "demo-op-matias-pases",
@@ -370,6 +373,22 @@ function getDemoSeed(): ControlBultosData {
         },
       ],
       operation_payments: [],
+      special_movements: [
+        {
+          id: "demo-special-matias-uza",
+          operation_id: "demo-op-matias-pases",
+          client_id: "demo-client-matias",
+          type: "adelanto_jeremias",
+          status: "pendiente",
+          provider_name: "Atacado UZA",
+          amount: 500000,
+          currency: "ARS",
+          money_source: "jeremias_adelanto",
+          note: "Proveedor no aceptaba USDT. Jeremías adelantó el pago al proveedor; queda pendiente de reintegro.",
+          created_at: created,
+          updated_at: created,
+        },
+      ],
     }),
   ];
 
@@ -509,6 +528,7 @@ export async function createOperation(input: OperationFormInput) {
       clients: client ? { id: client.id, name: client.name, phone: client.phone, default_price_per_package: client.default_price_per_package, private_code: client.private_code } : null,
       operation_shipments: [],
       operation_payments: [],
+      special_movements: [],
     });
     writeDemoData({ ...data, operations: [operation, ...data.operations] });
     return operation;
@@ -643,6 +663,9 @@ export async function saveShipment(input: ShipmentInput) {
         pass_usd_amount: Number(input.pass_usd_amount || 0),
         pass_date: input.pass_date || todayIso(),
         pass_note: cleanText(input.pass_note ?? ""),
+        pass_payment_status: "pendiente" as const,
+        pass_paid_at: null,
+        pass_payment_id: null,
         guide_surcharge_percent: isViaCargo(company) ? 2 : 0,
         guide_charge_amount: calculateGuideCharge(company, guideAmount),
         dispatch_date: input.dispatch_date,
@@ -706,10 +729,31 @@ export async function createPayment(input: PaymentInput) {
         created_by: "demo-owner",
         created_at: nowIso(),
       };
-      const nextShipments = input.markGuideReimbursed
-        ? operation.operation_shipments.map((shipment) => shipment.guide_payment_status === "pendiente_reintegro" ? { ...shipment, guide_payment_status: "reintegrada" as const } : shipment)
-        : operation.operation_shipments;
-      return recalculateOperation({ ...operation, operation_shipments: nextShipments, operation_payments: [...operation.operation_payments, payment] });
+      const selectedPassIds = input.selectedPassIds ?? [];
+      const nextShipments = operation.operation_shipments.map((shipment) => {
+        const withGuideStatus = input.markGuideReimbursed && shipment.guide_payment_status === "pendiente_reintegro"
+          ? { ...shipment, guide_payment_status: "reintegrada" as const }
+          : shipment;
+        if (selectedPassIds.includes(shipment.id)) {
+          return {
+            ...withGuideStatus,
+            pass_payment_status: "pagado" as const,
+            pass_paid_at: nowIso(),
+            pass_payment_id: payment.id,
+          };
+        }
+        return withGuideStatus;
+      });
+      const nextSpecialMovements = (operation.special_movements ?? []).map((movement) => {
+        const shouldClose = input.note?.includes(movement.id);
+        return shouldClose ? { ...movement, status: "reintegrado" as const, updated_at: nowIso() } : movement;
+      });
+      return recalculateOperation({
+        ...operation,
+        operation_shipments: nextShipments,
+        operation_payments: [...operation.operation_payments, { ...payment, selected_pass_ids: selectedPassIds }],
+        special_movements: nextSpecialMovements,
+      });
     });
     writeDemoData({ ...data, operations });
     return operations.find((item) => item.id === input.operation_id)?.operation_payments.at(-1) ?? null;
@@ -725,7 +769,7 @@ export async function createPayment(input: PaymentInput) {
       method: input.method,
       currency: input.currency,
       amount: input.amount,
-      note: cleanText(input.note ?? ""),
+      note: cleanText([input.note, input.selectedPassIds?.length ? `Pases seleccionados: ${input.selectedPassIds.join(", ")}` : ""].filter(Boolean).join(" | ")),
       created_by: actorId,
     })
     .select("*")
@@ -743,4 +787,49 @@ export async function createPayment(input: PaymentInput) {
 
   await recordAudit("payment_created", "operation", input.operation_id, data as Json);
   return data;
+}
+
+export async function createSpecialMovement(input: SpecialMovementInput) {
+  if (!input.operation_id) throw new Error("Selecciona una operación.");
+  if (!input.provider_name.trim()) throw new Error("El proveedor o tienda es obligatorio.");
+  if (!input.amount || input.amount <= 0) throw new Error("El monto debe ser mayor a cero.");
+
+  if (isDemoMode()) {
+    const data = readDemoData();
+    const movement = {
+      id: makeId("demo-special"),
+      operation_id: input.operation_id,
+      client_id: input.client_id,
+      type: input.type,
+      status: input.status,
+      provider_name: input.provider_name.trim(),
+      amount: Number(input.amount || 0),
+      currency: input.currency,
+      money_source: input.money_source,
+      note: cleanText(input.note ?? ""),
+      created_at: nowIso(),
+      updated_at: nowIso(),
+    };
+    const operations = data.operations.map((operation) => operation.id === input.operation_id
+      ? recalculateOperation({ ...operation, special_movements: [...(operation.special_movements ?? []), movement] })
+      : operation);
+    writeDemoData({ ...data, operations });
+    return movement;
+  }
+
+  await recordAudit("special_movement_created", "operation", input.operation_id, input as unknown as Json);
+  return {
+    id: makeId("local-special"),
+    operation_id: input.operation_id,
+    client_id: input.client_id,
+    type: input.type,
+    status: input.status,
+    provider_name: input.provider_name.trim(),
+    amount: Number(input.amount || 0),
+    currency: input.currency,
+    money_source: input.money_source,
+    note: cleanText(input.note ?? ""),
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  };
 }

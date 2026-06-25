@@ -140,23 +140,22 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
         <span>●</span>
         <strong>Seguimiento</strong>
       </Link>
-      <Link href="/owner/bultos#guias" className="">
-        <span>▤</span>
-        <strong>Guías</strong>
+      <Link href="/owner/bultos#cuentas" className="">
+        <span>$</span>
+        <strong>Cuentas</strong>
       </Link>
       <Link href="/owner/bultos#nueva" className={styles.mobileFab} aria-label="Nueva carga">
         <span>+</span>
         <strong>Nueva</strong>
       </Link>
-      <Link href="/owner/bultos#pases" className="">
-        <span>$</span>
-        <strong>Pases</strong>
+      <Link href="/owner/bultos#guias" className="">
+        <span>▤</span>
+        <strong>Guías</strong>
       </Link>
-      <Link href="/owner/clientes" className="">
+      <Link href="/owner/bultos#mas" className="">
         <span>⋯</span>
         <strong>Más</strong>
       </Link>
-      <small>The Prestige Group</small>
     </nav>
   </div>;
 }

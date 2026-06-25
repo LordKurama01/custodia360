@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/infrastructure/supabase/client";
 import { isDemoMode } from "@/shared/lib/demoMode";
+import { BrandLockup } from "@/shared/components/BrandLockup";
 import styles from "./LoginView.module.css";
 
 const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "+54 9 236 000-0000";
@@ -61,8 +62,7 @@ export function LoginView() {
     <main className={styles.page}>
       <header className={styles.topbar}>
         <Link href="/login" className={styles.brand} aria-label="Custodia360 inicio">
-          <img src="/brand/custodia360_icono_fondo_oscuro.png" alt="" className={styles.brandIcon} />
-          <img src="/brand/custodia360_wordmark_fondo_oscuro.png" alt="Custodia360" className={styles.brandWordmark} />
+          <BrandLockup subtitle="Control privado de bultos" />
         </Link>
 
         <nav className={styles.nav} aria-label="Navegacion principal">

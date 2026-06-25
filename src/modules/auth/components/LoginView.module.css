@@ -579,3 +579,22 @@
   .brandIcon { width: 40px; height: 40px; }
   .brandWordmark { width: 148px; }
 }
+
+/* v8 brand lockup: use isotype + live typography, not the cropped wordmark image */
+.brand {
+  gap: 0;
+  min-width: 210px;
+}
+
+.brandIcon,
+.brandWordmark,
+.brandSlot,
+.brandCopy {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .brand {
+    min-width: 0;
+  }
+}

@@ -425,3 +425,75 @@
     pointer-events: none;
   }
 }
+
+/* v8 architecture polish: brand separated into isotype + custom typography */
+.brandWrap {
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  padding: 6px 4px 10px;
+}
+
+.brandWrap:hover {
+  transform: translateY(-1px);
+}
+
+.sidebar {
+  gap: 13px;
+  background:
+    radial-gradient(circle at 50% -4%, rgba(154,255,0,.075), transparent 24%),
+    linear-gradient(180deg, rgba(3, 12, 22, .985), rgba(3, 10, 19, .997));
+}
+
+.platformMode {
+  padding: 11px 12px;
+  background: rgba(154, 255, 0, .045);
+}
+
+.nav {
+  gap: 12px;
+}
+
+.nav a {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+}
+
+.header {
+  min-height: 72px;
+  background:
+    linear-gradient(90deg, rgba(6, 18, 32, .92), rgba(6, 18, 32, .72));
+}
+
+.headerTitle {
+  min-width: 0;
+}
+
+.header h1 {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.headerActions a span {
+  min-height: 34px;
+  align-items: center;
+  background: rgba(255, 255, 255, .028);
+}
+
+.content {
+  padding: 20px 24px 44px;
+}
+
+@media (max-width: 960px) {
+  .header {
+    min-height: 64px;
+  }
+  .header h1 {
+    font-size: 19px;
+  }
+  .content {
+    padding: 10px 10px 126px;
+  }
+}

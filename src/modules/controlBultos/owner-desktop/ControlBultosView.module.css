@@ -772,3 +772,131 @@
     display: grid;
   }
 }
+
+/* v8 senior architecture: desktop is a control room, mobile is a fast field app */
+.topActions {
+  display: flex;
+  gap: .55rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.detailGrid div,
+.accountTotals div,
+.moneyLine div {
+  display: grid;
+  gap: .18rem;
+}
+
+@media (min-width: 961px) {
+  .topBar {
+    min-height: 5.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .7rem;
+    padding: 1rem 1.05rem;
+    border: 1px solid rgba(154,255,0,.13);
+    background:
+      linear-gradient(90deg, rgba(11,24,40,.98) 0%, rgba(11,24,40,.94) 58%, rgba(154,255,0,.10) 100%);
+  }
+
+  .topBar h2 {
+    margin: 0;
+    font-size: 1.34rem;
+    letter-spacing: -.04em;
+  }
+
+  .topBar p {
+    margin: 0 0 .25rem;
+  }
+
+  .topBar span {
+    color: var(--c360-muted);
+    font-size: .82rem;
+  }
+
+  .kpiStrip {
+    grid-template-columns: 1.05fr 1fr 1fr;
+    margin-top: 0;
+  }
+
+  .kpi {
+    min-height: 4.55rem;
+  }
+
+  .searchCard {
+    top: 72px;
+    margin-top: .7rem;
+    margin-bottom: .7rem;
+    border-radius: 1rem !important;
+  }
+
+  .contentGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    gap: .9rem;
+  }
+
+  .tableShell {
+    padding: .5rem;
+    border-radius: 1rem;
+  }
+
+  .tableHead,
+  .tableRow {
+    grid-template-columns: minmax(15rem, 1.45fr) minmax(9rem, .8fr) minmax(10rem, .85fr) minmax(8rem, .55fr) minmax(13rem, auto);
+  }
+
+  .tableHead {
+    padding: .45rem .65rem .55rem;
+  }
+
+  .tableRow {
+    min-height: 4.1rem;
+    padding: .66rem .65rem;
+    cursor: pointer;
+    transition: border-color .16s ease, background .16s ease, transform .16s ease;
+  }
+
+  .tableRowActive {
+    border-color: rgba(154,255,0,.30);
+    background: linear-gradient(90deg, rgba(154,255,0,.075), rgba(255,255,255,.035));
+    box-shadow: inset 3px 0 0 var(--c360-lemon);
+  }
+
+  .rowActions button {
+    min-height: 1.9rem;
+    padding-inline: .62rem;
+  }
+
+  .desktopDetail {
+    top: 152px;
+    padding: .86rem;
+    border-color: rgba(154,255,0,.13);
+  }
+
+  .desktopDetail .cardHead h3 {
+    margin: .1rem 0 0;
+    font-size: 1.12rem;
+  }
+
+  .desktopDetail .detailGrid div {
+    padding: .55rem .6rem;
+  }
+
+  .desktopDetail .ledgerItem {
+    padding: .55rem .6rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .topActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .topActions > * {
+    flex: 1 1 0;
+  }
+}

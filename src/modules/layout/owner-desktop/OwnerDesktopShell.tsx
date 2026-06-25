@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { roleLabels } from "@/infrastructure/auth/permissions";
+import { BrandLockup } from "@/shared/components/BrandLockup";
 import { createSupabaseBrowserClient } from "@/infrastructure/supabase/client";
 import { demoProfile, isDemoMode } from "@/shared/lib/demoMode";
 import type { ProfileRow } from "@/infrastructure/supabase/types";
@@ -111,18 +112,14 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
   return <div className={styles.shell}>
     <aside className={styles.sidebar}>
       <Link href="/owner/bultos" className={styles.brandWrap} aria-label="Custodia360 operación">
-        <img src="/brand/custodia360_icono_fondo_oscuro.png" alt="Custodia360" className={styles.brandIcon} />
-        <div>
-          <img src="/brand/custodia360_wordmark_fondo_oscuro.png" alt="Custodia360" className={styles.wordmark} />
-          <small>Sistema privado operativo</small>
-        </div>
+        <BrandLockup subtitle="Mesa privada de logística" />
       </Link>
 
       <div className={styles.platformMode}>
         <span className={styles.dot} />
         <div>
-          <strong>{isDemoMode() ? "Modo demo local" : "Operación real"}</strong>
-          <small>Control de bultos, guías, pases, pagos y WhatsApp desde una sola mesa.</small>
+          <strong>{isDemoMode() ? "Demo operativo" : "Operación real"}</strong>
+          <small>Bultos, guías, pases, pagos y cuenta corriente en una sola mesa.</small>
         </div>
       </div>
 
@@ -153,14 +150,14 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
     </aside>
     <main className={styles.main}>
       <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Operación activa - {tenant?.name ?? "sin negocio"}</p>
+        <div className={styles.headerTitle}>
+          <p className={styles.eyebrow}>Operación activa · {tenant?.name ?? "sin negocio"}</p>
           <h1>{title}</h1>
         </div>
         <div className={styles.headerActions}>
-          <Link href="/owner/bultos#seguimiento"><span>Seguimiento</span></Link>
+          <Link href="/owner/bultos#seguimiento"><span>Mesa</span></Link>
           <Link href="/owner/bultos#cuentas"><span>Cuentas</span></Link>
-          <Link href="/consulta/demo"><span>Portal demo</span></Link>
+          <Link href="/consulta/demo"><span>Portal cliente</span></Link>
           <div className={styles.user}>
             {profile?.full_name ?? profile?.email ?? "Owner"}<br />
             <strong>{profile?.role ? roleLabels[profile.role] : tenant?.code}</strong>

@@ -8,6 +8,7 @@ import {
 } from "@/modules/controlBultos/types";
 import { formatDate, formatMoney } from "@/shared/lib/format";
 import type { Currency, FinancialStatus, GuidePaidBy, GuidePaymentStatus, LogisticsStatus, PaymentMethod } from "@/infrastructure/supabase/types";
+import { BrandLockup } from "@/shared/components/BrandLockup";
 import styles from "./ClientPortalView.module.css";
 
 type PortalShipment = {
@@ -127,7 +128,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
   return <main id="inicio" className={styles.page}>
     <header className={styles.header}>
       <div>
-        <div className={styles.portalBrand}><img src="/brand/custodia360_icono_fondo_oscuro.png" alt="" /><span>Custodia360</span></div>
+        <div className={styles.portalBrand}><BrandLockup subtitle="Consulta privada" /></div>
         <h1>{data.client.name}</h1>
         <p>Consulta privada: estado de pedidos, guías cargadas, pases pendientes y contacto directo.</p>
       </div>

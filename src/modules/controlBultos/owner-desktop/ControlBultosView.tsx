@@ -315,6 +315,7 @@ export function ControlBultosView() {
   const [specialOperation, setSpecialOperation] = useState<ControlOperation | null>(null);
   const [specialForm, setSpecialForm] = useState<SpecialMovementInput>(emptySpecialMovementForm());
   const [detailOperation, setDetailOperation] = useState<ControlOperation | null>(null);
+  const [focusedOperationId, setFocusedOperationId] = useState<string | null>(null);
   const [filters, setFilters] = useState({ query: "", logistics_status: "", financial_status: "" });
 
   const demoMode = isDemoMode();
@@ -381,7 +382,7 @@ export function ControlBultosView() {
 
   const accounts = useMemo(() => buildClientAccounts(data.operations), [data.operations]);
   const selectedAccount = accounts.find((account) => account.clientId === selectedAccountId) ?? accounts[0] ?? null;
-  const sideOperation = detailOperation ?? filteredOperations[0] ?? null;
+  const sideOperation = filteredOperations.find((operation) => operation.id === focusedOperationId) ?? filteredOperations[0] ?? null;
 
   const kpis = useMemo(() => {
     return accounts.reduce((acc, account) => {
@@ -606,11 +607,14 @@ export function ControlBultosView() {
   return <OwnerDesktopShell title="Seguimiento">
     <section id="seguimiento" className={styles.topBar}>
       <div>
-        <p>Control de bultos + cuenta corriente</p>
-        <h2>Mesa operativa</h2>
-        <span>{demoMode ? "Demo local" : "Operación real"} · Dólar hoy ${DEFAULT_DOLLAR_RATE} · {profile?.full_name ?? profile?.email ?? "Owner"}</span>
+        <p>Mesa logística</p>
+        <h2>Control diario</h2>
+        <span>{demoMode ? "Demo local" : "Operación real"} · Dólar hoy ${DEFAULT_DOLLAR_RATE} · bultos, guías, pases y cuenta corriente.</span>
       </div>
-      <Button onClick={() => openQuickPanel("operacion")}>+ Nueva</Button>
+      <div className={styles.topActions}>
+        <Button variant="secondary" onClick={() => setActiveTab("cuentas")}>Ver cuentas</Button>
+        <Button onClick={() => openQuickPanel("operacion")}>+ Nueva operación</Button>
+      </div>
     </section>
 
     {message ? <div className={styles.success}>{message}</div> : null}
@@ -653,7 +657,7 @@ export function ControlBultosView() {
           {filteredOperations.length ? filteredOperations.map((operation) => {
             const totals = calculateOperationTotals(operation);
             const account = accounts.find((item) => item.clientId === operation.client_id);
-            return <article key={operation.id} className={styles.tableRow}>
+            return <article key={operation.id} className={`${styles.tableRow} ${sideOperation?.id === operation.id ? styles.tableRowActive : ""}`} onClick={() => setFocusedOperationId(operation.id)}>
               <div className={styles.clientCell}>
                 <strong>{operation.clients?.name ?? "Sin cliente"}</strong>
                 <span>{operation.public_code} · {operation.provider_name}</span>
@@ -671,9 +675,9 @@ export function ControlBultosView() {
                 <small>{guideNumbers(operation)}</small>
               </div>
               <div className={styles.rowActions}>
-                <button type="button" onClick={() => setDetailOperation(operation)}>Ficha</button>
-                <button type="button" onClick={() => startPayment(operation)} disabled={!canCollect}>Cobrar</button>
-                <button type="button" onClick={() => copyWhatsAppOperation(operation)}>WhatsApp</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); setFocusedOperationId(operation.id); }}>Ver</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); startPayment(operation); }} disabled={!canCollect}>Cobrar</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); copyWhatsAppOperation(operation); }}>WhatsApp</button>
               </div>
             </article>;
           }) : <Card className={styles.empty}>No hay operaciones para estos filtros.</Card>}
@@ -734,7 +738,7 @@ export function ControlBultosView() {
           </div>) : <p>Sin guías cargadas.</p>}
         </div>
         <div className={styles.actions}>
-          <Button variant="secondary" onClick={() => setDetailOperation(sideOperation)}>Abrir ficha</Button>
+          <Button variant="secondary" onClick={() => setDetailOperation(sideOperation)}>Abrir completa</Button>
           <Button variant="secondary" onClick={() => startPayment(sideOperation)} disabled={!canCollect}>Cobrar</Button>
           <Button variant="ghost" onClick={() => startShipment(sideOperation)} disabled={!canEdit}>Guía</Button>
           <Button variant="ghost" onClick={() => startSpecial(sideOperation)} disabled={!canEdit}>Movimiento especial</Button>

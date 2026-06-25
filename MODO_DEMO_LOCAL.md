@@ -1,29 +1,46 @@
-# Custodia360 - Modo demo local
+# Modo demo local — Custodia360
 
-Este ZIP incluye un modo demo para mostrar el sistema sin configurar Supabase ni Google Auth.
+## Objetivo
 
-## Levantar local
+Mostrar el sistema sin Supabase real, usando datos demo guardados en el navegador.
 
-```powershell
-cd C:\Proyectos\custodia360
-copy .env.local.demo .env.local
-npm install
-npm run dev
+## Rutas
+
+- `/login`
+- `/owner/bultos`
+- `/consulta/demo`
+- `/consulta/estela`
+- `/consulta/matias`
+
+## Regla de organización
+
+El flujo principal es `/owner/bultos`. El resto de módulos queda más abajo como preparado/no principal.
+
+## Datos demo principales
+
+### Estela
+
+Operación: compra de 5 teléfonos.
+
+- 5 guías.
+- 5 destinatarios.
+- Pases asociados a cada guía.
+- Una guía Buspack pendiente de $57.000 para mostrar deuda de guía.
+- Guías pagadas en destino como informativas.
+
+### Matías
+
+Operación: pases pendientes.
+
+- Pase USD 80 ligado a guía Vía Cargo.
+- Pase USD 150 ligado a guía Correo Argentino.
+- Pase USD 200 ligado a guía Buspack.
+- Guía Buspack pendiente: $57.000.
+
+## Dólar demo
+
+```txt
+$1500
 ```
 
-Abrir:
-
-- Login demo: http://localhost:8787/login/
-- Control de Bultos: http://localhost:8787/owner/bultos/
-- Portal cliente demo: http://localhost:8787/consulta/demo/
-
-## Produccion real
-
-Para usar Supabase real:
-
-1. Cambiar `NEXT_PUBLIC_DEMO_MODE=false` en `.env.local` o en variables del deploy.
-2. Cargar `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY`.
-3. Ejecutar el SQL de `supabase/migrations/20260624_phase1_control_bultos.sql`.
-4. Configurar Google Auth en Supabase.
-
-En modo demo, los cambios del módulo se guardan solo en el navegador con `localStorage`.
+El equivalente en pesos se muestra al día de consulta. Si el pago se hace otro día, el valor puede cambiar según el dólar cargado.

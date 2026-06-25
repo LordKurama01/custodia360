@@ -52,12 +52,18 @@ export type ShipmentInput = {
   guide_number: string;
   guide_amount: number;
   dispatch_date: string | null;
+  recipient_name?: string;
+  recipient_identity_number?: string;
+  destination_detail?: string;
   paid: boolean;
   guide_paid_by: GuidePaidBy;
   guide_payment_status: GuidePaymentStatus;
   method?: PaymentMethod;
   currency?: Currency;
   amount?: number;
+  pass_usd_amount?: number;
+  pass_date?: string | null;
+  pass_note?: string;
 };
 
 export type PaymentInput = {
@@ -74,6 +80,7 @@ export type OperationTotals = {
   totalPackages: number;
   guideToCharge: number;
   passAmount: number;
+  passAmountArs: number;
   totalAmount: number;
   paidArs: number;
   paidUsd: number;
@@ -81,13 +88,32 @@ export type OperationTotals = {
   financialStatus: FinancialStatus;
 };
 
-export const logisticsStatusOptions: Array<{ value: LogisticsStatus; label: string }> = [
-  { value: "para_retirar", label: "Para retirar" },
-  { value: "retirado", label: "Retirado" },
-  { value: "paso", label: "Paso" },
-  { value: "deposito_1", label: "Deposito 1" },
-  { value: "despachado", label: "Despachado" },
+export const DEFAULT_DOLLAR_RATE = 1500;
+export const VIA_CARGO_SURCHARGE = 0.02;
+
+export const logisticsStatusOptions: Array<{ value: LogisticsStatus; label: string; clientLabel: string }> = [
+  { value: "para_retirar", label: "Para retirar", clientLabel: "En preparación" },
+  { value: "retirado", label: "Retirado", clientLabel: "En preparación" },
+  { value: "cd", label: "Depósito CD", clientLabel: "En preparación" },
+  { value: "deposito_a", label: "Depósito A", clientLabel: "En tránsito" },
+  { value: "deposito_b", label: "Depósito B", clientLabel: "En tránsito" },
+  { value: "despachado", label: "Despachado", clientLabel: "Despachado" },
 ];
+
+export const transportCompanyOptions = ["Vía Cargo", "Buspack", "Crucero Express", "Correo Argentino", "Otro"];
+
+export function getClientVisibleStatus(status: LogisticsStatus) {
+  return logisticsStatusOptions.find((item) => item.value === status)?.clientLabel ?? "En preparación";
+}
+
+export function isViaCargo(company?: string | null) {
+  return (company ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes("via cargo");
+}
+
+export function calculateGuideCharge(company: string | null | undefined, amount: number) {
+  const base = Number(amount || 0);
+  return Math.round((isViaCargo(company) ? base * (1 + VIA_CARGO_SURCHARGE) : base) * 100) / 100;
+}
 
 export const financialStatusOptions: Array<{ value: FinancialStatus; label: string }> = [
   { value: "pendiente", label: "Pendiente" },
@@ -103,13 +129,14 @@ export const paymentMethodOptions: Array<{ value: PaymentMethod; label: string; 
 ];
 
 export const logisticsLabels = Object.fromEntries(logisticsStatusOptions.map((item) => [item.value, item.label])) as Record<LogisticsStatus, string>;
+export const clientLogisticsLabels = Object.fromEntries(logisticsStatusOptions.map((item) => [item.value, item.clientLabel])) as Record<LogisticsStatus, string>;
 export const financialLabels = Object.fromEntries(financialStatusOptions.map((item) => [item.value, item.label])) as Record<FinancialStatus, string>;
 export const paymentMethodLabels = Object.fromEntries(paymentMethodOptions.map((item) => [item.value, item.label])) as Record<PaymentMethod, string>;
 
 export const guidePaymentLabels: Record<GuidePaymentStatus, string> = {
   pendiente: "Pendiente",
   pagada_por_jeremias: "Pagada por Jeremias",
-  pagada_por_cliente: "Pagada por cliente",
+  pagada_por_cliente: "Paga en destino / cliente",
   pendiente_reintegro: "Pendiente reintegro",
   reintegrada: "Reintegrada",
 };

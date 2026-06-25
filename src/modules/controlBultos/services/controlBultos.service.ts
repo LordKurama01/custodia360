@@ -10,6 +10,7 @@ import type {
   PaymentInput,
   ShipmentInput,
 } from "../types";
+import { DEFAULT_DOLLAR_RATE, calculateGuideCharge, isViaCargo } from "../types";
 
 const operationSelect = `
   *,
@@ -18,7 +19,7 @@ const operationSelect = `
   operation_payments(*)
 `;
 
-const demoStorageKey = "custodia360:control-bultos-demo:v2";
+const demoStorageKey = "custodia360:control-bultos-demo:v6";
 
 function requireNoError(error: { message: string } | null, fallback: string) {
   if (error) throw new Error(error.message || fallback);
@@ -56,14 +57,20 @@ function normalizeOperation(operation: ControlOperation): ControlOperation {
   };
 }
 
+function getPassUsd(operation: ControlOperation) {
+  const guidePassTotal = roundMoney(operation.operation_shipments.reduce((sum, shipment) => sum + Number(shipment.pass_usd_amount || 0), 0));
+  return guidePassTotal > 0 ? guidePassTotal : Number(operation.pass_amount || 0);
+}
+
 function recalculateOperation(operation: ControlOperation): ControlOperation {
   const normalized = normalizeOperation(operation);
   const totalPackages = roundMoney(Number(normalized.package_count || 0) * Number(normalized.price_per_package || 0));
   const guideToCharge = normalized.operation_shipments.reduce((sum, shipment) => {
     if (shipment.guide_payment_status === "pagada_por_cliente") return sum;
-    return sum + Number(shipment.guide_amount || 0);
+    return sum + calculateGuideCharge(shipment.company, Number(shipment.guide_amount || 0));
   }, 0);
-  const passAmount = Number(normalized.pass_amount || 0);
+  const passUsd = getPassUsd(normalized);
+  const passAmount = passUsd * DEFAULT_DOLLAR_RATE;
   const paidArs = normalized.operation_payments.reduce((sum, payment) => payment.currency === "ARS" ? sum + Number(payment.amount || 0) : sum, 0);
   const paidUsd = normalized.operation_payments.reduce((sum, payment) => payment.currency === "USD" ? sum + Number(payment.amount || 0) : sum, 0);
   const totalAmount = roundMoney(totalPackages + guideToCharge + passAmount);
@@ -72,6 +79,7 @@ function recalculateOperation(operation: ControlOperation): ControlOperation {
   return {
     ...normalized,
     total_packages_amount: totalPackages,
+    pass_amount: passUsd,
     total_amount: totalAmount,
     paid_amount_ars: roundMoney(paidArs),
     paid_amount_usd: roundMoney(paidUsd),
@@ -83,182 +91,290 @@ function recalculateOperation(operation: ControlOperation): ControlOperation {
 
 function getDemoSeed(): ControlBultosData {
   const created = "2026-06-24T10:00:00.000Z";
+  const today = todayIso();
   const clients: ControlClient[] = [
     {
-      id: "demo-client-luciano",
-      name: "Luciano",
+      id: "demo-client-estela",
+      name: "Estela",
       phone: "+54 9 236 555-0101",
       email: null,
-      default_price_per_package: 10000,
-      notes: "Cliente demo con varios locales.",
-      private_code: "CLI-LUCIANO-DEMO",
+      default_price_per_package: 0,
+      notes: "Cliente principal. Puede enviar compras a destinatarios propios y consultar por link privado.",
+      private_code: "CLI-ESTELA-DEMO",
       active: true,
       created_at: created,
       updated_at: created,
     },
     {
-      id: "demo-client-orlando",
-      name: "Orlando",
+      id: "demo-client-matias",
+      name: "Matías",
       phone: "+54 9 236 555-0202",
       email: null,
-      default_price_per_package: 12000,
-      notes: "Cliente demo con reintegro de guia.",
-      private_code: "CLI-ORLANDO-DEMO",
-      active: true,
-      created_at: created,
-      updated_at: created,
-    },
-    {
-      id: "demo-client-nabil",
-      name: "Nabil",
-      phone: "+54 9 236 555-0303",
-      email: null,
-      default_price_per_package: 9000,
-      notes: "Cliente demo pendiente de despacho.",
-      private_code: "CLI-NABIL-DEMO",
+      default_price_per_package: 0,
+      notes: "Cliente con pases pendientes ligados a guías.",
+      private_code: "CLI-MATIAS-DEMO",
       active: true,
       created_at: created,
       updated_at: created,
     },
   ];
 
+  const estelaClient = { id: "demo-client-estela", name: "Estela", phone: "+54 9 236 555-0101", default_price_per_package: 0, private_code: "CLI-ESTELA-DEMO" };
+  const matiasClient = { id: "demo-client-matias", name: "Matías", phone: "+54 9 236 555-0202", default_price_per_package: 0, private_code: "CLI-MATIAS-DEMO" };
+
   const operations: ControlOperation[] = [
     recalculateOperation({
-      id: "demo-op-1",
-      client_id: "demo-client-luciano",
+      id: "demo-op-estela-telefonos",
+      client_id: "demo-client-estela",
       serial_number: 1,
-      operation_date: todayIso(),
-      provider_name: "Flytec",
-      package_count: 3,
-      price_per_package: 10000,
-      total_packages_amount: 30000,
-      logistics_status: "paso",
-      financial_status: "pendiente",
-      note: "Retirar con comprobante. Mostrar al cliente como ejemplo.",
-      pass_amount: 5000,
-      total_amount: 0,
-      paid_amount_ars: 0,
-      paid_amount_usd: 0,
-      balance_amount: 0,
-      visible_to_client: true,
-      public_code: "DEMO-LUCIANO",
-      created_by: "demo-owner",
-      updated_by: "demo-owner",
-      created_at: created,
-      updated_at: created,
-      clients: { id: "demo-client-luciano", name: "Luciano", phone: "+54 9 236 555-0101", default_price_per_package: 10000, private_code: "CLI-LUCIANO-DEMO" },
-      operation_shipments: [{
-        id: "demo-ship-1",
-        operation_id: "demo-op-1",
-        company: "Crucero Express",
-        guide_number: "GUI-DEMO-001",
-        guide_amount: 18000,
-        guide_paid_by: "jeremias",
-        guide_payment_status: "pendiente_reintegro",
-        guide_payment_method: "efectivo_pesos",
-        guide_payment_currency: "ARS",
-        guide_paid_amount: 18000,
-        dispatch_date: null,
-        created_at: created,
-        updated_at: created,
-      }],
-      operation_payments: [{
-        id: "demo-pay-1",
-        operation_id: "demo-op-1",
-        concept: "Adelanto en pesos",
-        method: "transferencia_1",
-        currency: "ARS",
-        amount: 20000,
-        paid_at: created,
-        note: "Transferencia inicial demo.",
-        created_by: "demo-owner",
-        created_at: created,
-      }],
-    }),
-    recalculateOperation({
-      id: "demo-op-2",
-      client_id: "demo-client-orlando",
-      serial_number: 2,
-      operation_date: todayIso(),
-      provider_name: "Alpes",
-      package_count: 2,
-      price_per_package: 12000,
-      total_packages_amount: 24000,
+      operation_date: today,
+      provider_name: "Génesis / compra 5 teléfonos",
+      package_count: 5,
+      price_per_package: 0,
+      total_packages_amount: 0,
       logistics_status: "despachado",
       financial_status: "pendiente",
-      note: "Guia abonada por cliente antes del despacho.",
-      pass_amount: 0,
+      note: "Operación con cinco destinos. Estela paga; cada guía identifica un pedido/envío para un destinatario diferente.",
+      pass_amount: 550,
       total_amount: 0,
       paid_amount_ars: 0,
       paid_amount_usd: 0,
       balance_amount: 0,
       visible_to_client: true,
-      public_code: "DEMO-ORLANDO",
+      public_code: "ESTELA-5TEL",
       created_by: "demo-owner",
       updated_by: "demo-owner",
       created_at: created,
       updated_at: created,
-      clients: { id: "demo-client-orlando", name: "Orlando", phone: "+54 9 236 555-0202", default_price_per_package: 12000, private_code: "CLI-ORLANDO-DEMO" },
-      operation_shipments: [{
-        id: "demo-ship-2",
-        operation_id: "demo-op-2",
-        company: "Buspack Aldea",
-        guide_number: "GUI-DEMO-002",
-        guide_amount: 15000,
-        guide_paid_by: "cliente",
-        guide_payment_status: "pagada_por_cliente",
-        guide_payment_method: "transferencia_2",
-        guide_payment_currency: "ARS",
-        guide_paid_amount: 15000,
-        dispatch_date: todayIso(),
-        created_at: created,
-        updated_at: created,
-      }],
-      operation_payments: [{
-        id: "demo-pay-2",
-        operation_id: "demo-op-2",
-        concept: "Pago total bultos",
-        method: "efectivo_dolares",
-        currency: "USD",
-        amount: 20,
-        paid_at: created,
-        note: "Demo pago en dolares separado.",
-        created_by: "demo-owner",
-        created_at: created,
-      }],
+      clients: estelaClient,
+      operation_shipments: [
+        {
+          id: "demo-ship-estela-1",
+          operation_id: "demo-op-estela-telefonos",
+          company: "Vía Cargo",
+          guide_number: "VC-10253",
+          guide_amount: 57000,
+          guide_paid_by: "cliente",
+          guide_payment_status: "pagada_por_cliente",
+          guide_payment_method: null,
+          guide_payment_currency: null,
+          guide_paid_amount: 0,
+          recipient_name: "Matías",
+          recipient_identity_number: "33.547.272",
+          destination_detail: "Retira Matías por indicación de Estela.",
+          pass_usd_amount: 80,
+          pass_date: today,
+          pass_note: "Pase asociado a guía VC-10253.",
+          guide_cost_amount: 57000,
+          guide_surcharge_percent: 2,
+          guide_charge_amount: 58140,
+          dispatch_date: today,
+          created_at: created,
+          updated_at: created,
+        },
+        {
+          id: "demo-ship-estela-2",
+          operation_id: "demo-op-estela-telefonos",
+          company: "Buspack",
+          guide_number: "BP-10254",
+          guide_amount: 38000,
+          guide_paid_by: "cliente",
+          guide_payment_status: "pagada_por_cliente",
+          guide_payment_method: null,
+          guide_payment_currency: null,
+          guide_paid_amount: 0,
+          recipient_name: "Juan",
+          recipient_identity_number: "31.111.111",
+          destination_detail: "Entrega a cliente de Estela.",
+          pass_usd_amount: 150,
+          pass_date: today,
+          pass_note: "Pase asociado a guía BP-10254.",
+          guide_cost_amount: 38000,
+          guide_surcharge_percent: 0,
+          guide_charge_amount: 38000,
+          dispatch_date: today,
+          created_at: created,
+          updated_at: created,
+        },
+        {
+          id: "demo-ship-estela-3",
+          operation_id: "demo-op-estela-telefonos",
+          company: "Crucero Express",
+          guide_number: "CE-10255",
+          guide_amount: 42000,
+          guide_paid_by: "cliente",
+          guide_payment_status: "pagada_por_cliente",
+          guide_payment_method: null,
+          guide_payment_currency: null,
+          guide_paid_amount: 0,
+          recipient_name: "Laura",
+          recipient_identity_number: "29.222.222",
+          destination_detail: "Entrega a tercero autorizado.",
+          pass_usd_amount: 200,
+          pass_date: today,
+          pass_note: "Pase asociado a guía CE-10255.",
+          guide_cost_amount: 42000,
+          guide_surcharge_percent: 0,
+          guide_charge_amount: 42000,
+          dispatch_date: today,
+          created_at: created,
+          updated_at: created,
+        },
+        {
+          id: "demo-ship-estela-4",
+          operation_id: "demo-op-estela-telefonos",
+          company: "Correo Argentino",
+          guide_number: "CA-10256",
+          guide_amount: 26000,
+          guide_paid_by: "cliente",
+          guide_payment_status: "pagada_por_cliente",
+          guide_payment_method: null,
+          guide_payment_currency: null,
+          guide_paid_amount: 0,
+          recipient_name: "Pedro",
+          recipient_identity_number: "30.333.333",
+          destination_detail: "Entrega a cuarto destinatario.",
+          pass_usd_amount: 70,
+          pass_date: today,
+          pass_note: "Pase asociado a guía CA-10256.",
+          guide_cost_amount: 26000,
+          guide_surcharge_percent: 0,
+          guide_charge_amount: 26000,
+          dispatch_date: today,
+          created_at: created,
+          updated_at: created,
+        },
+        {
+          id: "demo-ship-estela-5",
+          operation_id: "demo-op-estela-telefonos",
+          company: "Buspack",
+          guide_number: "BP-10257",
+          guide_amount: 57000,
+          guide_paid_by: "pendiente",
+          guide_payment_status: "pendiente",
+          guide_payment_method: null,
+          guide_payment_currency: null,
+          guide_paid_amount: 0,
+          recipient_name: "Carla",
+          recipient_identity_number: "32.444.444",
+          destination_detail: "Guía no pagada / pendiente para mostrar en WhatsApp.",
+          pass_usd_amount: 50,
+          pass_date: today,
+          pass_note: "Pase asociado a guía BP-10257.",
+          guide_cost_amount: 57000,
+          guide_surcharge_percent: 0,
+          guide_charge_amount: 57000,
+          dispatch_date: today,
+          created_at: created,
+          updated_at: created,
+        },
+      ],
+      operation_payments: [],
     }),
     recalculateOperation({
-      id: "demo-op-3",
-      client_id: "demo-client-nabil",
-      serial_number: 3,
-      operation_date: todayIso(),
-      provider_name: "Felipe",
-      package_count: 4,
-      price_per_package: 9000,
-      total_packages_amount: 36000,
-      logistics_status: "para_retirar",
+      id: "demo-op-matias-pases",
+      client_id: "demo-client-matias",
+      serial_number: 2,
+      operation_date: today,
+      provider_name: "Compras varias / pases pendientes",
+      package_count: 3,
+      price_per_package: 0,
+      total_packages_amount: 0,
+      logistics_status: "deposito_a",
       financial_status: "pendiente",
-      note: "Pedido pendiente para mostrar cambio de estado.",
-      pass_amount: 4000,
+      note: "Pases variables: USD 80 + USD 150 + USD 200. El equivalente en pesos se actualiza con el dólar del día.",
+      pass_amount: 430,
       total_amount: 0,
       paid_amount_ars: 0,
       paid_amount_usd: 0,
       balance_amount: 0,
       visible_to_client: true,
-      public_code: "DEMO-NABIL",
+      public_code: "MATIAS-PASES",
       created_by: "demo-owner",
       updated_by: "demo-owner",
       created_at: created,
       updated_at: created,
-      clients: { id: "demo-client-nabil", name: "Nabil", phone: "+54 9 236 555-0303", default_price_per_package: 9000, private_code: "CLI-NABIL-DEMO" },
-      operation_shipments: [],
+      clients: matiasClient,
+      operation_shipments: [
+        {
+          id: "demo-ship-matias-1",
+          operation_id: "demo-op-matias-pases",
+          company: "Vía Cargo",
+          guide_number: "VC-20080",
+          guide_amount: 50000,
+          guide_paid_by: "cliente",
+          guide_payment_status: "pagada_por_cliente",
+          guide_payment_method: null,
+          guide_payment_currency: null,
+          guide_paid_amount: 0,
+          recipient_name: "Matías",
+          recipient_identity_number: "33.547.272",
+          destination_detail: "Guía paga en destino.",
+          pass_usd_amount: 80,
+          pass_date: today,
+          pass_note: "Pase variable cargado manualmente.",
+          guide_cost_amount: 50000,
+          guide_surcharge_percent: 2,
+          guide_charge_amount: 51000,
+          dispatch_date: null,
+          created_at: created,
+          updated_at: created,
+        },
+        {
+          id: "demo-ship-matias-2",
+          operation_id: "demo-op-matias-pases",
+          company: "Correo Argentino",
+          guide_number: "CA-20150",
+          guide_amount: 30000,
+          guide_paid_by: "cliente",
+          guide_payment_status: "pagada_por_cliente",
+          guide_payment_method: null,
+          guide_payment_currency: null,
+          guide_paid_amount: 0,
+          recipient_name: "Matías",
+          recipient_identity_number: "33.547.272",
+          destination_detail: "Pase asociado a esta guía.",
+          pass_usd_amount: 150,
+          pass_date: today,
+          pass_note: "Pase variable cargado manualmente.",
+          guide_cost_amount: 30000,
+          guide_surcharge_percent: 0,
+          guide_charge_amount: 30000,
+          dispatch_date: null,
+          created_at: created,
+          updated_at: created,
+        },
+        {
+          id: "demo-ship-matias-3",
+          operation_id: "demo-op-matias-pases",
+          company: "Buspack",
+          guide_number: "BP-20200",
+          guide_amount: 57000,
+          guide_paid_by: "pendiente",
+          guide_payment_status: "pendiente",
+          guide_payment_method: null,
+          guide_payment_currency: null,
+          guide_paid_amount: 0,
+          recipient_name: "Matías",
+          recipient_identity_number: "33.547.272",
+          destination_detail: "Guía pendiente: $57.000 Buspack.",
+          pass_usd_amount: 200,
+          pass_date: today,
+          pass_note: "Pase variable cargado manualmente.",
+          guide_cost_amount: 57000,
+          guide_surcharge_percent: 0,
+          guide_charge_amount: 57000,
+          dispatch_date: null,
+          created_at: created,
+          updated_at: created,
+        },
+      ],
       operation_payments: [],
     }),
   ];
 
   return { clients, operations };
 }
-
 function readDemoData(): ControlBultosData {
   if (typeof window === "undefined") return getDemoSeed();
 
@@ -507,57 +623,66 @@ export async function saveShipment(input: ShipmentInput) {
     const data = readDemoData();
     const operations = data.operations.map((operation) => {
       if (operation.id !== input.operation_id) return operation;
-      const existing = operation.operation_shipments[0];
+      const guideAmount = Number(input.guide_amount || 0);
+      const company = cleanText(input.company);
       const shipment = {
-        id: existing?.id ?? makeId("demo-ship"),
+        id: makeId("demo-ship"),
         operation_id: input.operation_id,
-        company: cleanText(input.company),
+        company,
         guide_number: cleanText(input.guide_number),
-        guide_amount: Number(input.guide_amount || 0),
+        guide_amount: guideAmount,
         guide_paid_by: input.paid ? input.guide_paid_by : "pendiente" as const,
         guide_payment_status: input.paid ? input.guide_payment_status : "pendiente" as const,
         guide_payment_method: input.paid ? input.method ?? null : null,
         guide_payment_currency: input.paid ? input.currency ?? null : null,
         guide_paid_amount: input.paid ? Number(input.amount || 0) : 0,
+        recipient_name: cleanText(input.recipient_name ?? ""),
+        recipient_identity_number: cleanText(input.recipient_identity_number ?? ""),
+        destination_detail: cleanText(input.destination_detail ?? ""),
+        guide_cost_amount: guideAmount,
+        pass_usd_amount: Number(input.pass_usd_amount || 0),
+        pass_date: input.pass_date || todayIso(),
+        pass_note: cleanText(input.pass_note ?? ""),
+        guide_surcharge_percent: isViaCargo(company) ? 2 : 0,
+        guide_charge_amount: calculateGuideCharge(company, guideAmount),
         dispatch_date: input.dispatch_date,
-        created_at: existing?.created_at ?? nowIso(),
+        created_at: nowIso(),
         updated_at: nowIso(),
       };
-      return recalculateOperation({ ...operation, operation_shipments: [shipment] });
+      return recalculateOperation({ ...operation, operation_shipments: [...operation.operation_shipments, shipment] });
     });
     writeDemoData({ ...data, operations });
-    return operations.find((item) => item.id === input.operation_id)?.operation_shipments[0] ?? null;
+    return operations.find((item) => item.id === input.operation_id)?.operation_shipments.at(-1) ?? null;
   }
 
   const supabase = createSupabaseBrowserClient();
-  const { data: existing } = await supabase
-    .from("operation_shipments")
-    .select("*")
-    .eq("operation_id", input.operation_id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
+  const company = cleanText(input.company);
+  const guideAmount = Number(input.guide_amount || 0);
   const payload = {
     operation_id: input.operation_id,
-    company: cleanText(input.company),
+    company,
     guide_number: cleanText(input.guide_number),
-    guide_amount: input.guide_amount,
+    guide_amount: guideAmount,
     guide_paid_by: input.paid ? input.guide_paid_by : "pendiente",
     guide_payment_status: input.paid ? input.guide_payment_status : "pendiente",
     guide_payment_method: input.paid ? input.method ?? null : null,
     guide_payment_currency: input.paid ? input.currency ?? null : null,
     guide_paid_amount: input.paid ? input.amount ?? 0 : 0,
+    recipient_name: cleanText(input.recipient_name ?? ""),
+    recipient_identity_number: cleanText(input.recipient_identity_number ?? ""),
+    destination_detail: cleanText(input.destination_detail ?? ""),
+    guide_cost_amount: guideAmount,
+    pass_usd_amount: Number(input.pass_usd_amount || 0),
+    pass_date: input.pass_date || todayIso(),
+    pass_note: cleanText(input.pass_note ?? ""),
+    guide_surcharge_percent: isViaCargo(company) ? 2 : 0,
+    guide_charge_amount: calculateGuideCharge(company, guideAmount),
     dispatch_date: input.dispatch_date,
   };
 
-  const query = existing
-    ? supabase.from("operation_shipments").update(payload).eq("id", existing.id).select("*").single()
-    : supabase.from("operation_shipments").insert(payload).select("*").single();
-
-  const { data, error } = await query;
+  const { data, error } = await supabase.from("operation_shipments").insert(payload).select("*").single();
   requireNoError(error, "No se pudo guardar la guia.");
-  await recordAudit("shipment_saved", "operation", input.operation_id, data as Json, existing as Json);
+  await recordAudit("shipment_saved", "operation", input.operation_id, data as Json);
   return data;
 }
 

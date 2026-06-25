@@ -1,7 +1,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type InternalRole = "owner" | "admin" | "operator" | "collector" | "viewer";
-export type LogisticsStatus = "para_retirar" | "retirado" | "paso" | "deposito_1" | "despachado";
+export type LogisticsStatus = "para_retirar" | "retirado" | "cd" | "deposito_a" | "deposito_b" | "despachado";
 export type FinancialStatus = "pendiente" | "pago_parcial" | "pago_total";
 export type PaymentMethod = "efectivo_pesos" | "efectivo_dolares" | "transferencia_1" | "transferencia_2";
 export type Currency = "ARS" | "USD";
@@ -79,6 +79,15 @@ export type OperationShipmentRow = {
   guide_payment_method: PaymentMethod | null;
   guide_payment_currency: Currency | null;
   guide_paid_amount: number;
+  recipient_name?: string | null;
+  recipient_identity_number?: string | null;
+  destination_detail?: string | null;
+  guide_cost_amount?: number | null;
+  guide_surcharge_percent?: number | null;
+  guide_charge_amount?: number | null;
+  pass_usd_amount?: number | null;
+  pass_date?: string | null;
+  pass_note?: string | null;
   dispatch_date: string | null;
   created_at: string;
   updated_at: string;

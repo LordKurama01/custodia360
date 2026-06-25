@@ -6,7 +6,7 @@ exception when duplicate_object then null;
 end $$;
 
 do $$ begin
-  create type public.logistics_status as enum ('para_retirar', 'retirado', 'paso', 'deposito_1', 'despachado');
+  create type public.logistics_status as enum ('para_retirar', 'retirado', 'cd', 'deposito_a', 'deposito_b', 'despachado');
 exception when duplicate_object then null;
 end $$;
 
@@ -100,6 +100,15 @@ create table if not exists public.operation_shipments (
   guide_payment_method public.payment_method,
   guide_payment_currency public.currency,
   guide_paid_amount numeric(14,2) default 0,
+  recipient_name text,
+  recipient_identity_number text,
+  destination_detail text,
+  guide_cost_amount numeric(14,2) default 0,
+  guide_surcharge_percent numeric(6,2) default 0,
+  guide_charge_amount numeric(14,2) default 0,
+  pass_usd_amount numeric(14,2) default 0,
+  pass_date date,
+  pass_note text,
   dispatch_date date,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -248,7 +257,7 @@ begin
   select coalesce(sum(
     case
       when s.guide_payment_status = 'pagada_por_cliente' then 0
-      else coalesce(s.guide_amount, 0)
+      else coalesce(nullif(s.guide_charge_amount, 0), s.guide_amount, 0)
     end
   ), 0)
   into guide_total
@@ -262,7 +271,7 @@ begin
   from public.operation_payments p
   where p.operation_id = target_operation_id;
 
-  select coalesce(o.total_packages_amount, 0) + coalesce(o.pass_amount, 0) + guide_total
+  select coalesce(o.total_packages_amount, 0) + (coalesce(o.pass_amount, 0) * 1500) + guide_total
   into total_due
   from public.operations o
   where o.id = target_operation_id;
@@ -476,6 +485,12 @@ begin
               'guide_payment_method', s.guide_payment_method,
               'guide_payment_currency', s.guide_payment_currency,
               'guide_paid_amount', s.guide_paid_amount,
+              'recipient_name', s.recipient_name,
+              'recipient_identity_number', s.recipient_identity_number,
+              'destination_detail', s.destination_detail,
+              'guide_cost_amount', s.guide_cost_amount,
+              'guide_surcharge_percent', s.guide_surcharge_percent,
+              'guide_charge_amount', s.guide_charge_amount,
               'dispatch_date', s.dispatch_date
             ))
             from public.operation_shipments s

@@ -18,9 +18,9 @@ const groups = [
     mode: "primary",
     items: [
       ["Mesa de control", "/owner/bultos#seguimiento"],
-      ["Cuentas", "/owner/bultos#cuentas"],
+      ["Clientes / planillas", "/owner/bultos#cuentas"],
       ["Guías", "/owner/bultos#guias"],
-      ["Clientes", "/owner/clientes"],
+      ["Cuenta corriente", "/owner/bultos#cuentas"],
     ],
   },
   {
@@ -119,7 +119,7 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
         <span className={styles.dot} />
         <div>
           <strong>{isDemoMode() ? "Demo operativo" : "Operación real"}</strong>
-          <small>Bultos, guías, pases, pagos y cuenta corriente en una sola mesa.</small>
+          <small>Tablero general, planilla por cliente, guías y cuenta corriente.</small>
         </div>
       </div>
 
@@ -145,7 +145,7 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
       <div className={styles.tenantBox}>
         <div className={styles.tenantCode}>{tenant?.code ?? "Sin dueño"}</div>
         <strong>{tenant?.name ?? "Sin dueño activo"}</strong>
-        <small>Flujo base: cliente → operación → guías → pases USD → cuenta corriente → WhatsApp.</small>
+        <small>Flujo real: pizarrón digital → ficha cliente → guías → pases → pagos → WhatsApp.</small>
       </div>
     </aside>
     <main className={styles.main}>
@@ -155,9 +155,7 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
           <h1>{title}</h1>
         </div>
         <div className={styles.headerActions}>
-          <Link href="/owner/bultos#seguimiento"><span>Mesa</span></Link>
-          <Link href="/owner/bultos#cuentas"><span>Cuentas</span></Link>
-          <Link href="/consulta/demo"><span>Portal cliente</span></Link>
+          <Link href="/consulta/demo"><span>Vista cliente</span></Link>
           <div className={styles.user}>
             {profile?.full_name ?? profile?.email ?? "Owner"}<br />
             <strong>{profile?.role ? roleLabels[profile.role] : tenant?.code}</strong>
@@ -170,19 +168,19 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
     <nav className={styles.mobileBottomNav} aria-label="Navegación principal móvil">
       <Link href="/owner/bultos#seguimiento" className={pathname.startsWith("/owner/bultos") ? styles.mobileNavActive : ""}>
         <span>●</span>
-        <strong>Seguimiento</strong>
+        <strong>Mesa</strong>
       </Link>
       <Link href="/owner/bultos#cuentas">
-        <span>$</span>
-        <strong>Cuentas</strong>
+        <span>▦</span>
+        <strong>Clientes</strong>
       </Link>
       <Link href="/owner/bultos#nueva" className={styles.mobileFab} aria-label="Nueva carga">
         <span>+</span>
         <strong>Nueva</strong>
       </Link>
-      <Link href="/owner/bultos#guias">
-        <span>▤</span>
-        <strong>Guías</strong>
+      <Link href="/owner/bultos#cuentas">
+        <span>$</span>
+        <strong>Cuentas</strong>
       </Link>
       <Link href="/owner/bultos#mas">
         <span>⋯</span>

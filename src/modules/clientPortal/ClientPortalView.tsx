@@ -130,7 +130,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
       <div>
         <div className={styles.portalBrand}><BrandLockup subtitle="Consulta privada" /></div>
         <h1>{data.client.name}</h1>
-        <p>Consulta privada: estado de pedidos, guías cargadas, pases pendientes y contacto directo.</p>
+        <p>Portal por invitación: estado del pedido, guías despachadas, pases pendientes y contacto directo.</p>
       </div>
       <strong>Cliente {data.client.id.slice(0, 8).toUpperCase()}</strong>
     </header>
@@ -164,7 +164,8 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
           </div>
 
           <div id="guias" className={styles.payments}>
-            <h2>{operation.logistics_status === "despachado" ? "Guías cargadas" : "Guías / pedidos"}</h2>
+            <h2>{operation.logistics_status === "despachado" ? "Despachado · guías disponibles" : "Guías / pedidos"}</h2>
+            {operation.logistics_status === "despachado" ? <p className={styles.guideHint}>Tocá cada guía para ver destinatario, domicilio, valor, pase y condición de pago.</p> : null}
             {operation.shipments.length ? operation.shipments.map((shipment, index) => <details key={`${operation.id}-${shipment.guide_number ?? index}`} className={styles.guideDetail}>
               <summary>
                 <strong>{shipment.guide_number ?? `Guía ${index + 1}`}</strong>
@@ -172,15 +173,15 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
               </summary>
               <div className={styles.grid}>
                 <div><span>Destinatario</span><strong>{shipment.recipient_name ?? "Sin cargar"}</strong></div>
-                <div><span>DNI / identidad</span><strong>{shipment.recipient_identity_number ?? "Sin cargar"}</strong></div>
+                <div><span>DNI / CUIT</span><strong>{shipment.recipient_identity_number ?? "Sin cargar"}</strong></div>
                 <div><span>Empresa</span><strong>{shipment.company ?? "Sin cargar"}</strong></div>
                 <div><span>Fecha despacho</span><strong>{formatDate(shipment.dispatch_date ?? undefined)}</strong></div>
-                <div><span>Valor real guía</span><strong>{formatMoney(Number(shipment.guide_amount || 0))}</strong></div>
+                <div><span>Valor declarado / guía</span><strong>{formatMoney(Number(shipment.guide_amount || 0))}</strong></div>
                 <div><span>Total guía cliente</span><strong>{guideChargeLabel(shipment)}</strong></div>
                 <div><span>Pase USD</span><strong>{moneyUsd(Number(shipment.pass_usd_amount || 0))}</strong></div>
                 <div><span>Pase hoy</span><strong>{formatMoney(Number(shipment.pass_usd_amount || 0) * DEFAULT_DOLLAR_RATE)}</strong></div>
                 <div><span>Fecha pase</span><strong>{formatDate(shipment.pass_date ?? undefined)}</strong></div>
-                <div><span>Estado guía</span><strong>{guidePaymentLabels[shipment.guide_payment_status]}</strong></div>
+                <div><span>Condición guía</span><strong>{guidePaymentLabels[shipment.guide_payment_status]}</strong></div>
                 <div><span>Resumen guía</span><strong>{guidePaymentDetail(shipment)}</strong></div>
               </div>
               <p>{shipment.destination_detail ?? "Sin observación de destino."}</p>

@@ -17,7 +17,7 @@ export function BrandLockup({
 
   return <div className={classNames} aria-label={iconOnlyLabel}>
     <span className={styles.symbol} aria-hidden="true">
-      <img src="/brand/custodia360_icono_transparente_aprox.png" alt="" />
+      <img src="/brand/custodia360_isotipo.png" alt="" />
     </span>
     <span className={styles.copy}>
       <span className={styles.name}><span>Custodia</span><strong>360</strong></span>

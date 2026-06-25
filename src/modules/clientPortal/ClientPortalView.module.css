@@ -468,3 +468,9 @@
 .portalBrand > span {
   display: none;
 }
+
+.guideHint {
+  margin: -.2rem 0 .2rem !important;
+  color: var(--c360-muted) !important;
+  font-size: .82rem;
+}

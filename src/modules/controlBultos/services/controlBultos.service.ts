@@ -20,7 +20,7 @@ const operationSelect = `
   operation_payments(*)
 `;
 
-const demoStorageKey = "custodia360:control-bultos-demo:v6";
+const demoStorageKey = "custodia360:control-bultos-demo:v9-flow-final";
 
 function requireNoError(error: { message: string } | null, fallback: string) {
   if (error) throw new Error(error.message || fallback);

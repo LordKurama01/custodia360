@@ -900,3 +900,195 @@
     flex: 1 1 0;
   }
 }
+
+/* v9 final flow: desk = tablero + planilla cliente; mobile = carga rápida sin doble navegación */
+.accountListTitle {
+  display: grid;
+  gap: .18rem;
+  padding: .75rem .8rem;
+  border: 1px solid rgba(154,255,0,.14);
+  border-radius: .95rem;
+  background: rgba(154,255,0,.045);
+}
+
+.accountListTitle strong,
+.clientSheetHead h3 {
+  color: #fff;
+}
+
+.accountListTitle span,
+.clientSheetHead span {
+  color: var(--c360-muted);
+  font-size: .76rem;
+  line-height: 1.35;
+}
+
+.clientSheetHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .85rem;
+}
+
+.clientSheetHead p {
+  margin: 0 0 .25rem;
+  color: var(--c360-lemon);
+  font-size: .68rem;
+  font-weight: 950;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.clientSheetHead h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: -.04em;
+}
+
+.clientSheetActions {
+  display: flex;
+  gap: .45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.sheetTable {
+  display: grid;
+  gap: .38rem;
+  padding: .5rem;
+  border: 1px solid var(--c360-line);
+  border-radius: 1rem;
+  background: rgba(3, 10, 19, .34);
+  overflow: auto;
+}
+
+.sheetHeadRow,
+.sheetRow,
+.sheetRowButton {
+  min-width: 760px;
+  display: grid;
+  grid-template-columns: 82px 54px 1.3fr .9fr .9fr .7fr .8fr;
+  gap: .55rem;
+  align-items: center;
+}
+
+.sheetHeadRow {
+  padding: .48rem .58rem;
+  color: var(--c360-muted);
+  font-size: .66rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.sheetRow,
+.sheetRowButton {
+  width: 100%;
+  padding: .58rem;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: .72rem;
+  color: var(--c360-ink-2);
+  background: rgba(255,255,255,.032);
+  text-align: left;
+  font-size: .76rem;
+}
+
+.sheetRowButton {
+  cursor: pointer;
+}
+
+.sheetRowButton:hover {
+  border-color: rgba(154,255,0,.26);
+  background: rgba(154,255,0,.052);
+}
+
+.sheetRow strong,
+.sheetRowButton strong {
+  color: #fff;
+}
+
+.ledgerTwoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+}
+
+.panelSteps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .35rem;
+}
+
+.panelSteps span {
+  min-height: 2rem;
+  display: grid;
+  place-items: center;
+  padding: 0 .45rem;
+  border: 1px solid var(--c360-line);
+  border-radius: 999px;
+  color: var(--c360-muted);
+  background: rgba(255,255,255,.035);
+  font-size: .68rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.panelSteps span:first-child {
+  color: #07100d;
+  background: var(--c360-lemon);
+  border-color: rgba(154,255,0,.45);
+}
+
+@media (min-width: 961px) {
+  .appTabs { display: none !important; }
+  .accountsGrid { grid-template-columns: minmax(220px, 300px) 1fr; }
+  .accountDetail { gap: .85rem; }
+}
+
+@media (max-width: 960px) {
+  .appTabs { display: none !important; }
+  .topBar { margin-bottom: .6rem; }
+}
+
+@media (max-width: 767px) {
+  .topBar {
+    min-height: unset;
+    padding: .78rem;
+  }
+  .topBar h2 { font-size: 1.05rem; }
+  .topBar span { font-size: .7rem; }
+  .topActions { display: none; }
+  .kpiStrip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: .55rem;
+  }
+  .searchCard {
+    margin-top: .55rem;
+    padding: .65rem !important;
+  }
+  .operationCardHead strong {
+    overflow-wrap: anywhere;
+  }
+  .clientSheetHead {
+    display: grid;
+  }
+  .clientSheetActions {
+    justify-content: stretch;
+  }
+  .clientSheetActions > * {
+    flex: 1 1 0;
+  }
+  .ledgerTwoCols,
+  .accountTotals {
+    grid-template-columns: 1fr;
+  }
+  .sheetHeadRow,
+  .sheetRow,
+  .sheetRowButton {
+    min-width: 680px;
+    grid-template-columns: 74px 48px 1.2fr .9fr .9fr .65fr .8fr;
+  }
+  .panelSteps {
+    grid-template-columns: 1fr;
+  }
+}

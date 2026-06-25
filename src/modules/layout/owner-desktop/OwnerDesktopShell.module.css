@@ -497,3 +497,27 @@
     padding: 10px 10px 126px;
   }
 }
+
+/* v9: desktop navigation lives in sidebar; mobile is one bottom nav only */
+@media (min-width: 961px) {
+  .headerActions a:not(:first-child) { display: none; }
+  .brandWrap { min-height: 54px; }
+  .platformMode small { max-width: 220px; }
+}
+
+@media (max-width: 960px) {
+  .mobileBottomNav {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    padding: 8px 8px 12px;
+    border-radius: 22px;
+  }
+  .mobileBottomNav a { min-height: 46px; }
+  .mobileBottomNav .mobileFab { transform: translateY(-16px); }
+  .mobileBottomNav .mobileFab span {
+    width: 54px;
+    height: 54px;
+  }
+  .mobileBottomNav small { display: none; }
+}

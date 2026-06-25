@@ -565,3 +565,210 @@
   .panelHead h3 { font-size: .98rem; }
   .checkRow { grid-template-columns: 22px 1fr auto; padding: .5rem; }
 }
+
+/* v7 senior polish: desktop as office control table, mobile as fast app */
+.tableShell {
+  display: none;
+}
+
+.desktopDetail {
+  display: none;
+}
+
+.mobileOperationCards {
+  display: grid;
+  gap: .75rem;
+}
+
+@media (min-width: 961px) {
+  .topBar {
+    padding: 1.05rem 1.15rem;
+    border-radius: 1.35rem;
+    background:
+      radial-gradient(circle at 96% 10%, rgba(154, 255, 0, .13), transparent 25%),
+      linear-gradient(135deg, rgba(16, 32, 51, .98), rgba(6, 18, 32, .96));
+  }
+
+  .topBar h2 {
+    font-size: 1.5rem;
+  }
+
+  .appTabs {
+    display: none;
+  }
+
+  .kpiStrip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .65rem;
+  }
+
+  .kpi {
+    min-height: 4.9rem;
+    padding: .9rem 1rem !important;
+    border-radius: 1.05rem !important;
+  }
+
+  .searchCard {
+    position: sticky;
+    top: 91px;
+    z-index: 8;
+    grid-template-columns: minmax(20rem, 1fr) auto;
+    align-items: center;
+    padding: .78rem 1rem !important;
+    background: rgba(11, 24, 40, .92) !important;
+    backdrop-filter: blur(18px);
+  }
+
+  .filterChips {
+    justify-content: flex-end;
+    max-width: 720px;
+  }
+
+  .contentGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    align-items: start;
+    gap: .85rem;
+  }
+
+  .operationList {
+    min-width: 0;
+  }
+
+  .mobileOperationCards {
+    display: none;
+  }
+
+  .tableShell {
+    display: grid;
+    gap: .42rem;
+    padding: .55rem;
+    border: 1px solid var(--c360-line);
+    border-radius: 1.1rem;
+    background: linear-gradient(180deg, rgba(11, 24, 40, .98), rgba(6, 18, 32, .96));
+    box-shadow: var(--c360-shadow-soft);
+  }
+
+  .tableHead,
+  .tableRow {
+    display: grid;
+    grid-template-columns: minmax(14rem, 1.4fr) minmax(10rem, .9fr) minmax(11rem, .9fr) minmax(9rem, .7fr) minmax(15rem, auto);
+    gap: .7rem;
+    align-items: center;
+  }
+
+  .tableHead {
+    padding: .58rem .7rem;
+    color: var(--c360-muted);
+    font-size: .68rem;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .tableRow {
+    min-height: 4.5rem;
+    padding: .74rem .7rem;
+    border: 1px solid rgba(255, 255, 255, .07);
+    border-radius: .88rem;
+    background: rgba(255, 255, 255, .032);
+  }
+
+  .tableRow:hover {
+    border-color: rgba(154, 255, 0, .20);
+    background: rgba(154, 255, 0, .045);
+  }
+
+  .tableRow strong,
+  .clientCell strong,
+  .moneyCell strong {
+    display: block;
+    color: #fff;
+    font-size: .86rem;
+  }
+
+  .tableRow span,
+  .tableRow small,
+  .clientCell span,
+  .moneyCell small {
+    display: block;
+    margin-top: .18rem;
+    color: var(--c360-muted);
+    font-size: .72rem;
+    line-height: 1.28;
+  }
+
+  .rowActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .4rem;
+    flex-wrap: wrap;
+  }
+
+  .rowActions button {
+    min-height: 2rem;
+    padding: 0 .7rem;
+    border-radius: .65rem;
+    border: 1px solid var(--c360-line);
+    color: var(--c360-ink-2);
+    background: rgba(255, 255, 255, .04);
+    font-size: .72rem;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .rowActions button:nth-child(2) {
+    color: #07100d;
+    border-color: rgba(184, 255, 26, .45);
+    background: var(--c360-lemon);
+  }
+
+  .rowActions button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+
+  .desktopDetail {
+    position: sticky;
+    top: 174px;
+    display: grid;
+    gap: .75rem;
+    padding: .9rem;
+    border: 1px solid var(--c360-line);
+    border-radius: 1.1rem;
+    background: linear-gradient(180deg, rgba(16, 32, 51, .98), rgba(6, 18, 32, .97));
+    box-shadow: var(--c360-shadow-soft);
+  }
+
+  .desktopDetail .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .desktopDetail .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .guideGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .guideCard {
+    box-shadow: none;
+  }
+
+  .moreGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .tableShell,
+  .desktopDetail {
+    display: none;
+  }
+
+  .mobileOperationCards {
+    display: grid;
+  }
+}

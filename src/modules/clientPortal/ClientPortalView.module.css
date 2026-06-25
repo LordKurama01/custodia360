@@ -434,3 +434,25 @@
     pointer-events: none;
   }
 }
+
+.portalBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  width: fit-content;
+}
+
+.portalBrand img {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 0 24px rgba(154, 255, 0, .18);
+}
+
+@media (max-width: 767px) {
+  .portalBrand img {
+    width: 30px;
+    height: 30px;
+  }
+}

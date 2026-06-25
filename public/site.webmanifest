@@ -1,0 +1,14 @@
+{
+  "name": "Custodia360",
+  "short_name": "Custodia360",
+  "description": "Control privado de bultos, guías, pases USD y cuenta corriente logística.",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#030C16",
+  "theme_color": "#9AFF00",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

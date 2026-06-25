@@ -12,10 +12,47 @@ import { useAppState } from "@/shared/state/AppStateProvider";
 import styles from "./OwnerDesktopShell.module.css";
 
 const groups = [
-  { title: "Principal", mode: "primary", items: [["Seguimiento clientes", "/owner/bultos"]] },
-  { title: "Apoyo", mode: "support", items: [["Clientes", "/owner/clientes"], ["Guias", "/owner/guias"], ["Pagos / Cobros", "/owner/pagos-cobros"], ["Permisos", "/owner/permisos"], ["Configuracion", "/owner/configuracion"]] },
-  { title: "Preparado / no principal", mode: "future", items: [["Dashboard anterior", "/owner/dashboard"], ["Solicitudes", "/owner/solicitudes"], ["Ordenes", "/owner/ordenes"], ["Tareas", "/owner/tareas"], ["Viajes / Lotes", "/owner/viajes-lotes"], ["Choferes", "/owner/choferes"], ["Operarios", "/owner/operarios"], ["Evidencias", "/owner/evidencias"], ["Incidencias", "/owner/incidencias"], ["Auditoria", "/owner/auditoria"], ["Gastos", "/owner/gastos"], ["Rentabilidad", "/owner/rentabilidad"], ["Pasarelas", "/owner/configuracion/pagos"]] },
+  {
+    title: "Operación diaria",
+    mode: "primary",
+    items: [
+      ["Mesa de control", "/owner/bultos#seguimiento"],
+      ["Cuentas", "/owner/bultos#cuentas"],
+      ["Guías", "/owner/bultos#guias"],
+      ["Clientes", "/owner/clientes"],
+    ],
+  },
+  {
+    title: "Gestión",
+    mode: "support",
+    items: [
+      ["Configuración", "/owner/configuracion"],
+      ["Permisos", "/owner/permisos"],
+      ["Dueños", "/platform"],
+    ],
+  },
+  {
+    title: "Preparado / no principal",
+    mode: "future",
+    items: [
+      ["Dashboard anterior", "/owner/dashboard"],
+      ["Solicitudes", "/owner/solicitudes"],
+      ["Órdenes", "/owner/ordenes"],
+      ["Tareas", "/owner/tareas"],
+      ["Viajes / Lotes", "/owner/viajes-lotes"],
+      ["Choferes", "/owner/choferes"],
+      ["Operarios", "/owner/operarios"],
+      ["Evidencias", "/owner/evidencias"],
+      ["Incidencias", "/owner/incidencias"],
+      ["Auditoría", "/owner/auditoria"],
+    ],
+  },
 ] as const;
+
+function isActive(pathname: string, href: string) {
+  const cleanHref = href.split("#")[0];
+  return cleanHref === "/owner/bultos" ? pathname.startsWith("/owner/bultos") : pathname.startsWith(cleanHref);
+}
 
 export function OwnerDesktopShell({ title, children }: { title: string; children: ReactNode }) {
   const pathname = usePathname();
@@ -23,8 +60,6 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
   const { tenant } = useTenantData();
   const { state, actions } = useAppState();
   const [profile, setProfile] = useState<Pick<ProfileRow, "email" | "full_name" | "role"> | null>(null);
-  const gateways = (state.paymentGateways ?? []).filter((gateway) => gateway.tenantId === state.activeTenantId);
-  const connectedGateway = gateways.find((gateway) => gateway.status === "conectada");
   const activeTenantUsers = state.users.filter((user) => user.tenantId === state.activeTenantId);
 
   useEffect(() => {
@@ -75,16 +110,19 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
 
   return <div className={styles.shell}>
     <aside className={styles.sidebar}>
-      <div className={styles.brandWrap}>
-        <div className={styles.brand}><span className={styles.brandMark}>360</span><span>Custodia<span>360</span></span></div>
-        <small>Sistema privado operativo</small>
-      </div>
+      <Link href="/owner/bultos" className={styles.brandWrap} aria-label="Custodia360 operación">
+        <img src="/brand/custodia360_icono_fondo_oscuro.png" alt="Custodia360" className={styles.brandIcon} />
+        <div>
+          <img src="/brand/custodia360_wordmark_fondo_oscuro.png" alt="Custodia360" className={styles.wordmark} />
+          <small>Sistema privado operativo</small>
+        </div>
+      </Link>
 
       <div className={styles.platformMode}>
         <span className={styles.dot} />
         <div>
-          <strong>{isDemoMode() ? "Modo demo local" : "Seguimiento principal"}</strong>
-          <small>{isDemoMode() ? "Pantalla principal: clientes, guías, pases, dólar y WhatsApp." : "La operación central vive en Seguimiento clientes."}</small>
+          <strong>{isDemoMode() ? "Modo demo local" : "Operación real"}</strong>
+          <small>Control de bultos, guías, pases, pagos y WhatsApp desde una sola mesa.</small>
         </div>
       </div>
 
@@ -96,36 +134,33 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
         <div className={styles.tenantMiniStats}>
           <small>{activeTenantUsers.filter((user) => user.role === "chofer").length} choferes</small>
           <small>{activeTenantUsers.filter((user) => user.role === "operario").length} operarios</small>
-          <small>{activeTenantUsers.filter((user) => user.role === "cliente").length} usuarios cliente</small>
+          <small>{activeTenantUsers.filter((user) => user.role === "cliente").length} clientes</small>
         </div>
-        <Link href="/platform" className={styles.adminLink}>Administrador General</Link>
       </div>
 
       <nav className={styles.nav}>
         {groups.map((group) => <div key={group.title} className={`${styles.navGroup} ${group.mode === "future" ? styles.futureGroup : ""}`}>
           <div className={styles.groupTitle}>{group.title}{group.mode === "future" ? <small>stand-by</small> : null}</div>
-          {group.items.map(([label, href]) => <Link key={href} href={href} className={`${pathname.startsWith(href) ? styles.active : ""} ${group.mode === "future" ? styles.futureLink : ""}`}>{label}</Link>)}
+          {group.items.map(([label, href]) => <Link key={href} href={href} className={`${isActive(pathname, href) ? styles.active : ""} ${group.mode === "future" ? styles.futureLink : ""}`}>{label}</Link>)}
         </div>)}
       </nav>
 
       <div className={styles.tenantBox}>
-        <div className={styles.tenantCode}>{tenant?.code ?? "Sin dueno"}</div>
-        <strong>{tenant?.name ?? "Sin dueno activo"}</strong>
-        <small>El flujo principal es cliente → operación → guías → pases USD → pagos → WhatsApp.</small>
-        <div className={connectedGateway ? styles.gatewayOk : styles.gatewayWarn}>{connectedGateway ? "Cobros conectados" : "Cobros por configurar"}</div>
+        <div className={styles.tenantCode}>{tenant?.code ?? "Sin dueño"}</div>
+        <strong>{tenant?.name ?? "Sin dueño activo"}</strong>
+        <small>Flujo base: cliente → operación → guías → pases USD → cuenta corriente → WhatsApp.</small>
       </div>
     </aside>
     <main className={styles.main}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Operacion activa principal - {tenant?.name ?? "Sin negocio"}</p>
+          <p className={styles.eyebrow}>Operación activa - {tenant?.name ?? "sin negocio"}</p>
           <h1>{title}</h1>
         </div>
         <div className={styles.headerActions}>
-          <Link href="/owner/bultos"><span>Seguimiento</span></Link>
+          <Link href="/owner/bultos#seguimiento"><span>Seguimiento</span></Link>
+          <Link href="/owner/bultos#cuentas"><span>Cuentas</span></Link>
           <Link href="/consulta/demo"><span>Portal demo</span></Link>
-          <Link href="/owner/configuracion"><span>Config.</span></Link>
-          <Link href="/platform"><span>Dueños</span></Link>
           <div className={styles.user}>
             {profile?.full_name ?? profile?.email ?? "Owner"}<br />
             <strong>{profile?.role ? roleLabels[profile.role] : tenant?.code}</strong>
@@ -140,7 +175,7 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
         <span>●</span>
         <strong>Seguimiento</strong>
       </Link>
-      <Link href="/owner/bultos#cuentas" className="">
+      <Link href="/owner/bultos#cuentas">
         <span>$</span>
         <strong>Cuentas</strong>
       </Link>
@@ -148,14 +183,15 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
         <span>+</span>
         <strong>Nueva</strong>
       </Link>
-      <Link href="/owner/bultos#guias" className="">
+      <Link href="/owner/bultos#guias">
         <span>▤</span>
         <strong>Guías</strong>
       </Link>
-      <Link href="/owner/bultos#mas" className="">
+      <Link href="/owner/bultos#mas">
         <span>⋯</span>
         <strong>Más</strong>
       </Link>
+      <small>The Prestige Group</small>
     </nav>
   </div>;
 }

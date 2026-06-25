@@ -127,19 +127,19 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
   return <main id="inicio" className={styles.page}>
     <header className={styles.header}>
       <div>
-        <span>Custodia360</span>
+        <div className={styles.portalBrand}><img src="/brand/custodia360_icono_fondo_oscuro.png" alt="" /><span>Custodia360</span></div>
         <h1>{data.client.name}</h1>
-        <p>Portal privado de seguimiento. Acá podés ver tus pedidos, estados, guías y pases pendientes.</p>
+        <p>Consulta privada: estado de pedidos, guías cargadas, pases pendientes y contacto directo.</p>
       </div>
-      <strong>ID cliente: {data.client.id.slice(0, 8).toUpperCase()}</strong>
+      <strong>Cliente {data.client.id.slice(0, 8).toUpperCase()}</strong>
     </header>
 
     <section id="resumen" className={styles.summary}>
-      <div><span>Pedidos activos</span><strong>{data.operations.length}</strong></div>
+      <div><span>Pedidos</span><strong>{data.operations.length}</strong></div>
       <div><span>Pases pendientes</span><strong>{moneyUsd(pendingUsd)}</strong></div>
       <div><span>Equivalente hoy</span><strong>{formatMoney(pendingUsd * DEFAULT_DOLLAR_RATE)}</strong></div>
       <div><span>Guías</span><strong>{allShipments.length}</strong></div>
-      <div><span>Guías en destino</span><strong>{destinationPaidGuides}</strong></div>
+      <div><span>Guías destino</span><strong>{destinationPaidGuides}</strong></div>
       <div><span>Dólar del día</span><strong>${DEFAULT_DOLLAR_RATE}</strong></div>
     </section>
 

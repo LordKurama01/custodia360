@@ -381,6 +381,7 @@ export function ControlBultosView() {
 
   const accounts = useMemo(() => buildClientAccounts(data.operations), [data.operations]);
   const selectedAccount = accounts.find((account) => account.clientId === selectedAccountId) ?? accounts[0] ?? null;
+  const sideOperation = detailOperation ?? filteredOperations[0] ?? null;
 
   const kpis = useMemo(() => {
     return accounts.reduce((acc, account) => {
@@ -606,7 +607,7 @@ export function ControlBultosView() {
     <section id="seguimiento" className={styles.topBar}>
       <div>
         <p>Control de bultos + cuenta corriente</p>
-        <h2>Operación del día</h2>
+        <h2>Mesa operativa</h2>
         <span>{demoMode ? "Demo local" : "Operación real"} · Dólar hoy ${DEFAULT_DOLLAR_RATE} · {profile?.full_name ?? profile?.email ?? "Owner"}</span>
       </div>
       <Button onClick={() => openQuickPanel("operacion")}>+ Nueva</Button>
@@ -641,37 +642,104 @@ export function ControlBultosView() {
 
     {activeTab === "seguimiento" && !loading ? <section className={styles.contentGrid}>
       <div className={styles.operationList}>
-        {filteredOperations.length ? filteredOperations.map((operation) => {
-          const totals = calculateOperationTotals(operation);
-          const account = accounts.find((item) => item.clientId === operation.client_id);
-          return <article key={operation.id} className={styles.operationCard}>
-            <div className={styles.operationCardHead}>
-              <div>
-                <strong>{operation.public_code}</strong>
-                <span>{operation.clients?.name ?? "Sin cliente"} · {operation.provider_name}</span>
+        <div className={styles.tableShell}>
+          <div className={styles.tableHead}>
+            <span>Cliente / operación</span>
+            <span>Logística</span>
+            <span>Cuenta</span>
+            <span>Guías</span>
+            <span>Acciones</span>
+          </div>
+          {filteredOperations.length ? filteredOperations.map((operation) => {
+            const totals = calculateOperationTotals(operation);
+            const account = accounts.find((item) => item.clientId === operation.client_id);
+            return <article key={operation.id} className={styles.tableRow}>
+              <div className={styles.clientCell}>
+                <strong>{operation.clients?.name ?? "Sin cliente"}</strong>
+                <span>{operation.public_code} · {operation.provider_name}</span>
               </div>
-              <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}>{logisticsLabels[operation.logistics_status]}</span>
-            </div>
-            <div className={styles.cardFacts}>
-              <span>{operation.package_count} bultos</span>
-              <span>{operation.operation_shipments.length} guías</span>
-              <span>Cliente ve: {clientLogisticsLabels[operation.logistics_status]}</span>
-              <span>Cuenta: {financialLabels[operation.financial_status]}</span>
-            </div>
-            <div className={styles.moneyLine}>
-              <div><span>Pases operación</span><strong>{moneyUsd(totals.passAmount)}</strong></div>
-              <div><span>Pendiente cliente</span><strong>{canSeeMoney ? moneyUsd(account?.passUsdPending ?? 0) : "-"}</strong></div>
-              <div><span>Guías</span><strong>{guideNumbers(operation)}</strong></div>
-            </div>
-            <div className={styles.actions}>
-              <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Ficha</Button>
-              <Button variant="secondary" onClick={() => startPayment(operation)} disabled={!canCollect}>Cobrar</Button>
-              <Button variant="ghost" onClick={() => startShipment(operation)} disabled={!canEdit}>Guía</Button>
-              <Button variant="ghost" onClick={() => copyWhatsAppOperation(operation)}>WhatsApp</Button>
-            </div>
-          </article>;
-        }) : <Card className={styles.empty}>No hay operaciones para estos filtros.</Card>}
+              <div>
+                <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}>{logisticsLabels[operation.logistics_status]}</span>
+                <small>Cliente ve {clientLogisticsLabels[operation.logistics_status]}</small>
+              </div>
+              <div className={styles.moneyCell}>
+                <strong>{canSeeMoney ? moneyUsd(account?.passUsdPending ?? 0) : "-"}</strong>
+                <small>{operation.financial_status ? financialLabels[operation.financial_status] : "Pendiente"} · op. {moneyUsd(totals.passAmount)}</small>
+              </div>
+              <div>
+                <strong>{operation.operation_shipments.length}</strong>
+                <small>{guideNumbers(operation)}</small>
+              </div>
+              <div className={styles.rowActions}>
+                <button type="button" onClick={() => setDetailOperation(operation)}>Ficha</button>
+                <button type="button" onClick={() => startPayment(operation)} disabled={!canCollect}>Cobrar</button>
+                <button type="button" onClick={() => copyWhatsAppOperation(operation)}>WhatsApp</button>
+              </div>
+            </article>;
+          }) : <Card className={styles.empty}>No hay operaciones para estos filtros.</Card>}
+        </div>
+
+        <div className={styles.mobileOperationCards}>
+          {filteredOperations.length ? filteredOperations.map((operation) => {
+            const totals = calculateOperationTotals(operation);
+            const account = accounts.find((item) => item.clientId === operation.client_id);
+            return <article key={operation.id} className={styles.operationCard}>
+              <div className={styles.operationCardHead}>
+                <div>
+                  <strong>{operation.public_code}</strong>
+                  <span>{operation.clients?.name ?? "Sin cliente"} · {operation.provider_name}</span>
+                </div>
+                <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}>{logisticsLabels[operation.logistics_status]}</span>
+              </div>
+              <div className={styles.cardFacts}>
+                <span>{operation.package_count} bultos</span>
+                <span>{operation.operation_shipments.length} guías</span>
+                <span>Cliente ve: {clientLogisticsLabels[operation.logistics_status]}</span>
+                <span>Cuenta: {financialLabels[operation.financial_status]}</span>
+              </div>
+              <div className={styles.moneyLine}>
+                <div><span>Pases operación</span><strong>{moneyUsd(totals.passAmount)}</strong></div>
+                <div><span>Pendiente cliente</span><strong>{canSeeMoney ? moneyUsd(account?.passUsdPending ?? 0) : "-"}</strong></div>
+                <div><span>Guías</span><strong>{guideNumbers(operation)}</strong></div>
+              </div>
+              <div className={styles.actions}>
+                <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Ficha</Button>
+                <Button variant="secondary" onClick={() => startPayment(operation)} disabled={!canCollect}>Cobrar</Button>
+                <Button variant="ghost" onClick={() => startShipment(operation)} disabled={!canEdit}>Guía</Button>
+                <Button variant="ghost" onClick={() => copyWhatsAppOperation(operation)}>WhatsApp</Button>
+              </div>
+            </article>;
+          }) : <Card className={styles.empty}>No hay operaciones para estos filtros.</Card>}
+        </div>
       </div>
+
+      {sideOperation ? <aside className={styles.desktopDetail}>
+        <div className={styles.cardHead}>
+          <div><p>Ficha rápida</p><h3>{sideOperation.clients?.name ?? "Sin cliente"}</h3></div>
+          <span className={`${styles.badge} ${statusClass(sideOperation.logistics_status)}`}>{logisticsLabels[sideOperation.logistics_status]}</span>
+        </div>
+        <div className={styles.detailGrid}>
+          <div><span>Operación</span><strong>{sideOperation.public_code}</strong></div>
+          <div><span>Proveedor</span><strong>{sideOperation.provider_name}</strong></div>
+          <div><span>Bultos</span><strong>{sideOperation.package_count}</strong></div>
+          <div><span>Guías</span><strong>{sideOperation.operation_shipments.length}</strong></div>
+          <div><span>Cliente ve</span><strong>{clientLogisticsLabels[sideOperation.logistics_status]}</strong></div>
+          <div><span>Link cliente</span><strong>/consulta/{sideOperation.public_code}</strong></div>
+        </div>
+        <div className={styles.ledger}>
+          <h4>Guías y pases</h4>
+          {sideOperation.operation_shipments.length ? sideOperation.operation_shipments.slice(0, 4).map((shipment) => <div key={shipment.id} className={styles.ledgerItem}>
+            <div><strong>{shipment.guide_number ?? "Sin número"}</strong><span>{shipment.company ?? "Sin empresa"} · {shipment.recipient_name ?? "Destinatario"}</span></div>
+            <b>{moneyUsd(toNumber(shipment.pass_usd_amount))}</b>
+          </div>) : <p>Sin guías cargadas.</p>}
+        </div>
+        <div className={styles.actions}>
+          <Button variant="secondary" onClick={() => setDetailOperation(sideOperation)}>Abrir ficha</Button>
+          <Button variant="secondary" onClick={() => startPayment(sideOperation)} disabled={!canCollect}>Cobrar</Button>
+          <Button variant="ghost" onClick={() => startShipment(sideOperation)} disabled={!canEdit}>Guía</Button>
+          <Button variant="ghost" onClick={() => startSpecial(sideOperation)} disabled={!canEdit}>Movimiento especial</Button>
+        </div>
+      </aside> : null}
     </section> : null}
 
     {activeTab === "cuentas" && !loading ? <section className={styles.accountsGrid}>

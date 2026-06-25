@@ -1,6 +1,6 @@
 {
-  "name": "custodia360-v1-7-1-build-safe",
-  "version": "1.7.1",
+  "name": "custodia360-fase1-control-bultos",
+  "version": "1.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 8787",

@@ -560,3 +560,22 @@
     bottom: 14px;
   }
 }
+
+.brandIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  object-fit: cover;
+  box-shadow: 0 0 34px rgba(154, 255, 0, .18);
+}
+
+.brandWordmark {
+  width: 174px;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 620px) {
+  .brandIcon { width: 40px; height: 40px; }
+  .brandWordmark { width: 148px; }
+}

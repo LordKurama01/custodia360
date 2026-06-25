@@ -1,0 +1,27 @@
+{
+  "brand": "Custodia360",
+  "logo_source": "00_MASTER/Custodia360_logo_elegido_master.png",
+  "colors": {
+    "custodia-lime": "#9AFF00",
+    "custodia-lime-soft": "#B8FF1A",
+    "custodia-navy-950": "#030C16",
+    "custodia-navy-900": "#061220",
+    "custodia-panel": "#0B1828",
+    "custodia-steel": "#1F344B",
+    "custodia-white": "#F6F9FD",
+    "custodia-muted": "#96A0AE"
+  },
+  "typography": {
+    "primary": "Inter, Manrope, Sora, system-ui, sans-serif",
+    "fallback": "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+  },
+  "radius": {
+    "card": "24px",
+    "button": "18px",
+    "pill": "999px"
+  },
+  "shadow": {
+    "lime-glow": "0 0 28px rgba(154,255,0,.35)"
+  },
+  "usage": "Dark UI first. Lime accent only for action, status and identity."
+}

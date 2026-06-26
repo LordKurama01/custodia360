@@ -1981,3 +1981,244 @@
     padding-inline: .78rem;
   }
 }
+
+/* v17 Navegación por Pantallas: listas cortas, detalle al tocar, deudores separado */
+.screenList {
+  display: grid;
+  gap: .52rem;
+  margin-top: .55rem;
+}
+
+.screenSummary {
+  display: grid;
+  gap: .14rem;
+  padding: .72rem .78rem;
+  border: 1px solid rgba(154,255,0,.16);
+  border-radius: .9rem;
+  color: var(--c360-ink-2);
+  background: rgba(154,255,0,.045);
+}
+
+.screenSummary strong {
+  color: #fff;
+  font-size: .96rem;
+}
+
+.screenSummary span,
+.emptyText {
+  color: var(--c360-muted);
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
+.screenRow,
+.screenRowStatic {
+  width: 100%;
+  min-height: 3.9rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 26px;
+  align-items: center;
+  gap: .58rem;
+  padding: .68rem .74rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .92rem;
+  color: var(--c360-ink-2);
+  background: linear-gradient(180deg, rgba(16,29,49,.94), rgba(8,18,33,.96));
+  text-align: left;
+  box-shadow: var(--c360-shadow-soft);
+}
+
+.screenRow {
+  cursor: pointer;
+}
+
+.screenRow:hover {
+  border-color: rgba(154,255,0,.28);
+  background: linear-gradient(180deg, rgba(154,255,0,.065), rgba(8,18,33,.97));
+}
+
+.screenRow div,
+.screenRowStatic div {
+  min-width: 0;
+  display: grid;
+  gap: .15rem;
+}
+
+.screenRow strong,
+.screenRowStatic strong {
+  color: #fff;
+  font-size: .92rem;
+  line-height: 1.08;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.screenRow span,
+.screenRowStatic span {
+  color: var(--c360-muted);
+  font-size: .68rem;
+  line-height: 1.28;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.screenRow b,
+.screenRowStatic b {
+  color: var(--c360-lemon);
+  font-size: .82rem;
+  white-space: nowrap;
+}
+
+.screenRow i {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: .65rem;
+  color: rgba(235,243,255,.74);
+  background: rgba(255,255,255,.045);
+  border: 1px solid rgba(255,255,255,.08);
+  font-style: normal;
+  font-weight: 950;
+}
+
+.clientScreenPanel {
+  max-width: 58rem;
+}
+
+.clientScreenTotals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .48rem;
+}
+
+.clientScreenTotals div {
+  display: grid;
+  gap: .12rem;
+  padding: .58rem .64rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .78rem;
+  background: rgba(255,255,255,.035);
+}
+
+.clientScreenTotals span {
+  color: var(--c360-muted);
+  font-size: .62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.clientScreenTotals strong {
+  color: #fff;
+  font-size: .9rem;
+}
+
+.innerTabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .35rem;
+  padding: .32rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .9rem;
+  background: rgba(3,10,19,.34);
+}
+
+.innerTabs button {
+  min-height: 2.25rem;
+  border: 0;
+  border-radius: .68rem;
+  color: rgba(235,243,255,.68);
+  background: rgba(255,255,255,.04);
+  font-size: .72rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.innerTabs .innerTabActive {
+  color: #07100d;
+  background: var(--c360-lemon);
+}
+
+.stickyClientActions {
+  position: sticky;
+  bottom: -.76rem;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: .4rem;
+  padding-top: .55rem;
+  background: linear-gradient(180deg, transparent, rgba(8,18,33,.98) 24%);
+}
+
+@media (max-width: 767px) {
+  .screenList {
+    gap: .38rem;
+    margin-top: .38rem;
+  }
+  .screenSummary {
+    padding: .54rem .6rem;
+    border-radius: .76rem;
+  }
+  .screenSummary strong { font-size: .82rem; }
+  .screenSummary span,
+  .emptyText { font-size: .64rem; }
+  .screenRow,
+  .screenRowStatic {
+    min-height: 3.28rem;
+    grid-template-columns: minmax(0, 1fr) auto 22px;
+    gap: .38rem;
+    padding: .54rem .58rem;
+    border-radius: .78rem;
+    box-shadow: none;
+  }
+  .screenRow strong,
+  .screenRowStatic strong { font-size: .82rem; }
+  .screenRow span,
+  .screenRowStatic span { font-size: .62rem; }
+  .screenRow b,
+  .screenRowStatic b { font-size: .72rem; }
+  .screenRow i { width: 21px; height: 21px; border-radius: .55rem; }
+  .clientScreenTotals { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .34rem; }
+  .clientScreenTotals div { padding: .44rem .5rem; border-radius: .68rem; }
+  .clientScreenTotals span { font-size: .53rem; }
+  .clientScreenTotals strong { font-size: .74rem; }
+  .innerTabs { gap: .22rem; padding: .24rem; border-radius: .76rem; }
+  .innerTabs button { min-height: 1.95rem; font-size: .62rem; border-radius: .58rem; }
+  .stickyClientActions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .32rem; }
+  .stickyClientActions button { min-height: 2.3rem; padding-inline: .15rem; font-size: .68rem; }
+}
+
+/* v18 final: navegación por pantallas, menos ruido */
+.contactSwitch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .35rem;
+  padding: .3rem;
+  border: 1px solid var(--c360-line);
+  border-radius: 999px;
+  background: rgba(255,255,255,.035);
+}
+.contactSwitch button {
+  min-height: 2.25rem;
+  border: 0;
+  border-radius: 999px;
+  color: rgba(235,243,255,.72);
+  background: transparent;
+  font-weight: 950;
+  cursor: pointer;
+}
+@media (max-width: 960px) {
+  .appTabs { display: none; }
+  .topBar { padding: .75rem; border-radius: 1rem; }
+  .topBar h2 { font-size: 1.15rem; }
+  .topBar span { font-size: .76rem; }
+  .kpiStrip { display: flex; overflow-x: auto; gap: .45rem; margin-top: .55rem; }
+  .kpi { min-width: 8.8rem; min-height: 4.2rem; padding: .65rem; }
+  .searchCard { margin-top: .55rem; padding: .65rem; }
+  .operationCard, .accountRow, .guideCard { padding: .68rem; gap: .45rem; border-radius: .9rem; }
+  .screenRow, .screenRowStatic { min-height: 3.35rem; padding: .66rem .7rem; }
+  .mobileFabAction { width: 48px; height: 48px; right: 18px; bottom: 118px; }
+}

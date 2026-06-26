@@ -2,8 +2,6 @@ import Link from "next/link";
 import { BrandLockup } from "@/shared/components/BrandLockup";
 import styles from "./home.module.css";
 
-const whatsappUrl = "https://wa.me/5493757653075?text=Hola%2C%20quiero%20pedir%20acceso%20a%20Custodia360.";
-
 export default function HomePage() {
   return <main className={styles.page}>
     <section className={styles.shell}>
@@ -21,6 +19,5 @@ export default function HomePage() {
         <Link href="/politica-de-cookies">Cookies</Link>
       </nav>
     </section>
-    <a className={styles.whatsappFab} href={whatsappUrl} target="_blank" rel="noreferrer" aria-label="WhatsApp Custodia360">W</a>
   </main>;
 }

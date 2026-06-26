@@ -143,7 +143,8 @@ function guidePaymentDetail(shipment: PortalShipment) {
 }
 
 function whatsappHref(message: string) {
-  return `https://wa.me/5493757653075?text=${encodeURIComponent(message)}`;
+  const phone = process.env.NEXT_PUBLIC_OWNER_WHATSAPP ?? "5493757653075";
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
 function contextMessage(type: "landing" | "general" | "guide" | "payment" | "help", clientName: string, guideNumber?: string | null) {
@@ -221,6 +222,12 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
       <div className={styles.portalBrand}><BrandLockup subtitle="Visor privado" /></div>
       <a className={styles.helpLink} href={whatsappHref(contextMessage("general", data.client.name))} target="_blank" rel="noreferrer">WhatsApp</a>
     </header>
+
+    <section className={styles.clientBanner}>
+      <span>Información del servicio</span>
+      <strong>Tu consulta privada está activa</strong>
+      <small>Los avisos y promociones de esta pantalla los administra Custodia360.</small>
+    </section>
 
     {activeTab === "inicio" ? <section className={styles.heroStatus}>
       <div className={styles.privateStateCard}>

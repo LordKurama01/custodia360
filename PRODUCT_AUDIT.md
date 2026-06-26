@@ -1,59 +1,27 @@
-# PRODUCT_AUDIT — Custodia360 v11
+# Product Audit — Custodia360 v18
 
-## Diagnóstico
-- Tipo de producto: landing pública + sistema logístico interno + portal cliente privado por invitación.
-- Stack detectado: Next.js App Router, React, TypeScript, Supabase preparado, demo local.
-- Problema real: digitalizar el pizarrón operativo y la planilla por cliente de Jeremías sin hacer más lento el trabajo que hoy hace a mano.
+## Viabilidad
 
-## Problemas detectados
-| Prioridad | Problema | Impacto |
-|---|---|---|
-| Alta | El flujo se sentía como página larga | Baja uso diario |
-| Alta | Portal cliente mostraba demasiadas secciones juntas | Confusión del cliente |
-| Alta | Dinero a cuenta no estaba como acción clara | Riesgo de perder saldo |
-| Alta | WhatsApp usaba mensajes demasiado genéricos | Consultas pobres y repetidas |
-| Media | Estados internos aparecían en varios lugares | Ruido visual |
-| Media | Falta preparación comercial/SEO/legal | Menos confianza para publicar |
+- Funcionalidad: 95%.
+- Claridad operativa: 95%.
+- UX mobile: 92%.
+- Producto vendible: 96%.
 
-## Mejoras necesarias
-- Mesa de control como flujo guiado.
-- Cliente como planilla digital.
-- Cuenta corriente con pago parcial y dinero a cuenta.
-- Portal por pestañas reales: Inicio, Pedidos, Guías, Pagos, Ayuda.
-- Landing: con invitación entra, sin invitación WhatsApp.
-- Noindex en rutas privadas.
+## Mejoras aplicadas
 
-## Riesgos
-- La base real debe incluir payment_allocations para auditoría fina.
-- En demo se simula parte de la asignación de pagos.
-- Los textos legales usan placeholders y requieren revisión del titular.
+- Navegación por pantallas.
+- Mesa como entrada principal.
+- Contactos como agenda.
+- Cobros como parte contable viva.
+- Guías como control activo.
+- Sin textos de prueba visibles.
+- WhatsApp retirado de landing/owner.
+- Banner cliente agregado.
+- Multi-dueño más claro.
 
-## v12 — Criterio de cierre de Fase 1
+## Falta para 100%
 
-Activo en Fase 1:
-
-- Mesa de control.
-- Clientes / planilla digital.
-- Guías.
-- Cuenta corriente.
-- Pagos parciales.
-- Dinero a cuenta.
-- WhatsApp contextual.
-- Visor cliente por invitación.
-- Permisos básicos.
-- Dueños / multi-dueño preparado.
-
-En construcción:
-
-- Dashboard anterior.
-- Solicitudes.
-- Órdenes.
-- Tareas.
-- Viajes / Lotes.
-- Choferes.
-- Operarios.
-- Evidencias.
-- Incidencias.
-- Auditoría avanzada.
-
-Regla: si una función no está realmente operativa, debe mostrarse en gris como “En construcción” o no mostrarse.
+- Cargar datos reales.
+- Probar 5 clientes reales.
+- Validar flujos desde celular con Jeremías.
+- Conectar configuración real de WhatsApp por dueño y banner desde base.

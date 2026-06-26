@@ -4,19 +4,14 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/infrastructure/supabase/client";
-import { isDemoMode } from "@/shared/lib/demoMode";
 import { BrandLockup } from "@/shared/components/BrandLockup";
 import styles from "./LoginView.module.css";
-
-const whatsappLink = process.env.NEXT_PUBLIC_WHATSAPP_LINK ?? "https://wa.me/5493757653075?text=Hola%2C%20quiero%20pedir%20acceso%20a%20Custodia360.";
 
 export function LoginView() {
   const searchParams = useSearchParams();
   const [authError, setAuthError] = useState("");
   const [loading, setLoading] = useState(false);
   const next = searchParams.get("next") ?? "/owner/bultos";
-  const demoMode = isDemoMode();
-
   const errorMessage = useMemo(() => {
     const error = searchParams.get("error");
     if (error === "unauthorized") return "Este Gmail no está habilitado. Pedí acceso al dueño del servicio.";
@@ -26,10 +21,6 @@ export function LoginView() {
   }, [searchParams]);
 
   const signInWithGoogle = async () => {
-    if (demoMode) {
-      window.location.href = "/owner/bultos";
-      return;
-    }
     setLoading(true);
     setAuthError("");
     try {
@@ -54,12 +45,11 @@ export function LoginView() {
         <h1>Ingresá y seguí trabajando.</h1>
         <span>Custodia360 detecta tu email y abre la vista correcta: cliente, trabajador, dueño o super owner.</span>
       </div>
-      {(demoMode || errorMessage || authError) ? <div className={styles.notice}>{authError || errorMessage || "Modo demo activo. Entrás directo al sistema."}</div> : null}
+      {(errorMessage || authError) ? <div className={styles.notice}>{authError || errorMessage}</div> : null}
       <button type="button" className={styles.googleButton} onClick={signInWithGoogle} disabled={loading}>
-        {demoMode ? "Entrar al demo" : loading ? "Abriendo Google..." : "Ingresar con Gmail"}
+        {loading ? "Abriendo Google..." : "Ingresar con Gmail"}
       </button>
       <small>Sin acceso libre. Tu Gmail tiene que estar autorizado por el dueño.</small>
     </section>
-    <a className={styles.whatsappFab} href={whatsappLink} target="_blank" rel="noreferrer" aria-label="Pedir acceso por WhatsApp">W</a>
   </main>;
 }

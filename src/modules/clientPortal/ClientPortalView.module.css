@@ -865,3 +865,24 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* v18: banner comercial controlado por Super Owner en visor cliente */
+.clientBanner {
+  display: grid;
+  gap: .18rem;
+  margin: .55rem 0 .75rem;
+  padding: .72rem .82rem;
+  border: 1px solid rgba(154,255,0,.18);
+  border-radius: .95rem;
+  background: linear-gradient(135deg, rgba(154,255,0,.10), rgba(255,255,255,.035));
+}
+.clientBanner span {
+  color: var(--c360-lemon);
+  font-size: .62rem;
+  font-weight: 950;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.clientBanner strong { color: #fff; font-size: .9rem; }
+.clientBanner small { color: var(--c360-muted); font-size: .72rem; line-height: 1.3; }

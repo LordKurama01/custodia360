@@ -52,15 +52,15 @@ export function LoginView() {
     <section className={styles.card}>
       <Link href="/" className={styles.brand} aria-label="Custodia360 inicio"><BrandLockup subtitle="Acceso" /></Link>
       <div className={styles.copy}>
-        <p>Ingreso</p>
-        <h1>Entrá a trabajar.</h1>
-        <span>Acceso único. El sistema abre la vista que corresponde a tu usuario.</span>
+        <p>Acceso</p>
+        <h1>Ingresar</h1>
+        <span>Usá tu Gmail autorizado para abrir tu espacio.</span>
       </div>
       {(errorMessage || authError) ? <div className={styles.notice}>{authError || errorMessage}</div> : null}
       <button type="button" className={styles.googleButton} onClick={continueAccess} disabled={loading}>
         {loading ? "Ingresando..." : "Continuar con Gmail"}
       </button>
-      <small>Tu email debe estar autorizado por el dueño del espacio.</small>
+      <small>Email autorizado por el dueño del espacio.</small>
     </section>
   </main>;
 }

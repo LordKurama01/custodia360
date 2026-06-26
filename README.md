@@ -1,4 +1,4 @@
-# Custodia360 v19 — Landing corta + acceso operativo
+# Custodia360 v20 — Pulido Premium Operativo
 
 Versión de cierre para dejar el sistema final sin referencias visibles a demo y con ingreso usable ahora.
 

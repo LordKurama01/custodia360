@@ -5,61 +5,59 @@
   padding: 1rem 1rem 4.2rem;
   color: var(--c360-ink);
   background:
-    radial-gradient(circle at 50% 78%, rgba(154,255,0,.13), transparent 26%),
-    radial-gradient(circle at 8% 10%, rgba(47,128,237,.10), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(154,255,0,.08), transparent 24%),
     linear-gradient(135deg, #030c16 0%, #071220 58%, #050d18 100%);
 }
 .card {
-  width: min(100%, 28rem);
+  width: min(100%, 24rem);
   display: grid;
-  gap: .95rem;
-  padding: 1.05rem;
-  border: 1px solid rgba(154,255,0,.14);
-  border-radius: 1.25rem;
-  background: linear-gradient(180deg, rgba(16,29,49,.82), rgba(8,18,33,.92));
+  gap: .82rem;
+  padding: 1rem;
+  border: 1px solid rgba(154,255,0,.12);
+  border-radius: 1.12rem;
+  background: linear-gradient(180deg, rgba(16,29,49,.78), rgba(8,18,33,.93));
   box-shadow: var(--c360-shadow-soft);
 }
 .brand { color: inherit; }
-.copy { display: grid; gap: .5rem; }
+.copy { display: grid; gap: .34rem; }
 .copy p {
   margin: 0;
   color: var(--c360-lemon);
-  font-size: .68rem;
+  font-size: .64rem;
   font-weight: 950;
-  letter-spacing: .13em;
+  letter-spacing: .12em;
   text-transform: uppercase;
 }
 .copy h1 {
-  max-width: 10ch;
   margin: 0;
   color: #fff;
-  font-size: clamp(2.15rem, 10vw, 3.2rem);
-  line-height: .94;
-  letter-spacing: -.06em;
+  font-size: clamp(1.85rem, 8vw, 2.55rem);
+  line-height: 1;
+  letter-spacing: -.045em;
 }
 .copy span,
 .card small {
   color: rgba(235,243,255,.66);
   line-height: 1.38;
-  font-size: .88rem;
+  font-size: .82rem;
 }
 .notice {
-  padding: .72rem .85rem;
+  padding: .65rem .75rem;
   border: 1px solid rgba(154,255,0,.16);
-  border-radius: .9rem;
+  border-radius: .78rem;
   color: rgba(235,243,255,.86);
-  background: rgba(154,255,0,.06);
-  font-size: .82rem;
+  background: rgba(154,255,0,.055);
+  font-size: .78rem;
   font-weight: 850;
 }
 .googleButton {
-  min-height: 3rem;
+  min-height: 2.72rem;
   border: 0;
-  border-radius: .95rem;
+  border-radius: .86rem;
   color: #07100d;
   background: linear-gradient(135deg, #c9ff3a, var(--c360-lemon) 58%, #5ef3a4);
-  box-shadow: 0 18px 42px rgba(154,255,0,.20);
-  font-size: .98rem;
+  box-shadow: 0 12px 26px rgba(154,255,0,.16);
+  font-size: .9rem;
   font-weight: 950;
   cursor: pointer;
 }

@@ -762,11 +762,11 @@ export function ControlBultosView() {
   };
 
   const tabMeta: Record<MainTab, { title: string; eyebrow: string; hint: string }> = {
-    seguimiento: { title: "Mesa", eyebrow: "Pizarrón operativo", hint: "Trayecto vivo: proveedor, retiro, depósito, despacho y confirmación" },
-    cuentas: { title: "Contactos", eyebrow: "Agenda operativa", hint: "Clientes y proveedores en pantallas separadas" },
-    guias: { title: "Guías", eyebrow: "Activas", hint: "Guías abiertas, despachadas y a confirmar" },
-    cuenta: { title: "Cobros", eyebrow: "Parte contable", hint: "Solo pendientes vivos; lo pagado queda en la ficha del cliente" },
-    mas: { title: "Más", eyebrow: "Sistema", hint: "Configuración, permisos, dueños y soporte" },
+    seguimiento: { title: "Mesa", eyebrow: "Pizarrón operativo", hint: "Operaciones activas" },
+    cuentas: { title: "Contactos", eyebrow: "Clientes y proveedores", hint: "Agenda operativa" },
+    guias: { title: "Guías", eyebrow: "Envíos activos", hint: "Despachos y confirmaciones" },
+    cuenta: { title: "Cobros", eyebrow: "Parte contable", hint: "Pendientes vivos" },
+    mas: { title: "Más", eyebrow: "Sistema", hint: "Configuración" },
   };
   const activeMeta = tabMeta[activeTab];
 
@@ -779,7 +779,7 @@ export function ControlBultosView() {
       </div>
       <div className={styles.topActions}>
         <Button variant="secondary" onClick={() => setCommandOpen(true)}>Buscar</Button>
-        <Button onClick={() => setQuickPanel("acciones")}>Resolver</Button>
+        <Button onClick={() => setQuickPanel("acciones")}>+</Button>
       </div>
     </section>
 
@@ -938,46 +938,48 @@ export function ControlBultosView() {
     </section> : null}
 
     {activeTab === "cuenta" && !loading ? <section className={styles.screenList}>
-      <div className={styles.screenSummary}>
-        <strong>{debtorAccounts.length} cobros pendientes</strong>
-        <span>Cuando se marca pagado, sale de Cobros y queda en la ficha del cliente.</span>
+      <div className={styles.moduleSummaryGrid}>
+        <div><span>Pendiente</span><strong>{moneyUsd(kpis.passUsd)}</strong></div>
+        <div><span>A cuenta</span><strong>{formatMoney(kpis.specialArs)}</strong></div>
+        <div><span>Reintegrar</span><strong>{formatMoney(kpis.guideArs)}</strong></div>
       </div>
+      <div className={styles.sectionTitleRow}><strong>Pendientes</strong><span>{debtorAccounts.length}</span></div>
       {debtorAccounts.length ? debtorAccounts.map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}>
         <div>
           <strong>{account.clientName}</strong>
-          <span>{account.pendingPasses.length} pases · {account.guideReimbursements.length} guías · {account.specialPending.length} especiales abiertos</span>
+          <span>{account.pendingPasses.length} pases · {account.guideReimbursements.length} guías · {account.specialPending.length} especiales</span>
         </div>
         <b>{account.passUsdPending > 0.01 ? moneyUsd(account.passUsdPending) : formatMoney(account.guideArsPending + account.specialArsPending)}</b>
         <i>›</i>
-      </button>) : <Card className={styles.empty}>No hay cobros pendientes. Lo pagado queda en la ficha del cliente.</Card>}
+      </button>) : <Card className={styles.empty}>Sin cobros pendientes.</Card>}
+      <div className={styles.sectionTitleRow}><strong>Parciales / a cuenta</strong><span>{accounts.filter((account) => account.specialPending.length || account.pendingPasses.some((item) => item.paidUsd > 0)).length}</span></div>
     </section> : null}
 
     {activeTab === "guias" && !loading ? <section className={styles.guideGrid}>
-      {filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).map(({ operation, shipment }) => <article key={shipment.id} className={styles.guideCard} onClick={() => openOperationScreen(operation, "guias")}>
+      <div className={styles.moduleSummaryGrid}>
+        <div><span>Activas</span><strong>{filteredOperations.flatMap((operation) => operation.operation_shipments).length}</strong></div>
+        <div><span>Sin número</span><strong>{filteredOperations.flatMap((operation) => operation.operation_shipments).filter((shipment) => !shipment.guide_number).length}</strong></div>
+        <div><span>A confirmar</span><strong>{filteredOperations.filter((operation) => operation.logistics_status === "despachado").length}</strong></div>
+      </div>
+      {filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).length ? filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).map(({ operation, shipment }) => <article key={shipment.id} className={styles.guideCard} onClick={() => openOperationScreen(operation, "guias")}>
         <div className={styles.compactRowHead}>
-          <div><strong>{shipment.guide_number ?? "Sin guía"}</strong><span>{operation.clients?.name ?? "Sin cliente"} · {shipment.company ?? "Sin empresa"}</span></div>
+          <div><strong>{shipment.guide_number ?? "Sin número"}</strong><span>{operation.clients?.name ?? "Sin cliente"} · {shipment.company ?? "Empresa pendiente"}</span></div>
           <span className={`${styles.badge} ${statusClass(shipment.guide_payment_status)}`}>{guidePaymentLabels[shipment.guide_payment_status]}</span>
         </div>
         <div className={styles.compactRowMeta}>
           <span>{shipment.recipient_name ?? "Destinatario pendiente"}</span>
           <strong>{moneyUsd(toNumber(shipment.pass_usd_amount))}</strong>
         </div>
-        <div className={styles.compactNext}><span>Detalle</span><b>›</b></div>
-      </article>)}
+        <div className={styles.compactNext}><span>{logisticsLabels[operation.logistics_status]}</span><b>›</b></div>
+      </article>) : <Card className={styles.empty}>Sin guías activas.</Card>}
     </section> : null}
 
     {activeTab === "mas" ? <section className={styles.moreGrid}>
-      <Card className={styles.flowCard}>
-        <div className={styles.cardHead}><div><p>Sistema</p><h3>Configuración</h3></div></div>
-        <div className={styles.quickGrid}>
-          <a className={styles.utilityLink} href="/owner/configuracion">Configuración</a>
-          <a className={styles.utilityLink} href="/owner/permisos">Permisos</a>
-          <a className={styles.utilityLink} href="/platform">Dueños</a>
-          <a className={styles.utilityLink} href="/owner/configuracion">Banner cliente</a>
-          <a className={styles.utilityLink} href="/contacto-legal">Soporte legal</a>
-          <button type="button" className={styles.utilityLink} onClick={() => setCommandOpen(true)}>Buscar</button>
-        </div>
-      </Card>
+      <button type="button" className={styles.settingsRow} onClick={() => location.href = "/owner/configuracion"}><span>⚙</span><div><strong>Configuración</strong><small>Datos del espacio, dólar, WhatsApp y banner cliente.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => location.href = "/owner/permisos"}><span>◉</span><div><strong>Permisos</strong><small>Empleados, roles y accesos autorizados.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => location.href = "/platform"}><span>◆</span><div><strong>Dueños</strong><small>Espacios separados y límite comercial.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => setCommandOpen(true)}><span>⌕</span><div><strong>Buscar</strong><small>Cliente, guía, proveedor o cobro.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => location.href = "/contacto-legal"}><span>?</span><div><strong>Soporte</strong><small>Ayuda, contacto legal y datos del sistema.</small></div><i>›</i></button>
     </section> : null}
 
     {clientDetailAccount ? <div className={styles.panelOverlay}>
@@ -1013,7 +1015,7 @@ export function ControlBultosView() {
         </div> : null}
 
         {clientDetailTab === "cuenta" ? <div className={styles.screenList}>
-          <div className={styles.screenSummary}><strong>Pendientes</strong><span>Solo deuda viva. Lo pagado pasa a Historial.</span></div>
+          <div className={styles.sectionTitleRow}><strong>Pendientes</strong><span>{clientDetailAccount.pendingPasses.length}</span></div>
           {clientDetailAccount.pendingPasses.map((item) => <div key={item.id} className={styles.screenRowStatic}><div><strong>{item.guideNumber}</strong><span>{item.provider} · {item.company} · pagado {moneyUsd(item.paidUsd)}</span></div><b>{moneyUsd(item.balanceUsd)}</b></div>)}
           {clientDetailAccount.guideReimbursements.map((item) => <div key={item.id} className={styles.screenRowStatic}><div><strong>{item.guideNumber}</strong><span>{item.operationCode} · {item.company}</span></div><b>{formatMoney(item.amountArs)}</b></div>)}
           {clientDetailAccount.specialPending.map((item) => <div key={item.id} className={styles.screenRowStatic}><div><strong>{movementLabel(item)}</strong><span>{item.provider_name} · {item.status.replaceAll("_", " ")}</span></div><b>{item.currency === "ARS" ? formatMoney(item.amount) : moneyUsd(item.amount)}</b></div>)}
@@ -1021,7 +1023,7 @@ export function ControlBultosView() {
         </div> : null}
 
         {clientDetailTab === "historial" ? <div className={styles.screenList}>
-          <div className={styles.screenSummary}><strong>Archivo del cliente</strong><span>Pagados, reintegrados y movimientos cerrados quedan acá.</span></div>
+          <div className={styles.sectionTitleRow}><strong>Archivo</strong><span>{clientDetailAccount.paidPasses.length + clientDetailAccount.payments.length}</span></div>
           {clientDetailAccount.paidPasses.map((item) => <div key={item.id} className={styles.screenRowStatic}><div><strong>{item.guideNumber}</strong><span>Pagado · {item.provider} · {item.company}</span></div><b>{moneyUsd(item.amountUsd)}</b></div>)}
           {clientDetailAccount.payments.map((payment) => <div key={payment.id} className={styles.screenRowStatic}><div><strong>{formatDate(payment.paid_at)}</strong><span>{payment.concept} · {paymentMethodLabels[payment.method]}</span></div><b>{payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)}</b></div>)}
           {!clientDetailAccount.paidPasses.length && !clientDetailAccount.payments.length ? <p className={styles.emptyText}>Todavía no hay archivo cerrado.</p> : null}

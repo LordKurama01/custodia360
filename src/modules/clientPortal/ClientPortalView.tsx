@@ -219,14 +219,14 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
 
   return <main className={styles.page}>
     <header className={styles.headerCompact}>
-      <div className={styles.portalBrand}><BrandLockup subtitle="Visor privado" /></div>
-      <a className={styles.helpLink} href={whatsappHref(contextMessage("general", data.client.name))} target="_blank" rel="noreferrer">WhatsApp</a>
+      <div className={styles.portalBrand}><BrandLockup subtitle="Consulta privada" /></div>
+      
     </header>
 
     <section className={styles.clientBanner}>
-      <span>Información del servicio</span>
-      <strong>Tu consulta privada está activa</strong>
-      <small>Los avisos y promociones de esta pantalla los administra Custodia360.</small>
+      <span>Aviso</span>
+      <strong>Seguimiento privado activo</strong>
+      <small>Consultá guías, pagos y estado de tu pedido.</small>
     </section>
 
     {activeTab === "inicio" ? <section className={styles.heroStatus}>
@@ -246,7 +246,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
       </div>
       <div className={styles.heroActions}>
         <button className={styles.primaryAction} type="button" onClick={() => setActiveTab("guias")}>Ver guías</button>
-        <a className={styles.secondaryAction} href={whatsappHref(contextMessage("general", data.client.name))} target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
+        
       </div>
       <div className={styles.quickClientStrip} aria-label="Accesos rápidos cliente">
         <button type="button" onClick={() => setActiveTab("pedidos")}>Mis pedidos</button>
@@ -332,6 +332,8 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
       <button type="button" className={activeTab === "pagos" ? styles.navActive : ""} onClick={() => setActiveTab("pagos")}><span>$</span><strong>Pagos</strong></button>
       <button type="button" className={activeTab === "ayuda" ? styles.navActive : ""} onClick={() => setActiveTab("ayuda")}><span>?</span><strong>Ayuda</strong></button>
     </nav>
+
+    <a className={styles.clientWhatsappFab} href={whatsappHref(contextMessage("general", data.client.name))} target="_blank" rel="noreferrer" aria-label="Consultar por WhatsApp">W</a>
 
     {selectedGuide ? <div className={styles.guideModalOverlay}>
       <section className={styles.guideModal}>

@@ -2222,3 +2222,95 @@
   .screenRow, .screenRowStatic { min-height: 3.35rem; padding: .66rem .7rem; }
   .mobileFabAction { width: 48px; height: 48px; right: 18px; bottom: 118px; }
 }
+
+
+/* v20 Pulido Premium Operativo */
+.moduleSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+}
+.moduleSummaryGrid div {
+  display: grid;
+  gap: .12rem;
+  padding: .62rem .68rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .86rem;
+  background: rgba(255,255,255,.035);
+}
+.moduleSummaryGrid span {
+  color: var(--c360-muted);
+  font-size: .64rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.moduleSummaryGrid strong {
+  color: #fff;
+  font-size: .9rem;
+  overflow-wrap: anywhere;
+}
+.sectionTitleRow {
+  min-height: 2.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  color: #fff;
+  font-weight: 950;
+}
+.sectionTitleRow span {
+  min-width: 1.8rem;
+  min-height: 1.8rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #07100d;
+  background: var(--c360-lemon);
+  font-size: .78rem;
+}
+.settingsRow {
+  width: 100%;
+  min-height: 4.1rem;
+  display: grid;
+  grid-template-columns: 2.15rem 1fr auto;
+  align-items: center;
+  gap: .72rem;
+  padding: .72rem .78rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .95rem;
+  color: var(--c360-ink-2);
+  background: linear-gradient(180deg, rgba(16,29,49,.96), rgba(8,18,33,.97));
+  text-align: left;
+  cursor: pointer;
+}
+.settingsRow > span {
+  width: 2.15rem;
+  height: 2.15rem;
+  display: grid;
+  place-items: center;
+  border-radius: .72rem;
+  color: #07100d;
+  background: var(--c360-lemon);
+  font-weight: 950;
+}
+.settingsRow strong { color: #fff; display: block; }
+.settingsRow small { color: var(--c360-muted); display: block; margin-top: .12rem; font-size: .73rem; line-height: 1.25; }
+.settingsRow i { color: var(--c360-muted); font-style: normal; font-weight: 950; }
+@media (max-width: 767px) {
+  .filterChips { display: none; }
+  .searchCard { padding: .54rem; border-radius: .88rem; }
+  .kpiStrip { display: none; }
+  .moduleSummaryGrid { grid-template-columns: repeat(3, minmax(7.3rem, 1fr)); overflow-x: auto; padding-bottom: .1rem; }
+  .moduleSummaryGrid div { min-width: 7.3rem; padding: .52rem .58rem; }
+  .screenSummary { display: none; }
+  .moreGrid { display: grid !important; gap: .45rem !important; margin-top: .45rem !important; padding-bottom: 1rem; }
+  .moreGrid .flowCard:first-child { display: grid !important; }
+  .settingsRow { min-height: 3.65rem; border-radius: .86rem; padding: .6rem .66rem; }
+  .settingsRow small { font-size: .65rem; }
+  .mobileFabAction { width: 46px !important; height: 46px !important; right: 18px !important; bottom: 114px !important; font-size: 1.55rem !important; box-shadow: 0 14px 30px rgba(154,255,0,.22) !important; }
+  .panelOverlay { align-items: stretch; padding: .5rem .5rem 5.2rem; }
+  .clientScreenPanel { max-height: calc(100dvh - 6rem) !important; border-radius: 1.05rem !important; }
+  .clientScreenTotals div { padding: .48rem .52rem; }
+  .stickyClientActions { position: sticky; bottom: -.8rem; background: linear-gradient(180deg, transparent, rgba(8,18,33,.99) 28%); padding-top: .55rem; }
+}

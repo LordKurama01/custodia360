@@ -886,3 +886,43 @@
 }
 .clientBanner strong { color: #fff; font-size: .9rem; }
 .clientBanner small { color: var(--c360-muted); font-size: .72rem; line-height: 1.3; }
+
+
+/* v20: visor cliente propio, no ficha admin */
+.clientBanner {
+  display: grid;
+  gap: .12rem;
+  margin-top: .5rem;
+  padding: .65rem .75rem;
+  border: 1px solid rgba(154,255,0,.16);
+  border-radius: .88rem;
+  background: rgba(154,255,0,.055);
+}
+.clientBanner span { color: var(--c360-lemon); font-size: .64rem; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
+.clientBanner strong { color: #fff; font-size: .9rem; }
+.clientBanner small { color: var(--c360-muted); line-height: 1.3; }
+.clientWhatsappFab {
+  position: fixed;
+  right: 18px;
+  bottom: 118px;
+  z-index: 50;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #07100d;
+  background: #25d366;
+  box-shadow: 0 16px 34px rgba(37,211,102,.26);
+  font-weight: 950;
+}
+@media (max-width: 520px) {
+  .page { padding: .75rem .75rem 8rem; }
+  .headerCompact { margin-bottom: .45rem; }
+  .heroStatus, .sectionCard { border-radius: .96rem; padding: .72rem; gap: .62rem; }
+  .heroStatus h1 { font-size: 1.25rem; }
+  .heroMoney { grid-template-columns: 1fr 1fr; gap: .42rem; }
+  .heroActions { grid-template-columns: 1fr; }
+  .secondaryAction { display: none; }
+  .quickClientStrip { display: none; }
+}

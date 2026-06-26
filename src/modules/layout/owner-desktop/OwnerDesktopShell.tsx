@@ -183,7 +183,7 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
     <main className={styles.main}>
       <header className={styles.header}>
         <div className={styles.headerTitle}>
-          <p className={styles.eyebrow}>Operación activa · {tenant?.name ?? "sin negocio"}</p>
+          <p className={styles.eyebrow}>{tenant?.name ?? "Espacio operativo"}</p>
           <h1>{title}</h1>
         </div>
         <div className={styles.headerActions}>
@@ -197,28 +197,26 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
       <div className={styles.content}>{children}</div>
     </main>
     <nav className={styles.mobileBottomNav} aria-label="Navegación principal móvil">
+      <Link href="/owner/bultos#clientes" onClick={() => dispatchBultosTab("/owner/bultos#clientes")} className={currentHash === "cuentas" ? styles.mobileNavActive : ""}>
+        <span>▦</span>
+        <strong>Contactos</strong>
+      </Link>
+      <Link href="/owner/bultos#cobros" onClick={() => dispatchBultosTab("/owner/bultos#cobros")} className={currentHash === "cuenta" ? styles.mobileNavActive : ""}>
+        <span>$</span>
+        <strong>Cobros</strong>
+      </Link>
       <Link href="/owner/bultos#seguimiento" onClick={() => dispatchBultosTab("/owner/bultos#seguimiento")} className={`${styles.mobileMesaButton} ${currentHash === "seguimiento" ? styles.mobileNavActive : ""}`}>
-        <span>●</span>
+        <span>⌂</span>
         <strong>Mesa</strong>
       </Link>
-      <div className={styles.mobileBottomRow}>
-        <Link href="/owner/bultos#clientes" onClick={() => dispatchBultosTab("/owner/bultos#clientes")} className={currentHash === "cuentas" ? styles.mobileNavActive : ""}>
-          <span>▦</span>
-          <strong>Contactos</strong>
-        </Link>
-        <Link href="/owner/bultos#cobros" onClick={() => dispatchBultosTab("/owner/bultos#cobros")} className={currentHash === "cuenta" ? styles.mobileNavActive : ""}>
-          <span>$</span>
-          <strong>Cobros</strong>
-        </Link>
-        <Link href="/owner/bultos#guias" onClick={() => dispatchBultosTab("/owner/bultos#guias")} className={currentHash === "guias" ? styles.mobileNavActive : ""}>
-          <span>≡</span>
-          <strong>Guías</strong>
-        </Link>
-        <Link href="/owner/bultos#mas" onClick={() => dispatchBultosTab("/owner/bultos#mas")} className={currentHash === "mas" ? styles.mobileNavActive : ""}>
-          <span>•••</span>
-          <strong>Más</strong>
-        </Link>
-      </div>
+      <Link href="/owner/bultos#guias" onClick={() => dispatchBultosTab("/owner/bultos#guias")} className={currentHash === "guias" ? styles.mobileNavActive : ""}>
+        <span>≡</span>
+        <strong>Guías</strong>
+      </Link>
+      <Link href="/owner/bultos#mas" onClick={() => dispatchBultosTab("/owner/bultos#mas")} className={currentHash === "mas" ? styles.mobileNavActive : ""}>
+        <span>•••</span>
+        <strong>Más</strong>
+      </Link>
     </nav>
   </div>;
 }

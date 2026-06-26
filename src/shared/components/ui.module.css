@@ -48,3 +48,24 @@
 .mobileCard { background: linear-gradient(180deg, rgba(16,29,49,.96), rgba(8,18,33,.97)); border: 1px solid var(--c360-line); border-radius: 20px; padding: 15px; box-shadow: var(--c360-shadow-soft); display: grid; gap: 10px; }
 .mobileTitle { font-size: 16px; font-weight: 850; margin: 0; color: #fff; }
 .mobileMeta { color: var(--c360-muted); font-size: 12px; margin: 0; }
+
+/* v24 senior polish shared controls */
+.primary {
+  background: linear-gradient(135deg, #baf66c, #91df2b) !important;
+  color: #06100b !important;
+  box-shadow: 0 14px 28px rgba(155,231,45,.14) !important;
+  border-color: rgba(232,255,178,.34) !important;
+}
+.primary:hover {
+  filter: brightness(1.025) !important;
+  box-shadow: 0 16px 34px rgba(155,231,45,.18) !important;
+}
+.secondary {
+  background: rgba(155,231,45,.055) !important;
+  color: #c8ff72 !important;
+  border-color: rgba(155,231,45,.16) !important;
+}
+.input:focus, .select:focus, .textarea:focus {
+  border-color: rgba(155,231,45,.30) !important;
+  box-shadow: 0 0 0 3px rgba(155,231,45,.06) !important;
+}

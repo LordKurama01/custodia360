@@ -2414,3 +2414,139 @@
   .stickyClientActions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .28rem; padding-top: .42rem; }
   .stickyClientActions button { min-height: 2.08rem; font-size: .62rem; border-radius: .62rem; }
 }
+
+/* v24 senior polish: menos verde bruto, más brillo controlado y cards más premium */
+@media (max-width: 767px) {
+  .searchCard,
+  .operationCard,
+  .guideCard,
+  .screenRow,
+  .screenRowStatic,
+  .accountRow,
+  .settingsRow,
+  .clientScreenPanel,
+  .panel,
+  .statusTabs,
+  .innerTabs,
+  .moduleSummaryGrid div {
+    border-color: rgba(255,255,255,.068) !important;
+  }
+
+  .operationCard,
+  .guideCard,
+  .screenRow,
+  .screenRowStatic,
+  .accountRow,
+  .settingsRow {
+    background:
+      linear-gradient(180deg, rgba(17,31,50,.955), rgba(7,17,30,.985)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+  }
+
+  .operationCard:hover,
+  .guideCard:hover,
+  .screenRow:hover,
+  .accountRow:hover,
+  .settingsRow:hover {
+    border-color: rgba(155,231,45,.18) !important;
+    background:
+      radial-gradient(circle at 100% 0, rgba(155,231,45,.035), transparent 34%),
+      linear-gradient(180deg, rgba(18,34,55,.97), rgba(7,17,30,.985)) !important;
+  }
+
+  .badge,
+  .ok,
+  .info,
+  .warn,
+  .neutral {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.045) !important;
+  }
+
+  .compactNext span,
+  .screenRow b,
+  .screenRowStatic b,
+  .ledgerItem b,
+  .checkRow strong {
+    color: #baf66c !important;
+  }
+
+  .statusTabs .statusTabActive,
+  .innerTabs .innerTabActive,
+  .contactSwitch .innerTabActive,
+  .contactSwitch button[aria-pressed="true"] {
+    background: linear-gradient(135deg, #baf66c, #91df2b) !important;
+    color: #06100b !important;
+    box-shadow: 0 8px 18px rgba(155,231,45,.13) !important;
+  }
+
+  .mobileFabAction {
+    width: 40px !important;
+    height: 40px !important;
+    right: 18px !important;
+    bottom: 110px !important;
+    font-size: 1.28rem !important;
+    color: #06100b !important;
+    background:
+      radial-gradient(circle at 28% 18%, rgba(255,255,255,.62), transparent 17%),
+      linear-gradient(145deg, #c8ff72, #91df2b 58%, #5fd484) !important;
+    border-color: rgba(255,255,255,.25) !important;
+    box-shadow: 0 12px 24px rgba(155,231,45,.18), 0 0 0 5px rgba(155,231,45,.026) !important;
+  }
+
+  .settingsRow > span {
+    color: #06100b !important;
+    background: linear-gradient(145deg, #c8ff72, #91df2b) !important;
+    box-shadow: inset 0 -4px 10px rgba(4,16,10,.13), 0 8px 18px rgba(155,231,45,.10) !important;
+  }
+
+  .moduleSummaryGrid,
+  .accountTotals,
+  .kpiStrip,
+  .filterChips,
+  .screenList {
+    scrollbar-width: none;
+  }
+
+  .moduleSummaryGrid::-webkit-scrollbar,
+  .accountTotals::-webkit-scrollbar,
+  .kpiStrip::-webkit-scrollbar,
+  .filterChips::-webkit-scrollbar,
+  .screenList::-webkit-scrollbar {
+    display: none;
+  }
+
+  .moduleSummaryGrid {
+    mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 22px), transparent 100%);
+  }
+
+  .searchCard input {
+    background: rgba(2,9,17,.74) !important;
+    border-color: rgba(255,255,255,.06) !important;
+  }
+
+  .searchCard input:focus {
+    border-color: rgba(155,231,45,.28) !important;
+    box-shadow: 0 0 0 3px rgba(155,231,45,.055) !important;
+  }
+
+  .clientScreenPanel {
+    background:
+      radial-gradient(circle at 94% 8%, rgba(155,231,45,.045), transparent 30%),
+      linear-gradient(180deg, rgba(15,29,49,.99), rgba(7,17,30,.99)) !important;
+    box-shadow: 0 24px 70px rgba(0,0,0,.54), inset 0 1px 0 rgba(255,255,255,.04) !important;
+  }
+
+  .clientScreenPanel .panelHead button {
+    background: rgba(255,255,255,.035) !important;
+    color: rgba(235,243,255,.76) !important;
+  }
+
+  .stickyClientActions button:first-child,
+  .quickActionList button:first-child,
+  .formFooter button,
+  .actions button:first-child {
+    background: linear-gradient(135deg, #baf66c, #91df2b) !important;
+    color: #06100b !important;
+    box-shadow: 0 12px 26px rgba(155,231,45,.14) !important;
+  }
+}

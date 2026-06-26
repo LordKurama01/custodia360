@@ -1,3 +1,5 @@
+# Custodia360 v24 — Pulido senior entregable
+
 # Custodia360 v20 — Pulido Premium Operativo
 
 Versión de cierre para dejar el sistema final sin referencias visibles a demo y con ingreso usable ahora.

@@ -50,6 +50,16 @@ const groups = [
   },
 ] as const;
 
+
+function NavIcon({ type }: { type: "contacts" | "money" | "home" | "guides" | "more" }) {
+  const common = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+  if (type === "contacts") return <svg {...common}><path d="M8 7.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" /><path d="M2.8 19c.8-2.5 2.6-4 5.2-4s4.4 1.5 5.2 4" /><path d="M16.5 8.5h4" /><path d="M16.5 12h4" /><path d="M16.5 15.5h3" /></svg>;
+  if (type === "money") return <svg {...common}><path d="M12 3v18" /><path d="M16.5 7.2c-.8-.8-2.3-1.4-4-1.4-2.3 0-4 1.1-4 2.7 0 1.7 1.5 2.4 4.1 2.9 2.7.6 4.4 1.3 4.4 3.3s-2 3.2-4.6 3.2c-1.9 0-3.6-.6-4.8-1.7" /></svg>;
+  if (type === "home") return <svg {...common}><path d="M4 11.4 12 5l8 6.4" /><path d="M6.5 10.5V19h11v-8.5" /><path d="M10 19v-5h4v5" /></svg>;
+  if (type === "guides") return <svg {...common}><path d="M7 4h10a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2Z" /><path d="M9 8h6" /><path d="M9 12h6" /><path d="M9 16h4" /></svg>;
+  return <svg {...common}><path d="M5 12h.01" /><path d="M12 12h.01" /><path d="M19 12h.01" /></svg>;
+}
+
 function normalizeBultosHash(hash?: string) {
   const value = (hash ?? "").replace(/^#/, "").replace(/^\//, "").trim().toLowerCase() || "seguimiento";
   if (["clientes", "cliente", "planillas", "cuentas"].includes(value)) return "cuentas";
@@ -198,23 +208,23 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
     </main>
     <nav className={styles.mobileBottomNav} aria-label="Navegación principal móvil">
       <Link href="/owner/bultos#clientes" onClick={() => dispatchBultosTab("/owner/bultos#clientes")} className={currentHash === "cuentas" ? styles.mobileNavActive : ""}>
-        <span>▦</span>
+        <span><NavIcon type="contacts" /></span>
         <strong>Contactos</strong>
       </Link>
       <Link href="/owner/bultos#cobros" onClick={() => dispatchBultosTab("/owner/bultos#cobros")} className={currentHash === "cuenta" ? styles.mobileNavActive : ""}>
-        <span>$</span>
+        <span><NavIcon type="money" /></span>
         <strong>Cobros</strong>
       </Link>
       <Link href="/owner/bultos#seguimiento" onClick={() => dispatchBultosTab("/owner/bultos#seguimiento")} className={`${styles.mobileMesaButton} ${currentHash === "seguimiento" ? styles.mobileNavActive : ""}`}>
-        <span>⌂</span>
+        <span><NavIcon type="home" /></span>
         <strong>Mesa</strong>
       </Link>
       <Link href="/owner/bultos#guias" onClick={() => dispatchBultosTab("/owner/bultos#guias")} className={currentHash === "guias" ? styles.mobileNavActive : ""}>
-        <span>▤</span>
+        <span><NavIcon type="guides" /></span>
         <strong>Guías</strong>
       </Link>
       <Link href="/owner/bultos#mas" onClick={() => dispatchBultosTab("/owner/bultos#mas")} className={currentHash === "mas" ? styles.mobileNavActive : ""}>
-        <span>•••</span>
+        <span><NavIcon type="more" /></span>
         <strong>Más</strong>
       </Link>
     </nav>

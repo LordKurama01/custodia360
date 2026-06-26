@@ -748,3 +748,108 @@
   }
   .mobileBottomNav .mobileMesaButton strong { margin-top: -1px; }
 }
+
+/* v24 senior polish: nav limpio, menos verde bruto y sin halo raro detrás de Mesa */
+@media (max-width: 960px) {
+  .mobileBottomNav {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 40px !important;
+    min-height: 66px !important;
+    padding: 7px 8px 8px !important;
+    border-radius: 23px !important;
+    border: 1px solid rgba(255,255,255,.105) !important;
+    background:
+      linear-gradient(180deg, rgba(9,20,34,.88), rgba(3,10,19,.965)) !important;
+    box-shadow: 0 18px 50px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.055) !important;
+    backdrop-filter: blur(24px) saturate(1.1) !important;
+  }
+
+  .mobileBottomNav a {
+    min-height: 38px !important;
+    border-radius: 15px !important;
+    color: rgba(220,230,244,.62) !important;
+    transition: transform .16s ease, color .16s ease, background .16s ease;
+  }
+
+  .mobileBottomNav a span {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 10px !important;
+    color: rgba(220,230,244,.72) !important;
+    background: rgba(255,255,255,.035) !important;
+    border: 1px solid rgba(255,255,255,.055) !important;
+    box-shadow: none !important;
+  }
+
+  .mobileBottomNav a span svg {
+    width: 15px;
+    height: 15px;
+    display: block;
+  }
+
+  .mobileBottomNav a strong {
+    font-size: 8.5px !important;
+    color: inherit;
+    font-weight: 820;
+    letter-spacing: -.01em;
+  }
+
+  .mobileBottomNav .mobileNavActive:not(.mobileMesaButton) {
+    color: rgba(245,250,255,.92) !important;
+    background: rgba(155,231,45,.065) !important;
+    box-shadow: inset 0 0 0 1px rgba(155,231,45,.075) !important;
+  }
+
+  .mobileBottomNav .mobileNavActive:not(.mobileMesaButton) span {
+    color: #07100d !important;
+    background: linear-gradient(135deg, #baf66c, #91df2b) !important;
+    box-shadow: 0 8px 18px rgba(155,231,45,.16) !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton {
+    min-height: 56px !important;
+    transform: translateY(-12px) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton span {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 999px !important;
+    color: #06100b !important;
+    background:
+      radial-gradient(circle at 28% 18%, rgba(255,255,255,.65), transparent 18%),
+      linear-gradient(145deg, #c8ff72 0%, #9be72d 54%, #62d987 100%) !important;
+    border: 1px solid rgba(255,255,255,.28) !important;
+    box-shadow:
+      0 12px 24px rgba(155,231,45,.22),
+      0 0 0 5px rgba(155,231,45,.028),
+      inset 0 -5px 12px rgba(4,16,10,.16) !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton span svg {
+    width: 21px;
+    height: 21px;
+    stroke-width: 2.25;
+  }
+
+  .mobileBottomNav .mobileMesaButton strong {
+    margin-top: -1px !important;
+    color: rgba(245,250,255,.9) !important;
+    font-size: 8.8px !important;
+    text-shadow: 0 1px 8px rgba(0,0,0,.5);
+  }
+
+  .header {
+    min-height: 50px !important;
+    background: linear-gradient(180deg, rgba(6,18,32,.92), rgba(6,18,32,.62)) !important;
+    border-bottom-color: rgba(255,255,255,.055) !important;
+  }
+
+  .header h1 {
+    letter-spacing: -.04em;
+  }
+}

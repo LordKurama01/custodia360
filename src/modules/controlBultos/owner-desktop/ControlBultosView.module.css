@@ -1393,3 +1393,436 @@
     flex: 1 1 0;
   }
 }
+
+/* v15 Mobile Operativa Pro: misma app, menos scroll, menos texto, más acciones contextuales */
+.mobileFabAction {
+  display: none;
+}
+
+.advancedFields {
+  display: grid;
+  gap: .65rem;
+  padding: .72rem;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: .9rem;
+  background: rgba(255,255,255,.028);
+}
+
+.advancedFields summary {
+  cursor: pointer;
+  color: var(--c360-lemon);
+  font-weight: 950;
+  font-size: .82rem;
+}
+
+.advancedFields[open] summary {
+  margin-bottom: .55rem;
+}
+
+@media (max-width: 767px) {
+  .topBar {
+    display: none;
+  }
+
+  .success,
+  .error {
+    position: sticky;
+    top: 64px;
+    z-index: 20;
+    margin: 0 0 .45rem;
+    padding: .58rem .68rem;
+    font-size: .72rem;
+    border-radius: .8rem;
+  }
+
+  .kpiStrip {
+    display: flex;
+    overflow-x: auto;
+    gap: .38rem;
+    margin: .15rem 0 .48rem;
+    padding-bottom: .08rem;
+    scrollbar-width: none;
+  }
+
+  .kpiStrip::-webkit-scrollbar,
+  .filterChips::-webkit-scrollbar,
+  .accountList::-webkit-scrollbar {
+    display: none;
+  }
+
+  .kpi {
+    min-width: 8.1rem;
+    min-height: 2.85rem !important;
+    display: grid;
+    align-content: center;
+    gap: .08rem;
+    padding: .48rem .58rem !important;
+    border-radius: .85rem !important;
+    box-shadow: none !important;
+  }
+
+  .kpi span {
+    font-size: .54rem;
+    white-space: nowrap;
+  }
+
+  .kpi strong {
+    font-size: .78rem;
+    line-height: 1.05;
+  }
+
+  .kpi small {
+    display: none;
+  }
+
+  .searchCard {
+    position: sticky;
+    top: 64px;
+    z-index: 12;
+    gap: .38rem;
+    margin: .28rem 0 .45rem;
+    padding: .46rem !important;
+    border-radius: .9rem !important;
+    background: rgba(6, 17, 31, .92) !important;
+    backdrop-filter: blur(18px);
+  }
+
+  .searchCard input {
+    min-height: 2.32rem;
+    padding-inline: .72rem;
+    font-size: .82rem;
+    border-radius: .72rem;
+  }
+
+  .filterChips {
+    gap: .32rem;
+    padding-bottom: 0;
+  }
+
+  .filterChips button {
+    min-height: 1.72rem;
+    padding: 0 .58rem;
+    font-size: .62rem;
+  }
+
+  .mobileQuickActions,
+  .workflowRail,
+  .appTabs {
+    display: none !important;
+  }
+
+  .mobileFabAction {
+    position: fixed;
+    right: 18px;
+    bottom: 118px;
+    z-index: 70;
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 999px;
+    color: #07100d;
+    background: radial-gradient(circle at 25% 20%, #f6ff90, var(--c360-lemon) 52%, #5ef3a4);
+    box-shadow: 0 18px 42px rgba(154,255,0,.28), 0 18px 70px rgba(0,0,0,.45);
+    font: 950 2rem/1 system-ui, sans-serif;
+    cursor: pointer;
+  }
+
+  .contentGrid,
+  .operationList,
+  .mobileOperationCards,
+  .guideGrid,
+  .moreGrid,
+  .accountOnlyGrid,
+  .accountsGrid {
+    gap: .5rem;
+    margin-top: .45rem;
+  }
+
+  .operationCard,
+  .guideCard,
+  .accountRow {
+    gap: .48rem;
+    padding: .62rem .66rem;
+    border-radius: .9rem;
+    box-shadow: none;
+  }
+
+  .operationCardHead {
+    gap: .45rem;
+    align-items: center;
+  }
+
+  .operationCardHead strong {
+    font-size: .96rem;
+    line-height: 1.05;
+  }
+
+  .operationCardHead span {
+    font-size: .68rem;
+  }
+
+  .badge {
+    min-height: 1.45rem;
+    padding: .18rem .48rem;
+    font-size: .62rem;
+  }
+
+  .mobileCardSummary,
+  .mobileMoneySummary,
+  .mobileNextAction {
+    padding: .46rem .54rem;
+    border-radius: .68rem;
+  }
+
+  .mobileCardSummary strong,
+  .mobileMoneySummary strong,
+  .mobileNextAction strong {
+    font-size: .8rem;
+  }
+
+  .mobileCardSummary span,
+  .mobileMoneySummary span,
+  .mobileMoneySummary small,
+  .mobileNextAction span {
+    font-size: .64rem;
+  }
+
+  .actionsCompact {
+    grid-template-columns: 1fr 1fr 40px;
+    gap: .32rem;
+  }
+
+  .actionsCompact button {
+    min-height: 2rem;
+    border-radius: .7rem;
+    font-size: .65rem;
+  }
+
+  .accountListTitle {
+    display: none;
+  }
+
+  .accountList {
+    gap: .38rem;
+  }
+
+  .accountRow span {
+    font-size: .84rem;
+  }
+
+  .accountRow strong {
+    font-size: .9rem;
+  }
+
+  .accountRow small {
+    font-size: .64rem;
+  }
+
+  .accountDetail,
+  .accountHero,
+  .flowCard {
+    padding: .68rem !important;
+    border-radius: .92rem !important;
+  }
+
+  .clientSheetHead {
+    gap: .48rem;
+  }
+
+  .clientSheetHead p,
+  .cardHead p,
+  .panelHead p {
+    font-size: .58rem;
+  }
+
+  .clientSheetHead h3,
+  .cardHead h3 {
+    font-size: 1rem;
+  }
+
+  .clientSheetHead span,
+  .cardHead div > span,
+  .formFooter span {
+    display: none;
+  }
+
+  .clientSheetActions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .32rem;
+  }
+
+  .clientSheetActions button,
+  .quickGrid button,
+  .utilityLink {
+    min-height: 2rem;
+    padding-inline: .3rem;
+    font-size: .64rem;
+    border-radius: .68rem;
+  }
+
+  .accountTotals {
+    display: flex;
+    overflow-x: auto;
+    gap: .36rem;
+  }
+
+  .accountTotals div {
+    min-width: 8rem;
+    padding: .48rem .54rem;
+    border-radius: .68rem;
+  }
+
+  .accountTotals span {
+    font-size: .58rem;
+  }
+
+  .accountTotals strong {
+    font-size: .82rem;
+  }
+
+  .accountTotals small {
+    display: none;
+  }
+
+  .sheetTable {
+    display: none;
+  }
+
+  .ledger,
+  .ledgerTwoCols {
+    gap: .48rem;
+  }
+
+  .ledger h4 {
+    font-size: .9rem;
+  }
+
+  .ledger p {
+    font-size: .74rem;
+  }
+
+  .ledgerItem,
+  .checkRow {
+    padding: .48rem .52rem;
+    border-radius: .68rem;
+  }
+
+  .ledgerItem strong,
+  .checkRow span {
+    font-size: .78rem;
+  }
+
+  .ledgerItem span {
+    font-size: .64rem;
+  }
+
+  .ledgerItem b,
+  .checkRow strong {
+    font-size: .78rem;
+  }
+
+  .panelOverlay {
+    padding: 0;
+    align-items: end;
+  }
+
+  .panel {
+    max-height: 86dvh;
+    gap: .62rem;
+    padding: .76rem .76rem calc(.76rem + env(safe-area-inset-bottom));
+    border-radius: 1rem 1rem 0 0;
+    overflow: auto;
+  }
+
+  .panelHead {
+    position: sticky;
+    top: -.76rem;
+    z-index: 2;
+    padding: .1rem 0 .42rem;
+    background: linear-gradient(180deg, rgba(16, 29, 49, .99), rgba(16, 29, 49, .92));
+  }
+
+  .panelHead h3 {
+    font-size: .98rem;
+  }
+
+  .panelHead button {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    font-size: .72rem;
+  }
+
+  .panelSteps {
+    display: flex;
+    overflow-x: auto;
+    gap: .28rem;
+  }
+
+  .panelSteps span {
+    min-width: max-content;
+    min-height: 1.65rem;
+    padding: 0 .55rem;
+    font-size: .58rem;
+  }
+
+  .formGrid,
+  .detailGrid {
+    gap: .48rem;
+  }
+
+  .advancedFields {
+    gap: .52rem;
+    padding: .58rem;
+    border-radius: .78rem;
+  }
+
+  .advancedFields summary {
+    font-size: .74rem;
+  }
+
+  .formFooter {
+    position: sticky;
+    bottom: -.76rem;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: 1fr;
+    padding-top: .5rem;
+    padding-bottom: .15rem;
+    background: linear-gradient(180deg, transparent, rgba(8, 18, 33, .98) 24%);
+  }
+
+  .formFooter button {
+    width: 100%;
+    min-height: 2.6rem;
+    font-size: .82rem;
+  }
+
+  .quickActionList {
+    gap: .38rem;
+  }
+
+  .quickActionList button {
+    min-height: 2.45rem;
+    justify-content: flex-start;
+    border-radius: .8rem;
+    font-size: .78rem;
+  }
+
+  .moreGrid .flowCard:first-child {
+    display: none;
+  }
+
+  .quickGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .42rem;
+  }
+
+  .statusMap span {
+    padding: .45rem .5rem;
+    font-size: .65rem;
+  }
+}

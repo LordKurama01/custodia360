@@ -676,3 +676,192 @@
   .accountSummary { grid-template-columns: 1fr; }
   .guideRow { grid-template-columns: 1fr; }
 }
+
+/* v15 visor cliente: ver todo lo propio sin parecer dashboard */
+@media (max-width: 767px) {
+  .page {
+    padding: .65rem .65rem 7.2rem;
+  }
+
+  .headerCompact {
+    margin-bottom: .48rem;
+  }
+
+  .helpLink,
+  .primaryAction,
+  .secondaryAction,
+  .guideActions a {
+    min-height: 2.16rem;
+    padding: 0 .7rem;
+    font-size: .72rem;
+  }
+
+  .heroStatus,
+  .sectionCard,
+  .notFound {
+    gap: .58rem;
+    margin-top: .48rem;
+    padding: .68rem;
+    border-radius: .92rem;
+    box-shadow: none;
+  }
+
+  .privateStateCard {
+    gap: .46rem;
+    padding: .58rem;
+    border-radius: .82rem;
+  }
+
+  .heroStatus h1 {
+    font-size: 1.18rem;
+  }
+
+  .heroStatus p {
+    display: none;
+  }
+
+  .statusDisplay {
+    padding: .56rem;
+    border-radius: .72rem;
+  }
+
+  .statusDisplay strong {
+    font-size: 1.25rem;
+  }
+
+  .statusDisplay small {
+    font-size: .66rem;
+  }
+
+  .heroMoney,
+  .accountSummary,
+  .detailGrid {
+    display: flex;
+    gap: .38rem;
+    overflow-x: auto;
+  }
+
+  .heroMoney div,
+  .accountSummary div,
+  .detailGrid div {
+    min-width: 8rem;
+    padding: .48rem .54rem;
+    border-radius: .68rem;
+  }
+
+  .heroMoney span,
+  .accountSummary span,
+  .detailGrid span,
+  .sectionHead span {
+    font-size: .56rem;
+  }
+
+  .heroMoney strong,
+  .accountSummary strong,
+  .detailGrid strong {
+    font-size: .82rem;
+  }
+
+  .heroMoney small,
+  .accountSummary small,
+  .updated {
+    display: none;
+  }
+
+  .heroActions {
+    gap: .38rem;
+  }
+
+  .quickClientStrip {
+    display: none;
+  }
+
+  .sectionHead h2 {
+    font-size: .96rem;
+  }
+
+  .sectionHead p {
+    display: none;
+  }
+
+  .orderRow,
+  .paymentRow,
+  .guideDetail,
+  .accordion,
+  .guideRow button:first-child {
+    padding: .52rem .56rem;
+    border-radius: .7rem;
+  }
+
+  .orderRow span,
+  .paymentRow span,
+  .guideRow span,
+  .guideDetail summary span {
+    font-size: .66rem;
+  }
+
+  .badge {
+    min-height: 1.44rem;
+    padding: .18rem .46rem;
+    font-size: .62rem;
+  }
+
+  .guideRow {
+    grid-template-columns: 1fr 4rem;
+    gap: .35rem;
+  }
+
+  .guideRow button:first-child {
+    min-height: 2.72rem;
+  }
+
+  .guideRow button:last-child {
+    min-width: 3.9rem;
+    min-height: 2.72rem;
+    font-size: .64rem;
+  }
+
+  .clientBottomNav {
+    left: 8px;
+    right: 8px;
+    bottom: 42px;
+    gap: 3px;
+    padding: 6px 6px 8px;
+    border-radius: 20px;
+  }
+
+  .clientBottomNav button {
+    min-height: 40px;
+    border-radius: 14px;
+  }
+
+  .clientBottomNav button span {
+    width: 21px;
+    height: 21px;
+    font-size: 11px;
+  }
+
+  .clientBottomNav button strong {
+    font-size: 9px;
+  }
+
+  .guideModalOverlay {
+    padding: 0;
+  }
+
+  .guideModal {
+    max-height: 86dvh;
+    gap: .58rem;
+    padding: .76rem;
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  .modalHead h2 {
+    font-size: 1rem;
+  }
+
+  .modalActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

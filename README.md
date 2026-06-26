@@ -85,3 +85,8 @@ Esta versión agrega la regla de producto mobile-first completa:
 - Más contiene configuración, permisos, dueños y acciones secundarias.
 
 Fase 1 continúa limitada a Control de Bultos + Cuenta Corriente Operativa.
+
+
+## v15 — Mobile Operativa Pro
+
+Se aplicó una capa de arquitectura UX/UI mobile para que la app completa sea más ágil: FAB único con bottom sheet, KPIs compactos, cards más chicas, formularios con modo rápido/campos avanzados, cuenta corriente mobile sin tabla larga, bottom nav más fina y visor cliente con menos texto visible.

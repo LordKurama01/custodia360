@@ -51,7 +51,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const accountOpenStatuses = new Set(["pendiente", "pagado_proveedor", "a_devolver", "mercaderia_agotada"]);
 
 type MainTab = "seguimiento" | "cuentas" | "guias" | "cuenta" | "mas";
-type QuickPanel = "cliente" | "operacion" | "guia" | "pago" | "especial" | null;
+type QuickPanel = "cliente" | "operacion" | "guia" | "pago" | "especial" | "acciones" | null;
 
 type AccountPass = {
   id: string;
@@ -749,12 +749,7 @@ export function ControlBultosView() {
       </div>
     </Card>
 
-    <section className={styles.mobileQuickActions} aria-label="Acciones rápidas móvil">
-      <button type="button" onClick={() => openQuickPanel("operacion")}>+ Movimiento</button>
-      <button type="button" onClick={() => sideOperation && startShipment(sideOperation)} disabled={!sideOperation || !canEdit}>+ Guía</button>
-      <button type="button" onClick={() => sideOperation && startPayment(sideOperation)} disabled={!sideOperation || !canCollect}>Cobrar</button>
-      <button type="button" onClick={() => sideOperation && startMoneyOnAccount(sideOperation)} disabled={!sideOperation || !canEdit}>A cuenta</button>
-    </section>
+    <button type="button" className={styles.mobileFabAction} onClick={() => setQuickPanel("acciones")} aria-label="Abrir acciones rápidas">+</button>
 
     {activeTab === "seguimiento" ? <section className={styles.workflowRail} aria-label="Próximos pasos">
       <button type="button" onClick={() => openQuickPanel("operacion")}><span>1</span><strong>Movimiento</strong><small>Cliente, bultos y proveedor</small></button>
@@ -1096,15 +1091,20 @@ export function ControlBultosView() {
         <Field label="Empresa"><Select value={shipmentForm.company} onChange={(event) => setShipmentForm({ ...shipmentForm, company: event.target.value })}><option value="">Seleccionar</option>{transportCompanyOptions.map((company) => <option key={company} value={company}>{company}</option>)}</Select></Field>
         <Field label="Número guía"><Input value={shipmentForm.guide_number} onChange={(event) => setShipmentForm({ ...shipmentForm, guide_number: event.target.value })} /></Field>
         <Field label="Destinatario"><Input value={shipmentForm.recipient_name ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, recipient_name: event.target.value })} /></Field>
-        <Field label="DNI / CUIT"><Input value={shipmentForm.recipient_identity_number ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, recipient_identity_number: event.target.value })} /></Field>
         <Field label="Valor real guía"><Input type="number" min="0" value={shipmentForm.guide_amount} onChange={(event) => setShipmentForm({ ...shipmentForm, guide_amount: Number(event.target.value || 0), amount: Number(event.target.value || 0) })} /></Field>
-        <Field label="Pase USD"><Input type="number" min="0" value={shipmentForm.pass_usd_amount ?? 0} onChange={(event) => setShipmentForm({ ...shipmentForm, pass_usd_amount: Number(event.target.value || 0) })} /></Field>
-        <Field label="Fecha pase"><Input type="date" value={shipmentForm.pass_date ?? today()} onChange={(event) => setShipmentForm({ ...shipmentForm, pass_date: event.target.value || null })} /></Field>
-        <Field label="Condición guía"><Select value={shipmentForm.paid ? "si" : "no"} onChange={(event) => setShipmentForm({ ...shipmentForm, paid: event.target.value === "si", guide_paid_by: event.target.value === "si" ? shipmentForm.guide_paid_by : "pendiente", guide_payment_status: event.target.value === "si" ? shipmentForm.guide_payment_status : "pendiente" })}><option value="no">Pendiente / destino</option><option value="si">Ya fue pagada</option></Select></Field>
-        {shipmentForm.paid ? <Field label="Quién pagó"><Select value={shipmentForm.guide_paid_by} onChange={(event) => onShipmentPaidByChange(event.target.value as GuidePaidBy)}><option value="pendiente">Seleccionar</option><option value="jeremias">Jeremías</option><option value="cliente">Cliente / destino</option></Select></Field> : null}
       </div>
-      <Field label="Destino / instrucción"><Textarea value={shipmentForm.destination_detail ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, destination_detail: event.target.value })} /></Field>
-      <div className={styles.formFooter}><span>La guía queda clickeable para owner y cliente. Vía Cargo suma 2% automático si corresponde.</span><Button onClick={submitShipment} disabled={saving}>Guardar guía</Button></div>
+      <details className={styles.advancedFields}>
+        <summary>Campos avanzados</summary>
+        <div className={styles.formGrid}>
+          <Field label="DNI / CUIT"><Input value={shipmentForm.recipient_identity_number ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, recipient_identity_number: event.target.value })} /></Field>
+          <Field label="Pase USD"><Input type="number" min="0" value={shipmentForm.pass_usd_amount ?? 0} onChange={(event) => setShipmentForm({ ...shipmentForm, pass_usd_amount: Number(event.target.value || 0) })} /></Field>
+          <Field label="Fecha pase"><Input type="date" value={shipmentForm.pass_date ?? today()} onChange={(event) => setShipmentForm({ ...shipmentForm, pass_date: event.target.value || null })} /></Field>
+          <Field label="Condición guía"><Select value={shipmentForm.paid ? "si" : "no"} onChange={(event) => setShipmentForm({ ...shipmentForm, paid: event.target.value === "si", guide_paid_by: event.target.value === "si" ? shipmentForm.guide_paid_by : "pendiente", guide_payment_status: event.target.value === "si" ? shipmentForm.guide_payment_status : "pendiente" })}><option value="no">Pendiente / destino</option><option value="si">Ya fue pagada</option></Select></Field>
+          {shipmentForm.paid ? <Field label="Quién pagó"><Select value={shipmentForm.guide_paid_by} onChange={(event) => onShipmentPaidByChange(event.target.value as GuidePaidBy)}><option value="pendiente">Seleccionar</option><option value="jeremias">Jeremías</option><option value="cliente">Cliente / destino</option></Select></Field> : null}
+        </div>
+        <Field label="Destino / instrucción"><Textarea value={shipmentForm.destination_detail ?? ""} onChange={(event) => setShipmentForm({ ...shipmentForm, destination_detail: event.target.value })} /></Field>
+      </details>
+      <div className={styles.formFooter}><span>Modo rápido: empresa, número, destinatario y valor. Lo demás queda en campos avanzados.</span><Button onClick={submitShipment} disabled={saving}>Guardar guía</Button></div>
     </section></div> : null}
 
     {quickPanel === "pago" && paymentOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
@@ -1130,9 +1130,12 @@ export function ControlBultosView() {
         <Field label="Moneda"><Select value={paymentForm.currency} onChange={(event) => syncPaymentAmount(selectedPassIds, event.target.value as Currency)}><option value="ARS">ARS</option><option value="USD">USD</option></Select></Field>
         <Field label="Monto"><Input type="number" min="0" value={paymentForm.amount} onChange={(event) => setPaymentForm({ ...paymentForm, amount: Number(event.target.value || 0) })} /></Field>
       </div>
-      <Field label="Nota"><Textarea value={paymentForm.note ?? ""} onChange={(event) => setPaymentForm({ ...paymentForm, note: event.target.value })} /></Field>
-      {paymentOperation.operation_shipments.some((shipment) => shipment.guide_payment_status === "pendiente_reintegro") ? <label className={styles.checkRow}><input type="checkbox" checked={!!paymentForm.markGuideReimbursed} onChange={(event) => setPaymentForm({ ...paymentForm, markGuideReimbursed: event.target.checked })} /><span>Marcar guías a reintegrar como reintegradas</span></label> : null}
-      <div className={styles.formFooter}><span>El pago queda en historial. Podés cancelar completo, aplicar parcial o dejar saldo abierto por guía/pase.</span><Button onClick={submitPayment} disabled={saving}>Registrar pago</Button></div>
+      <details className={styles.advancedFields}>
+        <summary>Opciones avanzadas</summary>
+        <Field label="Nota"><Textarea value={paymentForm.note ?? ""} onChange={(event) => setPaymentForm({ ...paymentForm, note: event.target.value })} /></Field>
+        {paymentOperation.operation_shipments.some((shipment) => shipment.guide_payment_status === "pendiente_reintegro") ? <label className={styles.checkRow}><input type="checkbox" checked={!!paymentForm.markGuideReimbursed} onChange={(event) => setPaymentForm({ ...paymentForm, markGuideReimbursed: event.target.checked })} /><span>Marcar guías a reintegrar como reintegradas</span></label> : null}
+      </details>
+      <div className={styles.formFooter}><span>Seleccioná deuda, monto y medio. El historial queda guardado.</span><Button onClick={submitPayment} disabled={saving}>Registrar pago</Button></div>
     </section></div> : null}
 
     {quickPanel === "especial" && specialOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
@@ -1148,6 +1151,19 @@ export function ControlBultosView() {
       </div>
       <Field label="Observación"><Textarea value={specialForm.note ?? ""} onChange={(event) => setSpecialForm({ ...specialForm, note: event.target.value })} placeholder={specialForm.type === "dinero_recibido" ? "Ej: Estela deja USD 200 a cuenta para aplicar después" : "Ej: proveedor no acepta USDT; Jeremías lleva/transfiere el dinero"} /></Field>
       <div className={styles.formFooter}><span>{specialForm.type === "dinero_recibido" ? "Queda visible como dinero a cuenta dentro de la cuenta corriente del cliente." : "Queda como ítem excepcional dentro de la cuenta corriente."}</span><Button onClick={submitSpecialMovement} disabled={saving}>{specialForm.type === "dinero_recibido" ? "Guardar dinero a cuenta" : "Guardar movimiento"}</Button></div>
+    </section></div> : null}
+
+
+    {quickPanel === "acciones" ? <div className={styles.panelOverlay}><section className={`${styles.panel} ${styles.bottomSheet}`}>
+      <div className={styles.panelHead}><div><p>Acciones rápidas</p><h3>Resolver ahora</h3></div><button type="button" onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.quickActionList}>
+        <Button onClick={() => openQuickPanel("operacion")}>Nuevo movimiento</Button>
+        <Button variant="secondary" onClick={() => { if (sideOperation) startShipment(sideOperation); }} disabled={!sideOperation || !canEdit}>Nueva guía del seleccionado</Button>
+        <Button variant="secondary" onClick={() => { if (sideOperation) startPayment(sideOperation); }} disabled={!sideOperation || !canCollect}>Cobrar seleccionado</Button>
+        <Button variant="ghost" onClick={() => { if (sideOperation) startMoneyOnAccount(sideOperation); }} disabled={!sideOperation || !canEdit}>Dinero a cuenta</Button>
+        <Button variant="ghost" onClick={() => { setQuickPanel(null); setCommandOpen(true); }}>Buscar cliente o guía</Button>
+        <Button variant="ghost" onClick={() => { setQuickPanel(null); goToTab("cuenta", "cuenta"); }}>Abrir cuenta corriente</Button>
+      </div>
     </section></div> : null}
 
 

@@ -85,3 +85,8 @@ Advertencias:
 - Se corrigió el bottom nav cliente para usar botones reales con estilos activos.
 - Se agregaron accesos rápidos cliente desde Inicio: Pedidos, Pagos y Ayuda.
 - Se mantiene Fase 1: Control de Bultos + Cuenta Corriente. No se agregan módulos fuera de alcance.
+
+
+## v15 — Mobile Operativa Pro
+
+Se aplicó una capa de arquitectura UX/UI mobile para que la app completa sea más ágil: FAB único con bottom sheet, KPIs compactos, cards más chicas, formularios con modo rápido/campos avanzados, cuenta corriente mobile sin tabla larga, bottom nav más fina y visor cliente con menos texto visible.

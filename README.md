@@ -48,3 +48,12 @@ Pulido visual final: navegación mobile más fina, ficha cliente compacta, botó
 ### v25 — Pulido visual senior final
 
 Pasada visual fina sobre la app operativa: navegación inferior más limpia, Mesa central sin halo, verde reducido, mejor brillo, cards más premium y módulos más entregables. Sin funciones nuevas.
+
+## v26 — Ajuste fino final entregable
+
+- Nav inferior más limpio y sin halo extraño alrededor del botón central Mesa.
+- Verde reducido en botones, tabs, FAB y estados.
+- Buscador mobile deja de ser sticky para evitar solapamientos en Guías/Mesa.
+- Guías, Cobros, Contactos y Más con más padding, menos ruido y cards más compactas.
+- Acciones rápidas en grilla 2 columnas para usar mejor el espacio mobile.
+- Ficha cliente y paneles con menos peso visual y mejor proporción.

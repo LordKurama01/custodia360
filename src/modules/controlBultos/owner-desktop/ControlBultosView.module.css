@@ -2712,3 +2712,273 @@
     padding-bottom: .85rem !important;
   }
 }
+
+/* v26 ajuste fino final: solapamientos, verde más bajo, pantallas más entregables */
+@media (max-width: 767px) {
+  .searchCard {
+    position: relative !important;
+    top: auto !important;
+    z-index: 1 !important;
+    margin-top: .46rem !important;
+    margin-bottom: .54rem !important;
+    padding: .46rem !important;
+    border-radius: .78rem !important;
+    background: rgba(5,14,26,.82) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  }
+
+  .searchCard input {
+    min-height: 2rem !important;
+    border-radius: .62rem !important;
+    font-size: .76rem !important;
+  }
+
+  .contentGrid,
+  .operationList,
+  .mobileOperationCards,
+  .guideGrid,
+  .moreGrid,
+  .accountOnlyGrid,
+  .accountsGrid,
+  .screenList {
+    margin-top: .42rem !important;
+    gap: .46rem !important;
+    padding-bottom: .25rem;
+  }
+
+  .guideGrid {
+    padding-bottom: 4.4rem !important;
+  }
+
+  .moreGrid {
+    padding-bottom: 4.6rem !important;
+  }
+
+  .operationCard,
+  .guideCard,
+  .screenRow,
+  .screenRowStatic,
+  .accountRow,
+  .settingsRow {
+    border-radius: .76rem !important;
+    border-color: rgba(255,255,255,.055) !important;
+    background:
+      linear-gradient(180deg, rgba(14,27,45,.925), rgba(6,15,28,.985)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.028),
+      0 8px 22px rgba(0,0,0,.16) !important;
+  }
+
+  .operationCard,
+  .guideCard {
+    padding: .58rem .62rem !important;
+  }
+
+  .screenRow,
+  .screenRowStatic {
+    min-height: 3.24rem !important;
+    padding: .54rem .58rem !important;
+  }
+
+  .compactRowHead strong,
+  .screenRow strong,
+  .screenRowStatic strong {
+    font-size: .86rem !important;
+  }
+
+  .compactRowHead span:not(.badge),
+  .compactRowMeta span,
+  .compactNext span,
+  .screenRow span,
+  .screenRowStatic span,
+  .settingsRow small {
+    color: rgba(151,162,176,.78) !important;
+  }
+
+  .compactRowMeta strong,
+  .screenRow b,
+  .screenRowStatic b,
+  .ledgerItem b,
+  .checkRow strong {
+    color: #9fe45a !important;
+    text-shadow: none !important;
+  }
+
+  .moduleSummaryGrid {
+    gap: .34rem !important;
+    padding-bottom: .02rem !important;
+  }
+
+  .moduleSummaryGrid div {
+    min-width: 6.75rem !important;
+    padding: .42rem .5rem !important;
+    border-radius: .7rem !important;
+    background: rgba(255,255,255,.024) !important;
+  }
+
+  .moduleSummaryGrid span {
+    font-size: .52rem !important;
+    color: rgba(151,162,176,.78) !important;
+  }
+
+  .moduleSummaryGrid strong {
+    font-size: .74rem !important;
+  }
+
+  .statusTabs,
+  .innerTabs,
+  .contactSwitch {
+    background: rgba(255,255,255,.020) !important;
+    border-color: rgba(255,255,255,.052) !important;
+  }
+
+  .statusTabs button,
+  .innerTabs button,
+  .contactSwitch button {
+    min-height: 1.76rem !important;
+    font-size: .57rem !important;
+    border-radius: .52rem !important;
+  }
+
+  .statusTabs .statusTabActive,
+  .innerTabs .innerTabActive,
+  .contactSwitch .innerTabActive,
+  .contactSwitch button[aria-pressed="true"] {
+    background: linear-gradient(145deg, #afea61, #7fc526) !important;
+    color: #06100b !important;
+    box-shadow: 0 6px 14px rgba(127,197,38,.10) !important;
+  }
+
+  .badge {
+    min-height: 1.46rem !important;
+    padding: 0 .5rem !important;
+    font-size: .61rem !important;
+    border-radius: 999px !important;
+  }
+
+  .sectionTitleRow {
+    min-height: 1.8rem !important;
+    font-size: .9rem !important;
+    margin-top: .1rem !important;
+  }
+
+  .sectionTitleRow span {
+    min-width: 1.45rem !important;
+    min-height: 1.45rem !important;
+    font-size: .64rem !important;
+    background: linear-gradient(145deg, #afea61, #7fc526) !important;
+    box-shadow: none !important;
+  }
+
+  .mobileFabAction {
+    width: 38px !important;
+    height: 38px !important;
+    right: 20px !important;
+    bottom: 103px !important;
+    font-size: 1.18rem !important;
+    color: #06100b !important;
+    background: linear-gradient(145deg, #bff56c, #7fc526 60%, #50bd73) !important;
+    border: 1px solid rgba(255,255,255,.17) !important;
+    box-shadow:
+      0 8px 18px rgba(127,197,38,.12),
+      inset 0 1px 0 rgba(255,255,255,.22),
+      inset 0 -4px 10px rgba(3,15,8,.16) !important;
+  }
+
+  .settingsRow {
+    min-height: 3.22rem !important;
+    grid-template-columns: 1.74rem 1fr 16px !important;
+    gap: .54rem !important;
+    padding: .5rem .58rem !important;
+  }
+
+  .settingsRow > span {
+    width: 1.74rem !important;
+    height: 1.74rem !important;
+    border-radius: .58rem !important;
+    color: #07100d !important;
+    background: linear-gradient(145deg, #afea61, #7fc526) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.19) !important;
+    font-size: .78rem !important;
+  }
+
+  .settingsRow strong {
+    font-size: .80rem !important;
+  }
+
+  .settingsRow small {
+    font-size: .58rem !important;
+    line-height: 1.16 !important;
+  }
+
+  .panelOverlay {
+    padding: .5rem .5rem 5.15rem !important;
+    align-items: center !important;
+  }
+
+  .panel,
+  .clientScreenPanel {
+    border-radius: .96rem !important;
+    background:
+      linear-gradient(180deg, rgba(14,27,45,.99), rgba(6,15,28,.995)) !important;
+    box-shadow: 0 22px 62px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.035) !important;
+  }
+
+  .clientScreenPanel {
+    max-height: calc(100dvh - 6.1rem) !important;
+    padding: .68rem !important;
+  }
+
+  .clientScreenPanel .panelHead button {
+    width: 1.86rem !important;
+    min-width: 1.86rem !important;
+    height: 1.86rem !important;
+    min-height: 1.86rem !important;
+  }
+
+  .clientScreenTotals div,
+  .accountTotals div,
+  .ledgerItem,
+  .checkRow {
+    background: rgba(255,255,255,.024) !important;
+    border-color: rgba(255,255,255,.052) !important;
+  }
+
+  .clientScreenTotals div {
+    padding: .40rem .44rem !important;
+  }
+
+  .clientScreenTotals span {
+    font-size: .47rem !important;
+  }
+
+  .clientScreenTotals strong {
+    font-size: .70rem !important;
+  }
+
+  .stickyClientActions button {
+    min-height: 2.02rem !important;
+    font-size: .60rem !important;
+  }
+
+  .stickyClientActions button:first-child,
+  .quickActionList button:first-child,
+  .formFooter button,
+  .actions button:first-child {
+    background: linear-gradient(145deg, #afea61, #7fc526) !important;
+    color: #06100b !important;
+    box-shadow: 0 8px 18px rgba(127,197,38,.10) !important;
+  }
+
+  .quickActionList {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .42rem !important;
+  }
+
+  .quickActionList button {
+    min-height: 2.45rem !important;
+    border-radius: .72rem !important;
+    font-size: .70rem !important;
+  }
+}

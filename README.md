@@ -61,3 +61,11 @@ Pasada visual fina sobre la app operativa: navegación inferior más limpia, Mes
 ## v27 — Alta cliente desde movimiento
 - Nuevo movimiento permite crear cliente si no aparece en el selector.
 - El cliente creado vuelve seleccionado automáticamente al movimiento.
+
+
+## v28 — Cobros final + acciones contextuales
+
+- Cobros queda con resumen superior: Pendiente, Pagos, En caja y Guías a cobrar.
+- Debajo quedan las acciones/vistas: Registrar cobro, Registrar adelanto, Guías para cobrar y Trabajos extras.
+- El botón `+` ahora cambia según pantalla: Mesa, Contactos, Cobros y Guías. En Más queda oculto.
+- Se evita mezclar dinero a cuenta como pendiente común.

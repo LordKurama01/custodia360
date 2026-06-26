@@ -338,7 +338,7 @@ export function ControlBultosView() {
   const [clientDetailId, setClientDetailId] = useState<string | null>(null);
   const [clientDetailTab, setClientDetailTab] = useState<"resumen" | "guias" | "cuenta" | "historial">("resumen");
   const [contactKind, setContactKind] = useState<"clientes" | "proveedores">("clientes");
-  const [cobrosView, setCobrosView] = useState<"pendientes" | "parciales" | "a_cuenta" | "cerrados">("pendientes");
+  const [cobrosView, setCobrosView] = useState<"registrar_cobro" | "registrar_adelanto" | "guias_cobrar" | "trabajos_extras">("registrar_cobro");
   const [guiasView, setGuiasView] = useState<"activas" | "sin_numero" | "confirmar" | "cerradas">("activas");
   const [providerDetailName, setProviderDetailName] = useState<string | null>(null);
 
@@ -473,8 +473,9 @@ export function ControlBultosView() {
       acc.guideArs += account.guideArsPending;
       acc.specialArs += account.specialArsPending;
       acc.pendingPasses += account.pendingPasses.length;
+      acc.paymentsArs += account.payments.reduce((sum, payment) => sum + (payment.currency === "USD" ? payment.amount * DEFAULT_DOLLAR_RATE : payment.amount), 0);
       return acc;
-    }, { passUsd: 0, guideArs: 0, specialArs: 0, pendingPasses: 0 });
+    }, { passUsd: 0, guideArs: 0, specialArs: 0, pendingPasses: 0, paymentsArs: 0 });
   }, [accounts]);
 
   const selectedClient = data.clients.find((client) => client.id === operationForm.client_id);
@@ -492,7 +493,12 @@ export function ControlBultosView() {
     ].join(" ").toLowerCase();
     return haystack.includes(queryText);
   });
-  const debtorAccounts = filteredAccounts.filter((account) => account.passUsdPending > 0.01 || account.guideArsPending > 0.01 || account.specialArsPending > 0.01);
+  const pendingCobroAccounts = filteredAccounts.filter((account) => account.passUsdPending > 0.01 || account.guideArsPending > 0.01);
+  const partialCobroAccounts = filteredAccounts.filter((account) => account.pendingPasses.some((item) => item.paidUsd > 0));
+  const moneyOnAccountAccounts = filteredAccounts.filter((account) => account.specialPending.some((item) => item.type === "dinero_recibido"));
+  const guideChargeItems = filteredAccounts.flatMap((account) => account.guideReimbursements.map((guide) => ({ ...guide, account })));
+  const extraWorkAccounts = filteredAccounts.filter((account) => account.specialPending.some((item) => item.type !== "dinero_recibido"));
+  const debtorAccounts = pendingCobroAccounts;
   const providerContacts = useMemo(() => {
     const map = new Map<string, { name: string; operations: ControlOperation[]; shipments: number; pendingUsd: number; lastStatus?: LogisticsStatus }>();
     data.operations.forEach((operation) => {
@@ -796,6 +802,13 @@ export function ControlBultosView() {
     mas: { title: "Más", eyebrow: "Sistema", hint: "Configuración" },
   };
   const activeMeta = tabMeta[activeTab];
+  const actionSheetCopy: Record<MainTab, { eyebrow: string; title: string }> = {
+    seguimiento: { eyebrow: "Mesa", title: "Acciones de Mesa" },
+    cuentas: { eyebrow: "Contactos", title: "Agregar contacto" },
+    cuenta: { eyebrow: "Cobros", title: "Registrar cobro" },
+    guias: { eyebrow: "Guías", title: "Nueva guía" },
+    mas: { eyebrow: "Sistema", title: "Acciones" },
+  };
 
   return <OwnerDesktopShell title={activeMeta.title}>
     <section id="seguimiento" className={styles.topBar}>
@@ -806,7 +819,7 @@ export function ControlBultosView() {
       </div>
       <div className={styles.topActions}>
         <Button variant="secondary" onClick={() => setCommandOpen(true)}>Buscar</Button>
-        <Button onClick={() => setQuickPanel("acciones")}>+</Button>
+        {activeTab !== "mas" ? <Button onClick={() => setQuickPanel("acciones")}>+</Button> : null}
       </div>
     </section>
 
@@ -821,7 +834,7 @@ export function ControlBultosView() {
       <button className={activeTab === "mas" ? styles.activeTab : ""} onClick={() => goToTab("mas")}>Más</button>
     </nav>
 
-    {activeTab === "seguimiento" || activeTab === "cuenta" ? <section className={styles.kpiStrip}>
+    {activeTab === "seguimiento" ? <section className={styles.kpiStrip}>
       <Card className={styles.kpi}><span>Pendiente</span><strong>{canSeeMoney ? moneyUsd(kpis.passUsd) : "-"}</strong><small>{canSeeMoney ? formatMoney(kpis.passUsd * DEFAULT_DOLLAR_RATE) : ""}</small></Card>
       <Card className={styles.kpi}><span>Reintegrar</span><strong>{canSeeMoney ? formatMoney(kpis.guideArs) : "-"}</strong><small>{kpis.pendingPasses} pases</small></Card>
       <Card className={styles.kpi}><span>A cuenta</span><strong>{canSeeMoney ? formatMoney(kpis.specialArs) : "-"}</strong><small>Especiales</small></Card>
@@ -835,7 +848,7 @@ export function ControlBultosView() {
       </div> : null}
     </Card> : null}
 
-    {activeTab !== "mas" ? <button type="button" className={styles.mobileFabAction} onClick={() => setQuickPanel("acciones")} aria-label="Abrir acciones rápidas">+</button> : null}
+    {activeTab !== "mas" ? <button type="button" className={styles.mobileFabAction} onClick={() => setQuickPanel("acciones")} aria-label={actionSheetCopy[activeTab].title}>+</button> : null}
 
     {loading ? <Card className={styles.empty}>Cargando operaciones...</Card> : null}
 
@@ -967,35 +980,39 @@ export function ControlBultosView() {
     {activeTab === "cuenta" && !loading ? <section className={styles.screenList}>
       <div className={styles.moduleSummaryGrid}>
         <div><span>Pendiente</span><strong>{moneyUsd(kpis.passUsd)}</strong></div>
-        <div><span>A cuenta</span><strong>{formatMoney(kpis.specialArs)}</strong></div>
-        <div><span>Reintegrar</span><strong>{formatMoney(kpis.guideArs)}</strong></div>
+        <div><span>Pagos</span><strong>{formatMoney(kpis.paymentsArs)}</strong></div>
+        <div><span>En caja</span><strong>{formatMoney(kpis.paymentsArs + kpis.specialArs)}</strong></div>
+        <div><span>Guías a cobrar</span><strong>{formatMoney(kpis.guideArs)}</strong></div>
       </div>
-      <nav className={styles.statusTabs} aria-label="Vista de cobros">
-        <button type="button" className={cobrosView === "pendientes" ? styles.statusTabActive : ""} onClick={() => setCobrosView("pendientes")}>Pendientes</button>
-        <button type="button" className={cobrosView === "parciales" ? styles.statusTabActive : ""} onClick={() => setCobrosView("parciales")}>Parciales</button>
-        <button type="button" className={cobrosView === "a_cuenta" ? styles.statusTabActive : ""} onClick={() => setCobrosView("a_cuenta")}>A cuenta</button>
-        <button type="button" className={cobrosView === "cerrados" ? styles.statusTabActive : ""} onClick={() => setCobrosView("cerrados")}>Cerrados</button>
+      <nav className={styles.statusTabs} aria-label="Acciones de cobros">
+        <button type="button" className={cobrosView === "registrar_cobro" ? styles.statusTabActive : ""} onClick={() => setCobrosView("registrar_cobro")}>Registrar cobro</button>
+        <button type="button" className={cobrosView === "registrar_adelanto" ? styles.statusTabActive : ""} onClick={() => setCobrosView("registrar_adelanto")}>Registrar adelanto</button>
+        <button type="button" className={cobrosView === "guias_cobrar" ? styles.statusTabActive : ""} onClick={() => setCobrosView("guias_cobrar")}>Guías para cobrar</button>
+        <button type="button" className={cobrosView === "trabajos_extras" ? styles.statusTabActive : ""} onClick={() => setCobrosView("trabajos_extras")}>Trabajos extras</button>
       </nav>
-      {cobrosView === "pendientes" ? <>
-        <div className={styles.sectionTitleRow}><strong>Pendientes</strong><span>{debtorAccounts.length}</span></div>
-        {debtorAccounts.length ? debtorAccounts.map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}>
+      {cobrosView === "registrar_cobro" ? <>
+        <div className={styles.sectionTitleRow}><strong>Registrar cobro</strong><span>{pendingCobroAccounts.length}</span></div>
+        {pendingCobroAccounts.length ? pendingCobroAccounts.map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}>
           <div>
             <strong>{account.clientName}</strong>
-            <span>{account.pendingPasses.length} pases · {account.guideReimbursements.length} guías · {account.specialPending.length} especiales</span>
+            <span>{account.pendingPasses.length} pases · {account.guideReimbursements.length} guías para cobrar</span>
           </div>
-          <b>{account.passUsdPending > 0.01 ? moneyUsd(account.passUsdPending) : formatMoney(account.guideArsPending + account.specialArsPending)}</b>
+          <b>{account.passUsdPending > 0.01 ? moneyUsd(account.passUsdPending) : formatMoney(account.guideArsPending)}</b>
           <i>›</i>
         </button>) : <Card className={styles.empty}>Sin cobros pendientes.</Card>}
       </> : null}
-      {cobrosView === "parciales" ? <>
-        <div className={styles.sectionTitleRow}><strong>Parciales</strong><span>{accounts.filter((account) => account.pendingPasses.some((item) => item.paidUsd > 0)).length}</span></div>
-        {accounts.filter((account) => account.pendingPasses.some((item) => item.paidUsd > 0)).map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}><div><strong>{account.clientName}</strong><span>Pagos parciales registrados</span></div><b>{moneyUsd(account.passUsdPending)}</b><i>›</i></button>)}
+      {cobrosView === "registrar_adelanto" ? <>
+        <div className={styles.sectionTitleRow}><strong>Registrar adelanto</strong><span>{moneyOnAccountAccounts.length}</span></div>
+        {moneyOnAccountAccounts.length ? moneyOnAccountAccounts.map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}><div><strong>{account.clientName}</strong><span>Dinero entregado a cuenta</span></div><b>{formatMoney(account.specialArsPending)}</b><i>›</i></button>) : <Card className={styles.empty}>Sin adelantos activos.</Card>}
       </> : null}
-      {cobrosView === "a_cuenta" ? <>
-        <div className={styles.sectionTitleRow}><strong>Dinero a cuenta</strong><span>{accounts.filter((account) => account.specialPending.length).length}</span></div>
-        {accounts.filter((account) => account.specialPending.length).map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}><div><strong>{account.clientName}</strong><span>{account.specialPending.length} movimientos especiales abiertos</span></div><b>{formatMoney(account.specialArsPending)}</b><i>›</i></button>)}
+      {cobrosView === "guias_cobrar" ? <>
+        <div className={styles.sectionTitleRow}><strong>Guías para cobrar</strong><span>{guideChargeItems.length}</span></div>
+        {guideChargeItems.length ? guideChargeItems.map((item) => <button key={item.id} type="button" className={styles.screenRow} onClick={() => openClientScreen(item.account, "cuenta")}><div><strong>{item.guideNumber}</strong><span>{item.account.clientName} · {item.company}</span></div><b>{formatMoney(item.amountArs)}</b><i>›</i></button>) : <Card className={styles.empty}>Sin guías pendientes de cobro.</Card>}
       </> : null}
-      {cobrosView === "cerrados" ? <Card className={styles.empty}>Cerrados: consultalos dentro de cada ficha de cliente.</Card> : null}
+      {cobrosView === "trabajos_extras" ? <>
+        <div className={styles.sectionTitleRow}><strong>Trabajos extras</strong><span>{extraWorkAccounts.length}</span></div>
+        {extraWorkAccounts.length ? extraWorkAccounts.map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}><div><strong>{account.clientName}</strong><span>{account.specialPending.filter((item) => item.type !== "dinero_recibido").map(movementLabel).join(" · ")}</span></div><b>{formatMoney(account.specialArsPending)}</b><i>›</i></button>) : <Card className={styles.empty}>Sin trabajos extras activos.</Card>}
+      </> : null}
     </section> : null}
 
     {activeTab === "guias" && !loading ? <section className={styles.guideGrid}>
@@ -1222,14 +1239,31 @@ export function ControlBultosView() {
 
 
     {quickPanel === "acciones" ? <div className={styles.panelOverlay}><section className={`${styles.panel} ${styles.bottomSheet}`}>
-      <div className={styles.panelHead}><div><p>Acciones rápidas</p><h3>Resolver ahora</h3></div><button type="button" onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.panelHead}><div><p>{actionSheetCopy[activeTab].eyebrow}</p><h3>{actionSheetCopy[activeTab].title}</h3></div><button type="button" onClick={() => setQuickPanel(null)}>Cerrar</button></div>
       <div className={styles.quickActionList}>
-        <Button onClick={() => openQuickPanel("operacion")}>Nuevo movimiento</Button>
-        <Button variant="secondary" onClick={() => { if (sideOperation) startShipment(sideOperation); }} disabled={!sideOperation || !canEdit}>Nueva guía</Button>
-        <Button variant="secondary" onClick={() => { if (sideOperation) startPayment(sideOperation); }} disabled={!sideOperation || !canCollect}>Cobrar</Button>
-        <Button variant="ghost" onClick={() => { if (sideOperation) startMoneyOnAccount(sideOperation); }} disabled={!sideOperation || !canEdit}>Dinero a cuenta</Button>
-        <Button variant="ghost" onClick={() => { setQuickPanel(null); setCommandOpen(true); }}>Buscar cliente o guía</Button>
-        <Button variant="ghost" onClick={() => { setQuickPanel(null); goToTab("cuenta", "cobros"); }}>Abrir cobros</Button>
+        {activeTab === "seguimiento" ? <>
+          <Button onClick={() => openQuickPanel("operacion")}>Nuevo movimiento</Button>
+          <Button variant="secondary" onClick={() => { if (sideOperation) startShipment(sideOperation); }} disabled={!sideOperation || !canEdit}>Nueva guía</Button>
+          <Button variant="secondary" onClick={() => { if (sideOperation) startPayment(sideOperation); }} disabled={!sideOperation || !canCollect}>Cobrar</Button>
+          <Button variant="ghost" onClick={() => { setQuickPanel(null); setCommandOpen(true); }}>Buscar cliente o guía</Button>
+        </> : null}
+        {activeTab === "cuentas" ? <>
+          <Button onClick={() => openQuickPanel("cliente")}>Agregar cliente</Button>
+          <Button variant="secondary" onClick={() => openQuickPanel("operacion")}>Agregar proveedor</Button>
+          <Button variant="ghost" onClick={() => { setQuickPanel(null); setCommandOpen(true); }}>Buscar contacto</Button>
+        </> : null}
+        {activeTab === "cuenta" ? <>
+          <Button onClick={() => { if (sideOperation) startPayment(sideOperation); }} disabled={!sideOperation || !canCollect}>Registrar cobro</Button>
+          <Button variant="secondary" onClick={() => { if (sideOperation) startMoneyOnAccount(sideOperation); }} disabled={!sideOperation || !canEdit}>Registrar adelanto</Button>
+          <Button variant="secondary" onClick={() => setCobrosView("guias_cobrar")}>Guías para cobrar</Button>
+          <Button variant="ghost" onClick={() => { if (sideOperation) startSpecial(sideOperation); }} disabled={!sideOperation || !canEdit}>Trabajo extra</Button>
+        </> : null}
+        {activeTab === "guias" ? <>
+          <Button onClick={() => { if (sideOperation) startShipment(sideOperation); }} disabled={!sideOperation || !canEdit}>Nueva guía</Button>
+          <Button variant="secondary" onClick={() => setGuiasView("sin_numero")}>Sin número</Button>
+          <Button variant="secondary" onClick={() => setGuiasView("confirmar")}>A confirmar</Button>
+          <Button variant="ghost" onClick={() => { setQuickPanel(null); setCommandOpen(true); }}>Buscar guía</Button>
+        </> : null}
       </div>
     </section></div> : null}
 

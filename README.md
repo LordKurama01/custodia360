@@ -57,3 +57,7 @@ Pasada visual fina sobre la app operativa: navegación inferior más limpia, Mes
 - Guías, Cobros, Contactos y Más con más padding, menos ruido y cards más compactas.
 - Acciones rápidas en grilla 2 columnas para usar mejor el espacio mobile.
 - Ficha cliente y paneles con menos peso visual y mejor proporción.
+
+## v27 — Alta cliente desde movimiento
+- Nuevo movimiento permite crear cliente si no aparece en el selector.
+- El cliente creado vuelve seleccionado automáticamente al movimiento.

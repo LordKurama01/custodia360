@@ -322,6 +322,7 @@ export function ControlBultosView() {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [selectedPassIds, setSelectedPassIds] = useState<string[]>([]);
   const [clientForm, setClientForm] = useState<ClientQuickInput>(emptyClientForm);
+  const [returnToOperationAfterClient, setReturnToOperationAfterClient] = useState(false);
   const [operationForm, setOperationForm] = useState<OperationFormInput>(emptyOperationForm());
   const [shipmentOperation, setShipmentOperation] = useState<ControlOperation | null>(null);
   const [shipmentForm, setShipmentForm] = useState<ShipmentInput>(emptyShipmentForm());
@@ -531,12 +532,21 @@ export function ControlBultosView() {
 
   const openQuickPanel = (panel: QuickPanel) => {
     setQuickPanel(panel);
-    if (panel === "cliente") setClientForm(emptyClientForm);
+    if (panel === "cliente") {
+      setClientForm(emptyClientForm);
+      setReturnToOperationAfterClient(false);
+    }
     if (panel === "operacion") {
       const firstClient = data.clients[0];
       setEditingId(null);
       setOperationForm(emptyOperationForm(firstClient?.id ?? "", toNumber(firstClient?.default_price_per_package)));
     }
+  };
+
+  const openClientCreateForOperation = () => {
+    setClientForm(emptyClientForm);
+    setReturnToOperationAfterClient(true);
+    setQuickPanel("cliente");
   };
 
   const submitClient = async () => {
@@ -545,9 +555,20 @@ export function ControlBultosView() {
     setError("");
     try {
       const client = await createQuickClient(clientForm);
-      setMessage(`Cliente creado: ${client.name}`);
-      setQuickPanel(null);
-      await load();
+      const price = toNumber(client.default_price_per_package);
+      setMessage(returnToOperationAfterClient ? `Cliente creado y seleccionado: ${client.name}` : `Cliente creado: ${client.name}`);
+      setData((current) => ({ ...current, clients: [...current.clients.filter((item) => item.id !== client.id), client].sort((a, b) => a.name.localeCompare(b.name)) }));
+      setClientForm(emptyClientForm);
+      if (returnToOperationAfterClient) {
+        setOperationForm((current) => ({ ...current, client_id: client.id, price_per_package: price }));
+        setReturnToOperationAfterClient(false);
+        setQuickPanel("operacion");
+        await load();
+        setOperationForm((current) => ({ ...current, client_id: client.id, price_per_package: price }));
+      } else {
+        setQuickPanel(null);
+        await load();
+      }
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "No se pudo crear el cliente.");
     } finally {
@@ -737,6 +758,10 @@ export function ControlBultosView() {
   };
 
   const onOperationClientChange = (clientId: string) => {
+    if (clientId === "__add_client__") {
+      openClientCreateForOperation();
+      return;
+    }
     const client = data.clients.find((item) => item.id === clientId);
     setOperationForm((current) => ({ ...current, client_id: clientId, price_per_package: toNumber(client?.default_price_per_package) }));
   };
@@ -1091,21 +1116,31 @@ export function ControlBultosView() {
     </div> : null}
 
     {quickPanel === "cliente" ? <div className={styles.panelOverlay}><section className={styles.panel}>
-      <div className={styles.panelHead}><div><p>Cliente</p><h3>Alta rápida</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.panelHead}><div><p>Cliente</p><h3>{returnToOperationAfterClient ? "Agregar y seleccionar cliente" : "Alta rápida"}</h3></div><button onClick={() => { setReturnToOperationAfterClient(false); setQuickPanel(null); }}>Cerrar</button></div>
+      {returnToOperationAfterClient ? <div className={styles.inlineNotice}>Creá el cliente una sola vez. Al guardar vuelve al movimiento y queda seleccionado.</div> : null}
       <div className={styles.formGrid}>
         <Field label="Nombre"><Input value={clientForm.name} onChange={(event) => setClientForm({ ...clientForm, name: event.target.value })} disabled={!canEdit || saving} /></Field>
         <Field label="WhatsApp"><Input value={clientForm.phone} onChange={(event) => setClientForm({ ...clientForm, phone: event.target.value })} disabled={!canEdit || saving} /></Field>
         <Field label="Valor habitual por bulto"><Input type="number" min="0" value={clientForm.default_price_per_package} onChange={(event) => setClientForm({ ...clientForm, default_price_per_package: Number(event.target.value || 0) })} disabled={!canEdit || saving} /></Field>
       </div>
       <Field label="Observaciones"><Textarea value={clientForm.notes ?? ""} onChange={(event) => setClientForm({ ...clientForm, notes: event.target.value })} disabled={!canEdit || saving} /></Field>
-      <Button onClick={submitClient} disabled={!canEdit || saving}>Crear cliente</Button>
+      <Button onClick={submitClient} disabled={!canEdit || saving}>{returnToOperationAfterClient ? "Crear y seleccionar" : "Crear cliente"}</Button>
     </section></div> : null}
 
     {quickPanel === "operacion" ? <div className={styles.panelOverlay}><section className={styles.panel}>
       <div className={styles.panelHead}><div><p>{editingId ? "Editar" : "Movimiento"}</p><h3>{editingId ? "Editar movimiento" : "Nuevo movimiento del cliente"}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
       <div className={styles.panelSteps}><span>1 Cliente</span><span>2 Movimiento</span><span>3 Etapa</span><span>4 Cuenta</span><span>5 Guardar</span></div>
       <div className={styles.formGrid}>
-        <Field label="Cliente"><Select value={operationForm.client_id} onChange={(event) => onOperationClientChange(event.target.value)} disabled={!canEdit || saving}><option value="">Seleccionar</option>{data.clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</Select></Field>
+        <Field label="Cliente">
+          <div className={styles.clientSelectStack}>
+            <Select value={operationForm.client_id} onChange={(event) => onOperationClientChange(event.target.value)} disabled={!canEdit || saving}>
+              <option value="">Seleccionar</option>
+              <option value="__add_client__">＋ Agregar cliente nuevo</option>
+              {data.clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
+            </Select>
+            <button type="button" className={styles.inlineAddClientButton} onClick={openClientCreateForOperation} disabled={!canEdit || saving}>＋ Agregar cliente</button>
+          </div>
+        </Field>
         <Field label="Proveedor / local / descripción"><Input value={operationForm.provider_name} onChange={(event) => setOperationForm({ ...operationForm, provider_name: event.target.value })} placeholder="Ej: Génesis / ropa / perfumes" disabled={!canEdit || saving} /></Field>
         <Field label="Fecha"><Input type="date" value={operationForm.operation_date} onChange={(event) => setOperationForm({ ...operationForm, operation_date: event.target.value })} disabled={!canEdit || saving} /></Field>
         <Field label="Cantidad / bultos"><Input type="number" min="1" value={operationForm.package_count} onChange={(event) => setOperationForm({ ...operationForm, package_count: Number(event.target.value || 1) })} disabled={!canEdit || saving} /></Field>

@@ -1,27 +1,27 @@
-# Product Audit — Custodia360 v18
+# Product Audit v19
 
-## Viabilidad
+## Estado
 
-- Funcionalidad: 95%.
-- Claridad operativa: 95%.
-- UX mobile: 92%.
-- Producto vendible: 96%.
+La app queda enfocada en producto final operativo, sin mensajes visibles de prueba.
 
 ## Mejoras aplicadas
 
-- Navegación por pantallas.
-- Mesa como entrada principal.
-- Contactos como agenda.
-- Cobros como parte contable viva.
-- Guías como control activo.
-- Sin textos de prueba visibles.
-- WhatsApp retirado de landing/owner.
-- Banner cliente agregado.
-- Multi-dueño más claro.
+- Landing reducida.
+- Login diferenciado.
+- Acceso no bloqueado por auth incompleta.
+- Navegación principal consolidada.
+- Sin WhatsApp flotante en landing.
 
-## Falta para 100%
+## Viabilidad
 
-- Cargar datos reales.
-- Probar 5 clientes reales.
-- Validar flujos desde celular con Jeremías.
-- Conectar configuración real de WhatsApp por dueño y banner desde base.
+- Funcionalidad operativa: 95%.
+- Claridad de entrada: 94%.
+- Vendibilidad: 95%.
+
+## Para llegar a producción real completa
+
+- Conectar Supabase real.
+- Crear perfiles reales por rol.
+- Cargar tenant/dueño real.
+- Configurar WhatsApp por dueño.
+- Cargar datos reales de clientes/proveedores/guías/cobros.

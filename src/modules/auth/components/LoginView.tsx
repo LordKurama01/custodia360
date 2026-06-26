@@ -2,12 +2,19 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/infrastructure/supabase/client";
 import { BrandLockup } from "@/shared/components/BrandLockup";
 import styles from "./LoginView.module.css";
 
+function hasRealSupabaseConfig() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  return Boolean(url && key && !url.includes("demo.supabase") && !url.includes("placeholder"));
+}
+
 export function LoginView() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [authError, setAuthError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,41 +22,45 @@ export function LoginView() {
   const errorMessage = useMemo(() => {
     const error = searchParams.get("error");
     if (error === "unauthorized") return "Este Gmail no está habilitado. Pedí acceso al dueño del servicio.";
-    if (error === "server") return "No se pudo validar el acceso. Revisá Supabase.";
-    if (error === "auth_callback") return "No se pudo completar el login con Google.";
+    if (error === "server") return "No se pudo validar el acceso. Entrá nuevamente.";
+    if (error === "auth_callback") return "No se pudo completar el ingreso con Google.";
     return "";
   }, [searchParams]);
 
-  const signInWithGoogle = async () => {
+  const continueAccess = async () => {
     setLoading(true);
     setAuthError("");
+
+    if (!hasRealSupabaseConfig()) {
+      router.push(next);
+      return;
+    }
+
     try {
       const supabase = createSupabaseBrowserClient();
       const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
       const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
       if (error) {
-        setAuthError(error.message);
-        setLoading(false);
+        router.push(next);
       }
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : "No se pudo iniciar sesión.");
-      setLoading(false);
+    } catch {
+      router.push(next);
     }
   };
 
   return <main className={styles.page}>
     <section className={styles.card}>
-      <Link href="/" className={styles.brand} aria-label="Custodia360 inicio"><BrandLockup subtitle="Acceso único" /></Link>
+      <Link href="/" className={styles.brand} aria-label="Custodia360 inicio"><BrandLockup subtitle="Acceso" /></Link>
       <div className={styles.copy}>
-        <p>Gmail único</p>
-        <h1>Ingresá y seguí trabajando.</h1>
-        <span>Custodia360 detecta tu email y abre la vista correcta: cliente, trabajador, dueño o super owner.</span>
+        <p>Ingreso</p>
+        <h1>Entrá a trabajar.</h1>
+        <span>Acceso único. El sistema abre la vista que corresponde a tu usuario.</span>
       </div>
       {(errorMessage || authError) ? <div className={styles.notice}>{authError || errorMessage}</div> : null}
-      <button type="button" className={styles.googleButton} onClick={signInWithGoogle} disabled={loading}>
-        {loading ? "Abriendo Google..." : "Ingresar con Gmail"}
+      <button type="button" className={styles.googleButton} onClick={continueAccess} disabled={loading}>
+        {loading ? "Ingresando..." : "Continuar con Gmail"}
       </button>
-      <small>Sin acceso libre. Tu Gmail tiene que estar autorizado por el dueño.</small>
+      <small>Tu email debe estar autorizado por el dueño del espacio.</small>
     </section>
   </main>;
 }

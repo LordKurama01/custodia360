@@ -63,11 +63,11 @@ export const initialState: AppState = {
     { id: "ev-a2", tenantId: "tenant-a", entityType: "guia", entityId: "guide-a1", name: "guia_via_cargo.pdf", type: "pdf", uploadedByUserId: "u-driver-a", uploadedAt: "2026-06-17T11:35:00" }
   ],
   payments: [
-    { id: "pay-a1", tenantId: "tenant-a", code: "COB-000001", orderId: "ord-a1", clientId: "client-a2", concept: "Servicio retiro y despacho JR-000001", amount: 250000, status: "pendiente", dueAt: "2026-06-21", provider: "mercado_pago", providerIntentId: "mp-demo-a1", checkoutUrl: "https://www.mercadopago.com.ar/demo/custodia360" },
+    { id: "pay-a1", tenantId: "tenant-a", code: "COB-000001", orderId: "ord-a1", clientId: "client-a2", concept: "Servicio retiro y despacho JR-000001", amount: 250000, status: "pendiente", dueAt: "2026-06-21", provider: "mercado_pago", providerIntentId: "mp-a1", checkoutUrl: "https://www.mercadopago.com.ar/custodia360" },
     { id: "pay-a2", tenantId: "tenant-a", code: "COB-000002", clientId: "client-a1", concept: "Saldo operación anterior", amount: 180000, status: "vencido", dueAt: "2026-06-12" }
   ],
   paymentGateways: [
-    { id: "pgw-a1", tenantId: "tenant-a", provider: "mercado_pago", status: "conectada", displayName: "Mercado Pago · Norte Operaciones", publicKey: "APP_USR-demo-public-key", accessTokenLast4: "7781", webhookSecretConfigured: true, sandboxMode: true, enabledMethods: ["checkout_link", "qr", "manual_mark_as_paid"], connectedAt: "2026-06-17T10:00:00", updatedAt: "2026-06-17T10:00:00", notes: "Configuración aislada del Dueño A. Cambiar esta pasarela no afecta a otros dueños." },
+    { id: "pgw-a1", tenantId: "tenant-a", provider: "mercado_pago", status: "conectada", displayName: "Mercado Pago · Norte Operaciones", publicKey: "APP_USR-public-key", accessTokenLast4: "7781", webhookSecretConfigured: true, sandboxMode: true, enabledMethods: ["checkout_link", "qr", "manual_mark_as_paid"], connectedAt: "2026-06-17T10:00:00", updatedAt: "2026-06-17T10:00:00", notes: "Configuración aislada del Dueño A. Cambiar esta pasarela no afecta a otros dueños." },
     { id: "pgw-b1", tenantId: "tenant-b", provider: "manual_transfer", status: "borrador", displayName: "Transferencia manual · Sur Logística", webhookSecretConfigured: false, sandboxMode: true, enabledMethods: ["bank_transfer", "manual_mark_as_paid"], updatedAt: "2026-06-17T10:10:00", notes: "Dueño B todavía no conectó pasarela automática." }
   ],
   expenses: [

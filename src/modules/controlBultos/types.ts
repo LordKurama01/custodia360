@@ -18,7 +18,7 @@ export type ControlShipment = OperationShipmentRow & {
   pass_payment_status?: PassPaymentStatus;
   pass_paid_at?: string | null;
   pass_payment_id?: string | null;
-  /** Demo/v10: monto abonado de este pase. En base real se debe llevar con payment_allocations. */
+  /** Operativo: monto abonado de este pase. En base real se debe llevar con payment_allocations. */
   pass_paid_usd_amount?: number | null;
 };
 export type ControlPayment = OperationPaymentRow & { selected_pass_ids?: string[] };

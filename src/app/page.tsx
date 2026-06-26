@@ -7,12 +7,11 @@ export default function HomePage() {
     <section className={styles.shell}>
       <BrandLockup subtitle="Control privado de bultos" />
       <div className={styles.hero}>
-        <p>Compras · bultos · guías · despacho</p>
-        <h1>Entrás, pedís y te despachamos.</h1>
-        <span>Acceso único con Gmail. El sistema detecta si sos cliente, trabajador, dueño o super owner.</span>
+        <p>Compras · bultos · guías</p>
+        <h1>Todo el despacho bajo control.</h1>
+        <span>Una mesa privada para ver pedidos, guías y cobros sin perder el rastro.</span>
       </div>
-      <Link className={styles.loginButton} href="/login">Ingresar con Gmail</Link>
-      <small className={styles.help}>¿No tenés acceso? Usá el WhatsApp del dueño del servicio.</small>
+      <Link className={styles.loginButton} href="/login">Ingresar</Link>
       <nav className={styles.legal} aria-label="Legal">
         <Link href="/terminos-y-condiciones">Términos</Link>
         <Link href="/politica-de-privacidad">Privacidad</Link>

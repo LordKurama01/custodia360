@@ -11,7 +11,7 @@ export function getDemoClientPortalData(code: string): ClientPortalData | null {
         id: "demo-client-estela",
         name: "Estela",
         phone: "+54 9 236 555-0101",
-        notes: "Vista cliente demo. Link privado revocable.",
+        notes: "Vista cliente privada. Link revocable.",
       },
       operations: [
         {

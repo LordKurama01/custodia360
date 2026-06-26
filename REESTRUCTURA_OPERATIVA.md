@@ -1,23 +1,17 @@
-# Reestructura operativa — v18
+# Reestructura operativa v19
 
-Custodia360 queda organizado como app nativa por pantallas.
+## Decisión final
 
-## Pantalla principal
+No agregar funciones. Afinar entrada y operación.
 
-Mesa = pizarrón operativo.
+## Pantallas principales
 
-## Contactos
+- Mesa: trayecto vivo tipo pizarrón.
+- Contactos: clientes/proveedores como agenda.
+- Cobros: cuenta viva.
+- Guías: guías activas y confirmaciones.
+- Más: sistema.
 
-Clientes y proveedores.
+## Regla de cierre
 
-## Cobros
-
-Parte contable viva.
-
-## Guías
-
-Guías activas y confirmaciones.
-
-## Ficha cliente
-
-Archivo completo del cliente: datos, operaciones, guías, cuenta y cerrados.
+Lo recibido/cerrado desaparece de Mesa. Lo pagado desaparece de Cobros. Todo queda dentro de la ficha del cliente correspondiente.

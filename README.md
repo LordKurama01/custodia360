@@ -1,47 +1,32 @@
-# Custodia360
+# Custodia360 v19 — Landing corta + acceso operativo
 
-Sistema privado para control de compras, bultos, guías, cobros y entregas.
+Versión de cierre para dejar el sistema final sin referencias visibles a demo y con ingreso usable ahora.
 
-## Versión actual
+## Cambios principales
 
-**v18 — Cierre operativo final**
+- Landing pública más corta y comercial.
+- Login separado de la landing, más seco y operativo.
+- Botón de ingreso no envía a URLs externas rotas.
+- Si Supabase/Google OAuth todavía no está configurado, permite acceso operativo a Mesa.
+- Si Supabase/Google OAuth está configurado con variables reales, valida Gmail y perfil.
+- Se mantiene la arquitectura final: Mesa principal arriba, Contactos, Cobros, Guías y Más.
+- WhatsApp no aparece en landing ni en owner/admin general.
+- El texto visible ya no presenta el sistema como muestra ni prueba.
 
-## Estructura operativa
+## Flujo de ingreso
 
-```txt
-          Mesa
-Contactos | Cobros | Guías | Más
-```
+1. Usuario entra a `/`.
+2. Toca `Ingresar`.
+3. En `/login` toca `Continuar con Gmail`.
+4. Si hay Supabase real, inicia OAuth.
+5. Si no hay Supabase real, entra a `/owner/bultos` para operación inicial.
 
-- **Mesa**: pizarrón operativo principal.
-- **Contactos**: clientes y proveedores como agenda.
-- **Cobros**: parte contable viva.
-- **Guías**: guías activas y confirmaciones.
-- **Más**: configuración, permisos, dueños, soporte y banner cliente.
+## Variables
 
-## Reglas clave
+- `NEXT_PUBLIC_LOCAL_ACCESS=true`: acceso operativo inicial.
+- `NEXT_PUBLIC_LOCAL_ACCESS=false`: exige Supabase real cuando esté configurado.
+- `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`: OAuth real.
 
-- Ingreso único con Gmail.
-- Sin accesos de prueba visibles.
-- Sin datos mezclados entre dueños.
-- Cada dueño tiene su propio espacio por `tenant_id` / `owner_id`.
-- Lo pagado sale de Cobros y queda en la ficha del cliente.
-- Lo recibido sale de Mesa y queda en la ficha del cliente.
-- WhatsApp visible solo donde corresponde, con número configurado por dueño.
+## Regla comercial
 
-## Deploy
-
-```powershell
-$ErrorActionPreference = "Stop"
-
-cd C:\Proyectos\custodia360
-
-npm install
-npm run typecheck
-npm run build
-
-git status
-git add -A
-git commit -m "custodia360 v18 cierre operativo final"
-git push
-```
+No agregar módulos nuevos. Esta versión afina entrada, landing, acceso y arquitectura visual para vender/operar como producto final.

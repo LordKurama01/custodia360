@@ -1,18 +1,10 @@
-# Analytics Events — v18
+# Analytics v19
 
-Analytics solo público y sin datos sensibles.
+Eventos públicos mínimos sin datos sensibles:
 
-Eventos:
+- `landing_view`
+- `login_click`
+- `login_operational_access`
+- `login_oauth_start`
 
-- login_click
-- legal_click
-- contact_support_click
-
-No enviar:
-
-- nombres de clientes.
-- teléfonos.
-- guías.
-- DNI/CUIT.
-- saldos.
-- pagos.
+No enviar clientes, teléfonos, guías, saldos, pagos, direcciones ni datos de tenant.

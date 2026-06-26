@@ -1,59 +1,31 @@
-# Flow Map — Custodia360 v18
+# Flow Map v19
 
-## Acceso
+## Público
 
-Usuario entra por Gmail.
+`/` → landing corta → `Ingresar` → `/login`
 
-- Cliente: visor cliente.
-- Trabajador: operación según permisos.
-- Dueño: su espacio.
-- Super Owner: plataforma/dueños.
+## Login
 
-## Owner mobile
+`/login` → `Continuar con Gmail`
+
+- Con Supabase real: OAuth Google → callback → redirección por rol.
+- Sin Supabase real: acceso operativo inicial → `/owner/bultos`.
+
+## Owner / operación
+
+Arquitectura visual:
 
 ```txt
           Mesa
 Contactos | Cobros | Guías | Más
 ```
 
-## Mesa
+- Mesa: pizarrón operativo vivo.
+- Contactos: clientes y proveedores.
+- Cobros: parte contable viva.
+- Guías: guías activas / a confirmar.
+- Más: configuración, permisos, dueños y soporte.
 
-Pizarrón operativo vivo.
+## Cliente
 
-- En proveedor.
-- Para retirar.
-- Retirado.
-- Depósito CD.
-- Depósito A/B.
-- Despachado.
-- A confirmar.
-
-Al cerrar/confirmar, sale de Mesa y queda en cliente.
-
-## Contactos
-
-- Clientes.
-- Proveedores.
-
-Cliente abre ficha completa.
-Proveedor abre ficha operativa.
-
-## Cobros
-
-Parte contable viva.
-
-- Pendiente.
-- Parcial.
-- Dinero a cuenta.
-- Reintegro.
-- Pase pendiente.
-
-Al pagar, sale de Cobros y queda en ficha cliente.
-
-## Guías
-
-Guías activas y a confirmar.
-
-## Más
-
-Sistema, permisos, dueños, soporte y banner cliente.
+El cliente ve solo su visor y su información. WhatsApp aparece solo en contexto cliente y usa el WhatsApp del dueño/tenant.

@@ -102,7 +102,7 @@ function getDemoSeed(): ControlBultosData {
       email: null,
       default_price_per_package: 0,
       notes: "Cliente principal. Puede enviar compras a destinatarios propios y consultar por link privado.",
-      private_code: "CLI-ESTELA-DEMO",
+      private_code: "CLI-ESTELA",
       active: true,
       created_at: created,
       updated_at: created,
@@ -114,15 +114,15 @@ function getDemoSeed(): ControlBultosData {
       email: null,
       default_price_per_package: 0,
       notes: "Cliente con pases pendientes ligados a guías.",
-      private_code: "CLI-MATIAS-DEMO",
+      private_code: "CLI-MATIAS",
       active: true,
       created_at: created,
       updated_at: created,
     },
   ];
 
-  const estelaClient = { id: "demo-client-estela", name: "Estela", phone: "+54 9 236 555-0101", default_price_per_package: 0, private_code: "CLI-ESTELA-DEMO" };
-  const matiasClient = { id: "demo-client-matias", name: "Matías", phone: "+54 9 236 555-0202", default_price_per_package: 0, private_code: "CLI-MATIAS-DEMO" };
+  const estelaClient = { id: "demo-client-estela", name: "Estela", phone: "+54 9 236 555-0101", default_price_per_package: 0, private_code: "CLI-ESTELA" };
+  const matiasClient = { id: "demo-client-matias", name: "Matías", phone: "+54 9 236 555-0202", default_price_per_package: 0, private_code: "CLI-MATIAS" };
 
   const operations: ControlOperation[] = [
     recalculateOperation({

@@ -2,84 +2,66 @@
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 1rem 1rem 4.5rem;
+  padding: 1rem 1rem 4.2rem;
   color: var(--c360-ink);
   background:
-    radial-gradient(circle at 50% 76%, rgba(154, 255, 0, .16), transparent 28%),
-    radial-gradient(circle at 12% 8%, rgba(47, 128, 237, .10), transparent 28%),
+    radial-gradient(circle at 50% 82%, rgba(154, 255, 0, .13), transparent 26%),
+    radial-gradient(circle at 10% 8%, rgba(47, 128, 237, .10), transparent 28%),
     linear-gradient(135deg, #030a13 0%, #071326 52%, #07111f 100%);
 }
 .shell {
-  width: min(100%, 34rem);
+  width: min(100%, 29rem);
   display: grid;
-  gap: 1.05rem;
+  gap: .95rem;
   padding: 1.05rem;
   border: 1px solid rgba(154, 255, 0, .13);
-  border-radius: 1.45rem;
+  border-radius: 1.35rem;
   background: linear-gradient(180deg, rgba(16, 29, 49, .74), rgba(8, 18, 33, .88));
   box-shadow: var(--c360-shadow-soft);
 }
-.hero { display: grid; gap: .65rem; padding-top: .25rem; }
+.hero { display: grid; gap: .52rem; padding-top: .15rem; }
 .hero p {
   margin: 0;
   color: var(--c360-lemon);
   font-size: .68rem;
   font-weight: 950;
-  letter-spacing: .15em;
+  letter-spacing: .14em;
   text-transform: uppercase;
 }
 .hero h1 {
-  max-width: 12ch;
+  max-width: 11ch;
   margin: 0;
   color: #fff;
-  font-size: clamp(3rem, 14vw, 4.6rem);
-  line-height: .9;
-  letter-spacing: -.075em;
+  font-size: clamp(2.25rem, 10vw, 3.4rem);
+  line-height: .94;
+  letter-spacing: -.06em;
 }
 .hero span {
-  max-width: 32rem;
+  max-width: 25rem;
   color: var(--c360-muted);
-  font-size: .92rem;
-  line-height: 1.45;
+  font-size: .9rem;
+  line-height: 1.38;
 }
 .loginButton {
-  min-height: 3.2rem;
+  min-height: 3rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 1rem;
+  border-radius: .95rem;
   color: #07100d;
   background: linear-gradient(135deg, #c9ff3a, var(--c360-lemon) 58%, #5ef3a4);
-  box-shadow: 0 18px 42px rgba(154, 255, 0, .22);
-  font-size: 1rem;
+  box-shadow: 0 18px 42px rgba(154, 255, 0, .20);
+  font-size: .98rem;
   font-weight: 950;
 }
-.help { color: rgba(235, 243, 255, .62); line-height: 1.35; }
 .legal {
   display: flex;
   gap: .75rem;
   flex-wrap: wrap;
-  padding-top: .2rem;
+  padding-top: .1rem;
 }
-.legal a { color: rgba(235, 243, 255, .62); font-size: .78rem; font-weight: 850; }
-.whatsappFab {
-  display: none;
-  position: fixed;
-  right: 1rem;
-  bottom: 4.35rem;
-  width: 3.1rem;
-  height: 3.1rem;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  color: #06130a;
-  background: #25d366;
-  border: 1px solid rgba(255,255,255,.28);
-  box-shadow: 0 18px 44px rgba(37, 211, 102, .28), 0 16px 70px rgba(0,0,0,.42);
-  font-weight: 950;
-}
+.legal a { color: rgba(235, 243, 255, .58); font-size: .76rem; font-weight: 850; }
 @media (max-width: 520px) {
   .page { align-items: start; padding-top: 1rem; }
-  .shell { border-radius: 1.2rem; }
-  .hero h1 { max-width: 10ch; }
+  .shell { border-radius: 1.15rem; }
 }

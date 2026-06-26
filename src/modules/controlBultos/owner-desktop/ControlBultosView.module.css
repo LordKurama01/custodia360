@@ -3031,3 +3031,56 @@
     min-width: 10.5rem;
   }
 }
+
+/* v29 flujo real: estados operativos y alta rápida de proveedores */
+.statusUpdateBlock {
+  display: grid;
+  gap: .62rem;
+  margin-top: .78rem;
+  padding: .78rem;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: .95rem;
+  background: rgba(255,255,255,.025);
+}
+
+.statusUpdateBlock strong {
+  color: rgba(245, 255, 235, .92);
+  font-size: .82rem;
+  letter-spacing: -.02em;
+}
+
+.statusUpdateBlock small {
+  color: rgba(205, 224, 197, .66);
+  font-size: .70rem;
+  line-height: 1.35;
+}
+
+.statusStepGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .42rem;
+}
+
+.statusStepGrid button {
+  min-height: 2.1rem;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: .68rem;
+  background: rgba(255,255,255,.035);
+  color: rgba(236, 246, 231, .86);
+  font: inherit;
+  font-size: .70rem;
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.statusStepGrid .statusStepActive {
+  border-color: rgba(144, 214, 55, .42);
+  background: rgba(144, 214, 55, .13);
+  color: #dfffba;
+}
+
+@media (max-width: 640px) {
+  .statusStepGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .statusUpdateBlock { margin-top: .55rem; padding: .65rem; }
+  .statusStepGrid button { min-height: 1.94rem; font-size: .64rem; }
+}

@@ -6,7 +6,7 @@ exception when duplicate_object then null;
 end $$;
 
 do $$ begin
-  create type public.logistics_status as enum ('para_retirar', 'retirado', 'cd', 'deposito_a', 'deposito_b', 'despachado');
+  create type public.logistics_status as enum ('para_retirar', 'retirado', 'cd', 'deposito_a', 'deposito_b', 'en_transito', 'despachado', 'recibido');
 exception when duplicate_object then null;
 end $$;
 

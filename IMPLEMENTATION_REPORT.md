@@ -53,3 +53,12 @@ Pulido visual final: navegación mobile más fina, ficha cliente compacta, botó
 - Debajo quedan las acciones/vistas: Registrar cobro, Registrar adelanto, Guías para cobrar y Trabajos extras.
 - El botón `+` ahora cambia según pantalla: Mesa, Contactos, Cobros y Guías. En Más queda oculto.
 - Se evita mezclar dinero a cuenta como pendiente común.
+
+## v29 — Pedidos, proveedores y flujo real
+
+- Reordenado flujo real: Cliente → Pedido → Estado → Guía → Cobro → Historial.
+- Mesa: `+` contextual con Nuevo pedido, Nuevo despacho, Nuevo pago de guía y Nuevo adelanto.
+- Contactos: Clientes/Proveedores con carga rápida de proveedores.
+- Corregido campo `Valor habitual por bulto` para admitir vacío visual y edición normal.
+- Agregado estado `Recibido`; al aplicarlo sale de Mesa y queda archivado en ficha cliente.
+- Nuevo pedido incorpora alta rápida de cliente y proveedor desde el formulario.

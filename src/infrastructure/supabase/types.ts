@@ -1,7 +1,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type InternalRole = "owner" | "admin" | "operator" | "collector" | "viewer";
-export type LogisticsStatus = "para_retirar" | "retirado" | "cd" | "deposito_a" | "deposito_b" | "despachado";
+export type LogisticsStatus = "para_retirar" | "retirado" | "cd" | "deposito_a" | "deposito_b" | "en_transito" | "despachado" | "recibido";
 export type FinancialStatus = "pendiente" | "pago_parcial" | "pago_total";
 export type PaymentMethod = "efectivo_pesos" | "efectivo_dolares" | "transferencia_1" | "transferencia_2";
 export type Currency = "ARS" | "USD";

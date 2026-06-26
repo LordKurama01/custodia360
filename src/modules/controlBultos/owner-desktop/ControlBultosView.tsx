@@ -15,6 +15,7 @@ import {
   createOperation,
   createPayment,
   createQuickClient,
+  createQuickProvider,
   createSpecialMovement,
   getControlBultosData,
   saveShipment,
@@ -28,6 +29,7 @@ import type {
   ControlShipment,
   OperationFormInput,
   PaymentInput,
+  ProviderQuickInput,
   ShipmentInput,
   SpecialMovement,
   SpecialMovementInput,
@@ -49,9 +51,10 @@ import styles from "./ControlBultosView.module.css";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const accountOpenStatuses = new Set(["pendiente", "pagado_proveedor", "a_devolver", "mercaderia_agotada"]);
+const mesaVisibleStatuses = new Set<LogisticsStatus>(["para_retirar", "retirado", "cd", "deposito_a", "deposito_b", "en_transito", "despachado"]);
 
 type MainTab = "seguimiento" | "cuentas" | "guias" | "cuenta" | "mas";
-type QuickPanel = "cliente" | "operacion" | "guia" | "pago" | "especial" | "acciones" | null;
+type QuickPanel = "cliente" | "proveedor" | "operacion" | "guia" | "pago" | "especial" | "acciones" | null;
 
 type AccountPass = {
   id: string;
@@ -88,6 +91,14 @@ const emptyClientForm: ClientQuickInput = {
   phone: "",
   email: "",
   default_price_per_package: 0,
+  notes: "",
+};
+
+const emptyProviderForm: ProviderQuickInput = {
+  name: "",
+  phone: "",
+  payment_methods: "",
+  address: "",
   notes: "",
 };
 
@@ -157,9 +168,9 @@ function moneyUsd(value: number) {
 }
 
 function statusClass(status: LogisticsStatus | GuidePaymentStatus | string) {
-  if (["despachado", "pago_total", "reintegrada", "pagada_por_cliente", "pagado", "cerrado", "reintegrado"].includes(status)) return styles.ok;
+  if (["despachado", "recibido", "pago_total", "reintegrada", "pagada_por_cliente", "pagado", "cerrado", "reintegrado"].includes(status)) return styles.ok;
   if (["pendiente_reintegro", "pendiente", "para_retirar", "pagada_por_jeremias"].includes(status)) return styles.warn;
-  if (["retirado", "cd", "deposito_a", "deposito_b", "pago_parcial", "parcial", "pagado_proveedor"].includes(status)) return styles.info;
+  if (["retirado", "cd", "deposito_a", "deposito_b", "en_transito", "pago_parcial", "parcial", "pagado_proveedor"].includes(status)) return styles.info;
   return styles.neutral;
 }
 
@@ -202,7 +213,7 @@ function movementLabel(movement: SpecialMovement) {
     devolucion: "Devolución",
     aplicado_otra_compra: "Aplicado a otra compra",
   };
-  return labels[movement.type] ?? "Movimiento especial";
+  return labels[movement.type] ?? "Pedido especial";
 }
 
 function createPassItem(operation: ControlOperation, shipment: ControlShipment): AccountPass | null {
@@ -302,7 +313,7 @@ function buildAccountWhatsApp(account: ClientAccount) {
   }
 
   if (account.specialPending.length) {
-    lines.push("", "Movimientos especiales:", ...account.specialPending.map((item) => `- ${movementLabel(item)} · ${item.provider_name} · ${item.currency === "ARS" ? formatMoney(item.amount) : moneyUsd(item.amount)} · estado ${item.status.replaceAll("_", " ")}`));
+    lines.push("", "Pedidos especiales:", ...account.specialPending.map((item) => `- ${movementLabel(item)} · ${item.provider_name} · ${item.currency === "ARS" ? formatMoney(item.amount) : moneyUsd(item.amount)} · estado ${item.status.replaceAll("_", " ")}`));
   }
 
   lines.push("", `Total adicional ARS: ${formatMoney(account.guideArsPending + account.specialArsPending)}`, "Aclaración: el equivalente en pesos puede variar según el dólar al momento del pago.");
@@ -310,7 +321,7 @@ function buildAccountWhatsApp(account: ClientAccount) {
 }
 
 export function ControlBultosView() {
-  const [data, setData] = useState<ControlBultosData>({ clients: [], operations: [] });
+  const [data, setData] = useState<ControlBultosData>({ clients: [], operations: [], providers: [] });
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -322,6 +333,7 @@ export function ControlBultosView() {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [selectedPassIds, setSelectedPassIds] = useState<string[]>([]);
   const [clientForm, setClientForm] = useState<ClientQuickInput>(emptyClientForm);
+  const [providerForm, setProviderForm] = useState<ProviderQuickInput>(emptyProviderForm);
   const [returnToOperationAfterClient, setReturnToOperationAfterClient] = useState(false);
   const [operationForm, setOperationForm] = useState<OperationFormInput>(emptyOperationForm());
   const [shipmentOperation, setShipmentOperation] = useState<ControlOperation | null>(null);
@@ -463,9 +475,13 @@ export function ControlBultosView() {
     });
   }, [data.operations, filters]);
 
+  const mesaOperations = useMemo(() => filteredOperations.filter((operation) => mesaVisibleStatuses.has(operation.logistics_status)), [filteredOperations]);
+  const archivedOperations = useMemo(() => data.operations.filter((operation) => operation.logistics_status === "recibido"), [data.operations]);
+
   const accounts = useMemo(() => buildClientAccounts(data.operations), [data.operations]);
   const selectedAccount = accounts.find((account) => account.clientId === selectedAccountId) ?? accounts[0] ?? null;
-  const sideOperation = filteredOperations.find((operation) => operation.id === focusedOperationId) ?? filteredOperations[0] ?? null;
+  const sideSourceOperations = activeTab === "seguimiento" ? mesaOperations : filteredOperations;
+  const sideOperation = sideSourceOperations.find((operation) => operation.id === focusedOperationId) ?? sideSourceOperations[0] ?? null;
 
   const kpis = useMemo(() => {
     return accounts.reduce((acc, account) => {
@@ -500,7 +516,21 @@ export function ControlBultosView() {
   const extraWorkAccounts = filteredAccounts.filter((account) => account.specialPending.some((item) => item.type !== "dinero_recibido"));
   const debtorAccounts = pendingCobroAccounts;
   const providerContacts = useMemo(() => {
-    const map = new Map<string, { name: string; operations: ControlOperation[]; shipments: number; pendingUsd: number; lastStatus?: LogisticsStatus }>();
+    const map = new Map<string, { name: string; phone?: string | null; paymentMethods?: string | null; address?: string | null; notes?: string | null; operations: ControlOperation[]; shipments: number; pendingUsd: number; lastStatus?: LogisticsStatus }>();
+
+    (data.providers ?? []).forEach((provider) => {
+      map.set(provider.name, {
+        name: provider.name,
+        phone: provider.phone,
+        paymentMethods: provider.payment_methods,
+        address: provider.address,
+        notes: provider.notes,
+        operations: [],
+        shipments: 0,
+        pendingUsd: 0,
+      });
+    });
+
     data.operations.forEach((operation) => {
       const name = operation.provider_name?.trim() || "Proveedor sin nombre";
       const current = map.get(name) ?? { name, operations: [], shipments: 0, pendingUsd: 0, lastStatus: operation.logistics_status };
@@ -513,10 +543,11 @@ export function ControlBultosView() {
       current.lastStatus = operation.logistics_status;
       map.set(name, current);
     });
+
     const list = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
     if (!queryText) return list;
-    return list.filter((provider) => provider.name.toLowerCase().includes(queryText) || provider.operations.some((operation) => [operation.clients?.name, operation.public_code, operation.note].join(" ").toLowerCase().includes(queryText)));
-  }, [data.operations, queryText]);
+    return list.filter((provider) => [provider.name, provider.phone, provider.paymentMethods, provider.address, provider.notes].join(" ").toLowerCase().includes(queryText) || provider.operations.some((operation) => [operation.clients?.name, operation.public_code, operation.note].join(" ").toLowerCase().includes(queryText)));
+  }, [data.providers, data.operations, queryText]);
   const providerDetail = providerDetailName ? providerContacts.find((provider) => provider.name === providerDetailName) ?? null : null;
   const clientDetailAccount = accounts.find((account) => account.clientId === clientDetailId) ?? null;
   const clientDetailOperation = clientDetailAccount?.operations[0] ?? null;
@@ -541,6 +572,9 @@ export function ControlBultosView() {
     if (panel === "cliente") {
       setClientForm(emptyClientForm);
       setReturnToOperationAfterClient(false);
+    }
+    if (panel === "proveedor") {
+      setProviderForm(emptyProviderForm);
     }
     if (panel === "operacion") {
       const firstClient = data.clients[0];
@@ -582,6 +616,41 @@ export function ControlBultosView() {
     }
   };
 
+  const submitProvider = async () => {
+    if (!providerForm.name.trim()) return setError("El nombre del proveedor es obligatorio.");
+    setSaving(true);
+    setError("");
+    try {
+      const provider = await createQuickProvider(providerForm);
+      setMessage(`Proveedor creado: ${provider.name}`);
+      setData((current) => ({
+        ...current,
+        providers: [...(current.providers ?? []).filter((item) => item.id !== provider.id), provider].sort((a, b) => a.name.localeCompare(b.name)),
+      }));
+      setProviderForm(emptyProviderForm);
+      setQuickPanel(null);
+      await load();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "No se pudo crear el proveedor.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const startNewPedido = () => {
+    const firstClient = data.clients[0];
+    setEditingId(null);
+    setOperationForm(emptyOperationForm(firstClient?.id ?? "", toNumber(firstClient?.default_price_per_package)));
+    setQuickPanel("operacion");
+  };
+
+  const startGuidePayment = (operation: ControlOperation) => {
+    setPaymentOperation(operation);
+    setPaymentForm({ ...emptyPaymentForm(operation.id), concept: "Pago de guía", markGuideReimbursed: true });
+    setSelectedPassIds([]);
+    setQuickPanel("pago");
+  };
+
   const submitOperation = async () => {
     if (!canEdit) return setError("Tu rol no permite crear o editar operaciones.");
     if (!operationForm.client_id) return setError("Selecciona un cliente.");
@@ -591,16 +660,16 @@ export function ControlBultosView() {
     try {
       if (editingId) {
         await updateOperation(editingId, operationForm);
-        setMessage("Operación actualizada.");
+        setMessage("Pedido actualizado.");
       } else {
         await createOperation(operationForm);
-        setMessage("Operación creada.");
+        setMessage("Pedido creado.");
       }
       setEditingId(null);
       setQuickPanel(null);
       await load();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo guardar la operación.");
+      setError(submitError instanceof Error ? submitError.message : "No se pudo guardar el pedido.");
     } finally {
       setSaving(false);
     }
@@ -707,17 +776,17 @@ export function ControlBultosView() {
 
   const submitSpecialMovement = async () => {
     if (!specialOperation) return;
-    if (!canEdit) return setError("Tu rol no permite cargar movimientos especiales.");
+    if (!canEdit) return setError("Tu rol no permite cargar pedidos especiales.");
     setSaving(true);
     setError("");
     try {
       await createSpecialMovement(specialForm);
-      setMessage("Movimiento especial cargado.");
+      setMessage("Pedido especial cargado.");
       setSpecialOperation(null);
       setQuickPanel(null);
       await load();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo cargar el movimiento especial.");
+      setError(submitError instanceof Error ? submitError.message : "No se pudo cargar el pedido especial.");
     } finally {
       setSaving(false);
     }
@@ -856,14 +925,14 @@ export function ControlBultosView() {
       <div className={styles.operationList}>
         <div className={styles.tableShell}>
           <div className={styles.tableHead}>
-            <span>Cliente / movimiento</span>
+            <span>Cliente / pedido</span>
             <span>Etapa</span>
             <span>Cuenta</span>
             <span>Guías</span>
             <span>Próxima acción</span>
             <span>Acciones</span>
           </div>
-          {filteredOperations.length ? filteredOperations.map((operation) => {
+          {mesaOperations.length ? mesaOperations.map((operation) => {
             const totals = calculateOperationTotals(operation);
             const account = accounts.find((item) => item.clientId === operation.client_id);
             return <article key={operation.id} className={`${styles.tableRow} ${sideOperation?.id === operation.id ? styles.tableRowActive : ""}`} onClick={() => setFocusedOperationId(operation.id)}>
@@ -897,7 +966,7 @@ export function ControlBultosView() {
         </div>
 
         <div className={styles.mobileOperationCards}>
-          {filteredOperations.length ? filteredOperations.map((operation) => {
+          {mesaOperations.length ? mesaOperations.map((operation) => {
             const account = accounts.find((item) => item.clientId === operation.client_id);
             return <article key={operation.id} className={styles.operationCard} onClick={() => { setFocusedOperationId(operation.id); openOperationScreen(operation); }}>
               <div className={styles.compactRowHead}>
@@ -926,7 +995,7 @@ export function ControlBultosView() {
           <span className={`${styles.badge} ${statusClass(sideOperation.logistics_status)}`}>{logisticsLabels[sideOperation.logistics_status]}</span>
         </div>
         <div className={styles.detailGrid}>
-          <div><span>Operación</span><strong>{sideOperation.public_code}</strong></div>
+          <div><span>Pedido</span><strong>{sideOperation.public_code}</strong></div>
           <div><span>Proveedor</span><strong>{sideOperation.provider_name}</strong></div>
           <div><span>Bultos</span><strong>{sideOperation.package_count}</strong></div>
           <div><span>Guías</span><strong>{sideOperation.operation_shipments.length}</strong></div>
@@ -961,7 +1030,7 @@ export function ControlBultosView() {
         return <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account)}>
           <div>
             <strong>{account.clientName}</strong>
-            <span>{totalBultos} bultos · {account.operations.length} movimientos · {lastOperation ? logisticsLabels[lastOperation.logistics_status] : "Sin movimientos"}</span>
+            <span>{totalBultos} bultos · {account.operations.length} pedidos · {lastOperation ? logisticsLabels[lastOperation.logistics_status] : "Sin pedidos"}</span>
           </div>
           <b>{debtLabel}</b>
           <i>›</i>
@@ -970,7 +1039,7 @@ export function ControlBultosView() {
       {contactKind === "proveedores" ? (providerContacts.length ? providerContacts.map((provider) => <button key={provider.name} type="button" className={styles.screenRow} onClick={() => setProviderDetailName(provider.name)}>
         <div>
           <strong>{provider.name}</strong>
-          <span>{provider.operations.length} movimientos · {provider.shipments} guías · {provider.lastStatus ? logisticsLabels[provider.lastStatus] : "Sin estado"}</span>
+          <span>{provider.operations.length} pedidos · {provider.shipments} guías · {provider.lastStatus ? logisticsLabels[provider.lastStatus] : "Sin estado"}</span>
         </div>
         <b>{provider.pendingUsd > 0.01 ? moneyUsd(provider.pendingUsd) : "Activo"}</b>
         <i>›</i>
@@ -1045,8 +1114,8 @@ export function ControlBultosView() {
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/owner/permisos"}><span>◉</span><div><strong>Permisos</strong><small>Empleados, roles y accesos autorizados.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/platform"}><span>◆</span><div><strong>Dueños</strong><small>Espacios separados, límite comercial y solo lectura.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => setCommandOpen(true)}><span>⌕</span><div><strong>Buscar</strong><small>Cliente, guía, proveedor o cobro.</small></div><i>›</i></button>
-      <button type="button" className={styles.settingsRow} onClick={() => setQuickPanel("cliente")}><span>＋</span><div><strong>Nuevo contacto</strong><small>Alta rápida de cliente o movimiento inicial.</small></div><i>›</i></button>
-      <button type="button" className={styles.settingsRow} onClick={() => setQuickPanel("acciones")}><span>⚡</span><div><strong>Acciones rápidas</strong><small>Movimiento, guía, cobro o dinero a cuenta.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => setQuickPanel("cliente")}><span>＋</span><div><strong>Nuevo contacto</strong><small>Alta rápida de cliente o pedido inicial.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => setQuickPanel("acciones")}><span>⚡</span><div><strong>Acciones rápidas</strong><small>Pedido, guía, cobro o dinero a cuenta.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/contacto-legal"}><span>?</span><div><strong>Soporte</strong><small>Ayuda, contacto legal y datos del sistema.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/login"}><span>↩</span><div><strong>Salir</strong><small>Cerrar el espacio operativo.</small></div><i>›</i></button>
     </section> : null}
@@ -1095,7 +1164,8 @@ export function ControlBultosView() {
           <div className={styles.sectionTitleRow}><strong>Archivo</strong><span>{clientDetailAccount.paidPasses.length + clientDetailAccount.payments.length}</span></div>
           {clientDetailAccount.paidPasses.map((item) => <div key={item.id} className={styles.screenRowStatic}><div><strong>{item.guideNumber}</strong><span>Pagado · {item.provider} · {item.company}</span></div><b>{moneyUsd(item.amountUsd)}</b></div>)}
           {clientDetailAccount.payments.map((payment) => <div key={payment.id} className={styles.screenRowStatic}><div><strong>{formatDate(payment.paid_at)}</strong><span>{payment.concept} · {paymentMethodLabels[payment.method]}</span></div><b>{payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)}</b></div>)}
-          {!clientDetailAccount.paidPasses.length && !clientDetailAccount.payments.length ? <p className={styles.emptyText}>Todavía no hay archivo cerrado.</p> : null}
+          {clientDetailAccount.operations.filter((operation) => operation.logistics_status === "recibido").map((operation) => <div key={operation.id} className={styles.screenRowStatic}><div><strong>{operation.public_code}</strong><span>Recibido · {operation.provider_name} · {operation.package_count} bultos</span></div><b>Archivado</b></div>)}
+          {!clientDetailAccount.paidPasses.length && !clientDetailAccount.payments.length && !clientDetailAccount.operations.some((operation) => operation.logistics_status === "recibido") ? <p className={styles.emptyText}>Todavía no hay archivo cerrado.</p> : null}
         </div> : null}
 
         <div className={styles.stickyClientActions}>
@@ -1114,12 +1184,12 @@ export function ControlBultosView() {
           <button type="button" onClick={() => setProviderDetailName(null)}>Cerrar</button>
         </div>
         <div className={styles.clientScreenTotals}>
-          <div><span>Movimientos</span><strong>{providerDetail.operations.length}</strong></div>
+          <div><span>Pedidos</span><strong>{providerDetail.operations.length}</strong></div>
           <div><span>Guías</span><strong>{providerDetail.shipments}</strong></div>
           <div><span>Pendiente</span><strong>{providerDetail.pendingUsd > 0.01 ? moneyUsd(providerDetail.pendingUsd) : "Sin saldo"}</strong></div>
         </div>
         <div className={styles.screenList}>
-          <div className={styles.screenSummary}><strong>Datos del proveedor</strong><span>WhatsApp, medios de pago y notas se configuran en la ficha del proveedor.</span></div>
+          <div className={styles.screenSummary}><strong>Datos del proveedor</strong><span>{[providerDetail.phone, providerDetail.paymentMethods, providerDetail.address, providerDetail.notes].filter(Boolean).join(" · ") || "Carga rápida disponible: WhatsApp, medios de pago, dirección y notas."}</span></div>
           {providerDetail.operations.slice(0, 8).map((operation) => <button key={operation.id} type="button" className={styles.screenRow} onClick={() => openOperationScreen(operation)}>
             <div><strong>{operation.clients?.name ?? "Sin cliente"}</strong><span>{operation.public_code} · {operation.package_count} bultos · {logisticsLabels[operation.logistics_status]}</span></div>
             <b>{operation.operation_shipments.length} guías</b><i>›</i>
@@ -1134,19 +1204,31 @@ export function ControlBultosView() {
 
     {quickPanel === "cliente" ? <div className={styles.panelOverlay}><section className={styles.panel}>
       <div className={styles.panelHead}><div><p>Cliente</p><h3>{returnToOperationAfterClient ? "Agregar y seleccionar cliente" : "Alta rápida"}</h3></div><button onClick={() => { setReturnToOperationAfterClient(false); setQuickPanel(null); }}>Cerrar</button></div>
-      {returnToOperationAfterClient ? <div className={styles.inlineNotice}>Creá el cliente una sola vez. Al guardar vuelve al movimiento y queda seleccionado.</div> : null}
+      {returnToOperationAfterClient ? <div className={styles.inlineNotice}>Creá el cliente una sola vez. Al guardar vuelve al pedido y queda seleccionado.</div> : null}
       <div className={styles.formGrid}>
         <Field label="Nombre"><Input value={clientForm.name} onChange={(event) => setClientForm({ ...clientForm, name: event.target.value })} disabled={!canEdit || saving} /></Field>
         <Field label="WhatsApp"><Input value={clientForm.phone} onChange={(event) => setClientForm({ ...clientForm, phone: event.target.value })} disabled={!canEdit || saving} /></Field>
-        <Field label="Valor habitual por bulto"><Input type="number" min="0" value={clientForm.default_price_per_package} onChange={(event) => setClientForm({ ...clientForm, default_price_per_package: Number(event.target.value || 0) })} disabled={!canEdit || saving} /></Field>
+        <Field label="Valor habitual por bulto"><Input type="number" min="0" value={clientForm.default_price_per_package || ""} onChange={(event) => setClientForm({ ...clientForm, default_price_per_package: Number(event.target.value || 0) })} disabled={!canEdit || saving} /></Field>
       </div>
       <Field label="Observaciones"><Textarea value={clientForm.notes ?? ""} onChange={(event) => setClientForm({ ...clientForm, notes: event.target.value })} disabled={!canEdit || saving} /></Field>
       <Button onClick={submitClient} disabled={!canEdit || saving}>{returnToOperationAfterClient ? "Crear y seleccionar" : "Crear cliente"}</Button>
     </section></div> : null}
 
+    {quickPanel === "proveedor" ? <div className={styles.panelOverlay}><section className={styles.panel}>
+      <div className={styles.panelHead}><div><p>Proveedor</p><h3>Alta rápida</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.formGrid}>
+        <Field label="Nombre"><Input value={providerForm.name} onChange={(event) => setProviderForm({ ...providerForm, name: event.target.value })} disabled={!canEdit || saving} /></Field>
+        <Field label="WhatsApp"><Input value={providerForm.phone} onChange={(event) => setProviderForm({ ...providerForm, phone: event.target.value })} disabled={!canEdit || saving} /></Field>
+        <Field label="Medios de pago"><Input value={providerForm.payment_methods ?? ""} onChange={(event) => setProviderForm({ ...providerForm, payment_methods: event.target.value })} placeholder="Efectivo / transferencia / USDT" disabled={!canEdit || saving} /></Field>
+        <Field label="Dirección / referencia"><Input value={providerForm.address ?? ""} onChange={(event) => setProviderForm({ ...providerForm, address: event.target.value })} disabled={!canEdit || saving} /></Field>
+      </div>
+      <Field label="Notas"><Textarea value={providerForm.notes ?? ""} onChange={(event) => setProviderForm({ ...providerForm, notes: event.target.value })} placeholder="Horario, persona de contacto, instrucciones de retiro" disabled={!canEdit || saving} /></Field>
+      <Button onClick={submitProvider} disabled={!canEdit || saving}>Crear proveedor</Button>
+    </section></div> : null}
+
     {quickPanel === "operacion" ? <div className={styles.panelOverlay}><section className={styles.panel}>
-      <div className={styles.panelHead}><div><p>{editingId ? "Editar" : "Movimiento"}</p><h3>{editingId ? "Editar movimiento" : "Nuevo movimiento del cliente"}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
-      <div className={styles.panelSteps}><span>1 Cliente</span><span>2 Movimiento</span><span>3 Etapa</span><span>4 Cuenta</span><span>5 Guardar</span></div>
+      <div className={styles.panelHead}><div><p>{editingId ? "Editar" : "Pedido"}</p><h3>{editingId ? "Editar pedido" : "Nuevo pedido del cliente"}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.panelSteps}><span>1 Cliente</span><span>2 Pedido</span><span>3 Etapa</span><span>4 Cuenta</span><span>5 Guardar</span></div>
       <div className={styles.formGrid}>
         <Field label="Cliente">
           <div className={styles.clientSelectStack}>
@@ -1158,14 +1240,14 @@ export function ControlBultosView() {
             <button type="button" className={styles.inlineAddClientButton} onClick={openClientCreateForOperation} disabled={!canEdit || saving}>＋ Agregar cliente</button>
           </div>
         </Field>
-        <Field label="Proveedor / local / descripción"><Input value={operationForm.provider_name} onChange={(event) => setOperationForm({ ...operationForm, provider_name: event.target.value })} placeholder="Ej: Génesis / ropa / perfumes" disabled={!canEdit || saving} /></Field>
+        <Field label="Proveedor / local / descripción"><div className={styles.clientSelectStack}><Input list="custodia-provider-list" value={operationForm.provider_name} onChange={(event) => setOperationForm({ ...operationForm, provider_name: event.target.value })} placeholder="Ej: Génesis / ropa / perfumes" disabled={!canEdit || saving} /><datalist id="custodia-provider-list">{providerContacts.map((provider) => <option key={provider.name} value={provider.name} />)}</datalist><button type="button" className={styles.inlineAddClientButton} onClick={() => openQuickPanel("proveedor")} disabled={!canEdit || saving}>＋ Agregar proveedor</button></div></Field>
         <Field label="Fecha"><Input type="date" value={operationForm.operation_date} onChange={(event) => setOperationForm({ ...operationForm, operation_date: event.target.value })} disabled={!canEdit || saving} /></Field>
         <Field label="Cantidad / bultos"><Input type="number" min="1" value={operationForm.package_count} onChange={(event) => setOperationForm({ ...operationForm, package_count: Number(event.target.value || 1) })} disabled={!canEdit || saving} /></Field>
         <Field label="Pase USD referencia"><Input type="number" min="0" value={operationForm.pass_amount} onChange={(event) => setOperationForm({ ...operationForm, pass_amount: Number(event.target.value || 0) })} disabled={!canEdit || saving} /></Field>
         <Field label="Estado"><Select value={operationForm.logistics_status} onChange={(event) => setOperationForm({ ...operationForm, logistics_status: event.target.value as LogisticsStatus })} disabled={!canEdit || saving}>{logisticsStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></Field>
       </div>
       <Field label="Observaciones"><Textarea value={operationForm.note} onChange={(event) => setOperationForm({ ...operationForm, note: event.target.value })} disabled={!canEdit || saving} /></Field>
-      <div className={styles.formFooter}><span>Esto crea una línea en la planilla digital del cliente. Total estimado hoy: <strong>{formatMoney(draftTotal)}</strong></span><Button onClick={submitOperation} disabled={!canEdit || saving}>{editingId ? "Guardar" : "Crear movimiento"}</Button></div>
+      <div className={styles.formFooter}><span>Esto crea una línea en la planilla digital del cliente. Total estimado hoy: <strong>{formatMoney(draftTotal)}</strong></span><Button onClick={submitOperation} disabled={!canEdit || saving}>{editingId ? "Guardar" : "Crear pedido"}</Button></div>
     </section></div> : null}
 
     {quickPanel === "guia" && shipmentOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
@@ -1204,7 +1286,7 @@ export function ControlBultosView() {
           }} />
           <span>{item.guideNumber} · {item.company} · pagado {moneyUsd(item.paidUsd)}</span>
           <strong>Saldo {moneyUsd(item.balanceUsd)}</strong>
-        </label>) : <p>Esta operación no tiene pases pendientes.</p>}
+        </label>) : <p>Esta pedido no tiene pases pendientes.</p>}
       </div>
       <div className={styles.accountTotals}>
         <div><span>Seleccionado</span><strong>{moneyUsd(selectedPassTotalUsd)}</strong><small>{formatMoney(selectedPassTotalArs)}</small></div>
@@ -1223,7 +1305,7 @@ export function ControlBultosView() {
     </section></div> : null}
 
     {quickPanel === "especial" && specialOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
-      <div className={styles.panelHead}><div><p>{specialForm.type === "dinero_recibido" ? "Dinero a cuenta" : "Movimiento especial"}</p><h3>{specialOperation.clients?.name ?? specialOperation.public_code}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.panelHead}><div><p>{specialForm.type === "dinero_recibido" ? "Dinero a cuenta" : "Pedido especial"}</p><h3>{specialOperation.clients?.name ?? specialOperation.public_code}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
       <div className={styles.panelSteps}><span>1 Tipo</span><span>2 Origen</span><span>3 Monto</span><span>4 Aplicación</span><span>5 Guardar</span></div>
       <div className={styles.formGrid}>
         <Field label="Tipo"><Select value={specialForm.type} onChange={(event) => setSpecialForm({ ...specialForm, type: event.target.value as SpecialMovementInput["type"] })}><option value="adelanto_jeremias">Adelanto Jeremías</option><option value="pago_proveedor">Pago a proveedor</option><option value="dinero_recibido">Dinero a cuenta del cliente</option><option value="mercaderia_agotada">Mercadería agotada</option><option value="devolucion">Devolución</option><option value="aplicado_otra_compra">Aplicado a otra compra</option></Select></Field>
@@ -1234,7 +1316,7 @@ export function ControlBultosView() {
         <Field label="Monto"><Input type="number" min="0" value={specialForm.amount} onChange={(event) => setSpecialForm({ ...specialForm, amount: Number(event.target.value || 0) })} /></Field>
       </div>
       <Field label="Observación"><Textarea value={specialForm.note ?? ""} onChange={(event) => setSpecialForm({ ...specialForm, note: event.target.value })} placeholder={specialForm.type === "dinero_recibido" ? "Ej: Estela deja USD 200 a cuenta para aplicar después" : "Ej: proveedor no acepta USDT; Jeremías lleva/transfiere el dinero"} /></Field>
-      <div className={styles.formFooter}><span>{specialForm.type === "dinero_recibido" ? "Queda visible como dinero a cuenta dentro de la cuenta corriente del cliente." : "Queda como ítem excepcional dentro de la cuenta corriente."}</span><Button onClick={submitSpecialMovement} disabled={saving}>{specialForm.type === "dinero_recibido" ? "Guardar dinero a cuenta" : "Guardar movimiento"}</Button></div>
+      <div className={styles.formFooter}><span>{specialForm.type === "dinero_recibido" ? "Queda visible como dinero a cuenta dentro de la cuenta corriente del cliente." : "Queda como ítem excepcional dentro de la cuenta corriente."}</span><Button onClick={submitSpecialMovement} disabled={saving}>{specialForm.type === "dinero_recibido" ? "Guardar dinero a cuenta" : "Guardar pedido"}</Button></div>
     </section></div> : null}
 
 
@@ -1242,14 +1324,14 @@ export function ControlBultosView() {
       <div className={styles.panelHead}><div><p>{actionSheetCopy[activeTab].eyebrow}</p><h3>{actionSheetCopy[activeTab].title}</h3></div><button type="button" onClick={() => setQuickPanel(null)}>Cerrar</button></div>
       <div className={styles.quickActionList}>
         {activeTab === "seguimiento" ? <>
-          <Button onClick={() => openQuickPanel("operacion")}>Nuevo movimiento</Button>
-          <Button variant="secondary" onClick={() => { if (sideOperation) startShipment(sideOperation); }} disabled={!sideOperation || !canEdit}>Nueva guía</Button>
-          <Button variant="secondary" onClick={() => { if (sideOperation) startPayment(sideOperation); }} disabled={!sideOperation || !canCollect}>Cobrar</Button>
-          <Button variant="ghost" onClick={() => { setQuickPanel(null); setCommandOpen(true); }}>Buscar cliente o guía</Button>
+          <Button onClick={startNewPedido}>Nuevo pedido</Button>
+          <Button variant="secondary" onClick={() => { if (sideOperation) startShipment(sideOperation); }} disabled={!sideOperation || !canEdit}>Nuevo despacho</Button>
+          <Button variant="secondary" onClick={() => { if (sideOperation) startGuidePayment(sideOperation); }} disabled={!sideOperation || !canCollect}>Nuevo pago de guía</Button>
+          <Button variant="ghost" onClick={() => { if (sideOperation) startMoneyOnAccount(sideOperation); }} disabled={!sideOperation || !canEdit}>Nuevo adelanto</Button>
         </> : null}
         {activeTab === "cuentas" ? <>
           <Button onClick={() => openQuickPanel("cliente")}>Agregar cliente</Button>
-          <Button variant="secondary" onClick={() => openQuickPanel("operacion")}>Agregar proveedor</Button>
+          <Button variant="secondary" onClick={() => openQuickPanel("proveedor")}>Agregar proveedor</Button>
           <Button variant="ghost" onClick={() => { setQuickPanel(null); setCommandOpen(true); }}>Buscar contacto</Button>
         </> : null}
         {activeTab === "cuenta" ? <>
@@ -1276,7 +1358,14 @@ export function ControlBultosView() {
         <Button variant="ghost" onClick={() => { openOperationScreen(actionsOperation, "cuenta"); setActionsOperation(null); }}>Ficha cliente</Button>
         <Button variant="ghost" onClick={() => { copyClientLink(actionsOperation); setActionsOperation(null); }}>Copiar link cliente</Button>
         <Button variant="ghost" onClick={() => { startMoneyOnAccount(actionsOperation); setActionsOperation(null); }}>Dinero a cuenta</Button>
-        <Button variant="ghost" onClick={() => { startSpecial(actionsOperation); setActionsOperation(null); }}>Movimiento especial</Button>
+        <Button variant="ghost" onClick={() => { startSpecial(actionsOperation); setActionsOperation(null); }}>Trabajo extra</Button>
+      </div>
+      <div className={styles.statusUpdateBlock}>
+        <strong>Cambiar estado</strong>
+        <div className={styles.statusStepGrid}>
+          {logisticsStatusOptions.map((option) => <button key={option.value} type="button" className={actionsOperation.logistics_status === option.value ? styles.statusStepActive : ""} onClick={() => { changeStatus(actionsOperation.id, option.value); if (option.value === "recibido") setActionsOperation(null); }}>{option.label}</button>)}
+        </div>
+        <small>Al marcar Recibido, sale de Mesa y queda en historial del cliente.</small>
       </div>
     </section></div> : null}
 
@@ -1318,7 +1407,7 @@ export function ControlBultosView() {
       <div className={styles.panelHead}><div><p>Comando rápido</p><h3>Buscar o ejecutar acción</h3></div><button type="button" onClick={() => setCommandOpen(false)}>Cerrar</button></div>
       <Input autoFocus value={filters.query} onChange={(event) => { setFilters({ ...filters, query: event.target.value }); goToTab("seguimiento"); }} placeholder="Cliente, guía, proveedor, destinatario..." />
       <div className={styles.quickActionList}>
-        <Button onClick={() => { openQuickPanel("operacion"); setCommandOpen(false); }}>Nuevo movimiento guiado</Button>
+        <Button onClick={() => { startNewPedido(); setCommandOpen(false); }}>Nuevo pedido guiado</Button>
         <Button variant="secondary" onClick={() => { goToTab("cuentas", "clientes"); setCommandOpen(false); }}>Abrir clientes</Button>
         <Button variant="secondary" onClick={() => { goToTab("cuenta", "cobros"); setCommandOpen(false); }}>Abrir cobros</Button>
         <Button variant="ghost" onClick={() => { if (sideOperation) startPayment(sideOperation); setCommandOpen(false); }} disabled={!sideOperation || !canCollect}>Cobrar cliente seleccionado</Button>

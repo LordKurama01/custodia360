@@ -6,8 +6,10 @@ import type {
   ControlBultosData,
   ControlClient,
   ControlOperation,
+  ControlProvider,
   OperationFormInput,
   PaymentInput,
+  ProviderQuickInput,
   ShipmentInput,
   SpecialMovementInput,
 } from "../types";
@@ -123,6 +125,31 @@ function getDemoSeed(): ControlBultosData {
 
   const estelaClient = { id: "demo-client-estela", name: "Estela", phone: "+54 9 236 555-0101", default_price_per_package: 0, private_code: "CLI-ESTELA" };
   const matiasClient = { id: "demo-client-matias", name: "Matías", phone: "+54 9 236 555-0202", default_price_per_package: 0, private_code: "CLI-MATIAS" };
+
+  const providers: ControlProvider[] = [
+    {
+      id: "demo-provider-genesis",
+      name: "Génesis",
+      phone: "+595 981 000001",
+      payment_methods: "Efectivo / transferencia / USDT a confirmar",
+      address: "Ciudad del Este · referencia local",
+      notes: "Proveedor habitual para compras de electrónica y accesorios.",
+      active: true,
+      created_at: created,
+      updated_at: created,
+    },
+    {
+      id: "demo-provider-atacado",
+      name: "Atacado Game",
+      phone: "+595 981 000002",
+      payment_methods: "Transferencia / efectivo",
+      address: "Galería comercial CDE",
+      notes: "Usar foto de remito y validar bultos antes de retirar.",
+      active: true,
+      created_at: created,
+      updated_at: created,
+    },
+  ];
 
   const operations: ControlOperation[] = [
     recalculateOperation({
@@ -408,7 +435,7 @@ function getDemoSeed(): ControlBultosData {
     }),
   ];
 
-  return { clients, operations };
+  return { clients, operations, providers };
 }
 function readDemoData(): ControlBultosData {
   if (typeof window === "undefined") return getDemoSeed();
@@ -424,6 +451,7 @@ function readDemoData(): ControlBultosData {
     return {
       clients: parsed.clients ?? [],
       operations: (parsed.operations ?? []).map((operation) => recalculateOperation(normalizeOperation(operation))),
+      providers: parsed.providers ?? [],
     };
   } catch {
     return getDemoSeed();
@@ -435,7 +463,25 @@ function writeDemoData(data: ControlBultosData) {
   window.localStorage.setItem(demoStorageKey, JSON.stringify({
     clients: data.clients,
     operations: data.operations.map((operation) => recalculateOperation(operation)),
+    providers: data.providers ?? [],
   }));
+}
+
+const providerStorageKey = "custodia360:provider-directory:v1";
+
+function readProviderDirectory(): ControlProvider[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(providerStorageKey);
+    return raw ? JSON.parse(raw) as ControlProvider[] : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeProviderDirectory(providers: ControlProvider[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(providerStorageKey, JSON.stringify(providers));
 }
 
 async function getActorId() {
@@ -474,6 +520,7 @@ export async function getControlBultosData(): Promise<ControlBultosData> {
   return {
     clients: (clientsResult.data ?? []) as ControlClient[],
     operations: ((operationsResult.data ?? []) as unknown as ControlOperation[]).map(normalizeOperation),
+    providers: readProviderDirectory(),
   };
 }
 
@@ -512,6 +559,37 @@ export async function createQuickClient(input: ClientQuickInput) {
   requireNoError(error, "No se pudo crear el cliente.");
   await recordAudit("client_created", "client", data?.id ?? null, data as Json);
   return data as ControlClient;
+}
+
+
+export async function createQuickProvider(input: ProviderQuickInput) {
+  if (!input.name.trim()) throw new Error("El nombre del proveedor es obligatorio.");
+
+  const provider: ControlProvider = {
+    id: makeId("provider"),
+    name: input.name.trim(),
+    phone: cleanText(input.phone),
+    payment_methods: cleanText(input.payment_methods ?? ""),
+    address: cleanText(input.address ?? ""),
+    notes: cleanText(input.notes ?? ""),
+    active: true,
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  };
+
+  if (isDemoMode()) {
+    const data = readDemoData();
+    const providers = [...(data.providers ?? []).filter((item) => item.name.toLowerCase() !== provider.name.toLowerCase()), provider]
+      .sort((a, b) => a.name.localeCompare(b.name));
+    writeDemoData({ ...data, providers });
+    return provider;
+  }
+
+  const providers = [...readProviderDirectory().filter((item) => item.name.toLowerCase() !== provider.name.toLowerCase()), provider]
+    .sort((a, b) => a.name.localeCompare(b.name));
+  writeProviderDirectory(providers);
+  await recordAudit("provider_created", "provider", provider.id, provider as unknown as Json);
+  return provider;
 }
 
 export async function createOperation(input: OperationFormInput) {

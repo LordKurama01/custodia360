@@ -69,3 +69,7 @@ Pasada visual fina sobre la app operativa: navegación inferior más limpia, Mes
 - Debajo quedan las acciones/vistas: Registrar cobro, Registrar adelanto, Guías para cobrar y Trabajos extras.
 - El botón `+` ahora cambia según pantalla: Mesa, Contactos, Cobros y Guías. En Más queda oculto.
 - Se evita mezclar dinero a cuenta como pendiente común.
+
+### v29 — Pedidos, proveedores y flujo real
+
+Versión con flujo operativo real: alta de pedidos, proveedores, estados desde Mesa, archivo automático al marcar recibido y botón `+` contextual por pantalla.

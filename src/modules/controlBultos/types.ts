@@ -12,6 +12,19 @@ import type {
 } from "@/infrastructure/supabase/types";
 
 export type ControlClient = ClientRow;
+
+export type ControlProvider = {
+  id: string;
+  name: string;
+  phone: string | null;
+  payment_methods: string | null;
+  address: string | null;
+  notes: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type PassPaymentStatus = "pendiente" | "parcial" | "pagado" | "anulado";
 
 export type ControlShipment = OperationShipmentRow & {
@@ -51,6 +64,7 @@ export type ControlOperation = OperationRow & {
 export type ControlBultosData = {
   clients: ControlClient[];
   operations: ControlOperation[];
+  providers: ControlProvider[];
 };
 
 export type OperationFormInput = {
@@ -70,6 +84,14 @@ export type ClientQuickInput = {
   phone: string;
   email?: string;
   default_price_per_package: number;
+  notes?: string;
+};
+
+export type ProviderQuickInput = {
+  name: string;
+  phone: string;
+  payment_methods?: string;
+  address?: string;
   notes?: string;
 };
 
@@ -138,7 +160,9 @@ export const logisticsStatusOptions: Array<{ value: LogisticsStatus; label: stri
   { value: "cd", label: "Depósito CD", clientLabel: "En preparación" },
   { value: "deposito_a", label: "Depósito A", clientLabel: "En tránsito" },
   { value: "deposito_b", label: "Depósito B", clientLabel: "En tránsito" },
+  { value: "en_transito", label: "En tránsito", clientLabel: "En tránsito" },
   { value: "despachado", label: "Despachado", clientLabel: "Despachado" },
+  { value: "recibido", label: "Recibido", clientLabel: "Recibido" },
 ];
 
 export const transportCompanyOptions = ["Vía Cargo", "Buspack", "Crucero Express", "Correo Argentino", "Otro"];

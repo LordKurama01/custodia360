@@ -2347,3 +2347,70 @@
   .settingsRow { grid-template-columns: 2rem 1fr auto; }
   .compactNext { display: flex; }
 }
+
+/* v23 pasada fina: app más entregable, menos ruido visual */
+@media (max-width: 767px) {
+  .searchCard { position: sticky; top: 50px; border-color: rgba(255,255,255,.07) !important; }
+  .searchCard input { min-height: 2.18rem; font-size: .78rem; }
+  .operationCard, .guideCard, .screenRow, .accountRow, .settingsRow {
+    border-color: rgba(255,255,255,.075);
+    background: linear-gradient(180deg, rgba(14, 28, 47, .94), rgba(7, 17, 30, .98));
+  }
+  .operationCard, .guideCard { padding: .62rem .68rem; border-radius: .86rem; }
+  .compactRowHead strong { font-size: .9rem; }
+  .compactRowMeta strong, .screenRow b { font-size: .78rem; }
+  .compactNext { padding-top: 0; }
+  .compactNext span { font-size: .64rem; }
+  .compactNext button, .compactNext b { width: 1.82rem; height: 1.82rem; border-radius: .62rem; }
+  .mobileFabAction {
+    width: 42px !important;
+    height: 42px !important;
+    right: 18px !important;
+    bottom: 112px !important;
+    font-size: 1.42rem !important;
+    box-shadow: 0 12px 26px rgba(154,255,0,.20), 0 12px 44px rgba(0,0,0,.42) !important;
+  }
+  .moduleSummaryGrid { gap: .36rem; }
+  .moduleSummaryGrid div { min-width: 6.95rem; padding: .46rem .52rem; border-radius: .75rem; }
+  .moduleSummaryGrid span { font-size: .55rem; }
+  .moduleSummaryGrid strong { font-size: .78rem; }
+  .statusTabs { background: rgba(255,255,255,.026); border-color: rgba(255,255,255,.07); }
+  .statusTabs button { min-height: 1.82rem; font-size: .58rem; }
+  .sectionTitleRow { min-height: 1.9rem; font-size: .95rem; }
+  .sectionTitleRow span { min-width: 1.55rem; min-height: 1.55rem; font-size: .68rem; }
+  .moreGrid { gap: .38rem !important; }
+  .settingsRow {
+    min-height: 3.35rem;
+    grid-template-columns: 1.85rem 1fr 18px;
+    gap: .56rem;
+    padding: .54rem .6rem;
+    border-radius: .8rem;
+  }
+  .settingsRow > span { width: 1.85rem; height: 1.85rem; border-radius: .62rem; font-size: .82rem; }
+  .settingsRow strong { font-size: .82rem; }
+  .settingsRow small { font-size: .60rem; line-height: 1.18; }
+  .panelOverlay { align-items: center; padding: .5rem .5rem 5.4rem; }
+  .clientScreenPanel {
+    max-height: calc(100dvh - 6.2rem) !important;
+    border-radius: 1rem !important;
+    padding: .72rem !important;
+    gap: .52rem !important;
+  }
+  .clientScreenPanel .panelHead { position: static; padding: 0; background: transparent; }
+  .clientScreenPanel .panelHead button {
+    width: 2rem;
+    min-width: 2rem;
+    height: 2rem;
+    min-height: 2rem;
+    padding: 0;
+    font-size: 1rem;
+  }
+  .clientScreenTotals { gap: .3rem; }
+  .clientScreenTotals div { padding: .42rem .46rem; border-radius: .62rem; }
+  .clientScreenTotals span { font-size: .48rem; }
+  .clientScreenTotals strong { font-size: .72rem; }
+  .innerTabs { gap: .20rem; padding: .22rem; border-radius: .70rem; }
+  .innerTabs button { min-height: 1.74rem; font-size: .58rem; border-radius: .52rem; }
+  .stickyClientActions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .28rem; padding-top: .42rem; }
+  .stickyClientActions button { min-height: 2.08rem; font-size: .62rem; border-radius: .62rem; }
+}

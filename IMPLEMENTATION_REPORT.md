@@ -32,3 +32,8 @@ Cuando se conecte Supabase definitivo:
 - Un solo botón visible: Ingresar al sistema.
 - Sin secciones largas ni botones repetidos.
 - Login operativo queda separado.
+
+
+## v23 — Pasada fina entregable
+
+Pulido visual final: navegación mobile más fina, ficha cliente compacta, botón `+` menos invasivo, Más sin vacío y ajustes de densidad para dejar el sistema más presentable sin sumar funciones.

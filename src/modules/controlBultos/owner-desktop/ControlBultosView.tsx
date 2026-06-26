@@ -810,7 +810,7 @@ export function ControlBultosView() {
       </div> : null}
     </Card> : null}
 
-    <button type="button" className={styles.mobileFabAction} onClick={() => setQuickPanel("acciones")} aria-label="Abrir acciones rápidas">+</button>
+    {activeTab !== "mas" ? <button type="button" className={styles.mobileFabAction} onClick={() => setQuickPanel("acciones")} aria-label="Abrir acciones rápidas">+</button> : null}
 
     {loading ? <Card className={styles.empty}>Cargando operaciones...</Card> : null}
 
@@ -970,7 +970,7 @@ export function ControlBultosView() {
         <div className={styles.sectionTitleRow}><strong>Dinero a cuenta</strong><span>{accounts.filter((account) => account.specialPending.length).length}</span></div>
         {accounts.filter((account) => account.specialPending.length).map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}><div><strong>{account.clientName}</strong><span>{account.specialPending.length} movimientos especiales abiertos</span></div><b>{formatMoney(account.specialArsPending)}</b><i>›</i></button>)}
       </> : null}
-      {cobrosView === "cerrados" ? <Card className={styles.empty}>Los cobros cerrados quedan dentro de cada cliente.</Card> : null}
+      {cobrosView === "cerrados" ? <Card className={styles.empty}>Cerrados: consultalos dentro de cada ficha de cliente.</Card> : null}
     </section> : null}
 
     {activeTab === "guias" && !loading ? <section className={styles.guideGrid}>
@@ -1012,8 +1012,8 @@ export function ControlBultosView() {
     {clientDetailAccount ? <div className={styles.panelOverlay}>
       <section className={`${styles.panel} ${styles.clientScreenPanel}`}>
         <div className={styles.panelHead}>
-          <div><p>Cliente</p><h3>{clientDetailAccount.clientName}</h3></div>
-          <button type="button" onClick={() => setClientDetailId(null)}>Cerrar</button>
+          <div><p>Ficha cliente</p><h3>{clientDetailAccount.clientName}</h3></div>
+          <button type="button" aria-label="Cerrar ficha" onClick={() => setClientDetailId(null)}>×</button>
         </div>
         <div className={styles.clientScreenTotals}>
           <div><span>Debe</span><strong>{moneyUsd(clientDetailAccount.passUsdPending)}</strong></div>
@@ -1058,8 +1058,8 @@ export function ControlBultosView() {
 
         <div className={styles.stickyClientActions}>
           <Button onClick={() => clientDetailOperation && startPayment(clientDetailOperation)} disabled={!clientDetailOperation || !canCollect}>Cobrar</Button>
-          <Button variant="secondary" onClick={() => clientDetailOperation && startShipment(clientDetailOperation)} disabled={!clientDetailOperation || !canEdit}>Guía</Button>
-          <Button variant="ghost" onClick={() => copyWhatsAppAccount(clientDetailAccount)}>Contactar</Button>
+          <Button variant="secondary" onClick={() => clientDetailOperation && startShipment(clientDetailOperation)} disabled={!clientDetailOperation || !canEdit}>Nueva guía</Button>
+          <Button variant="ghost" onClick={() => copyWhatsAppAccount(clientDetailAccount)}>WhatsApp</Button>
         </div>
       </section>
     </div> : null}
@@ -1190,8 +1190,8 @@ export function ControlBultosView() {
       <div className={styles.panelHead}><div><p>Acciones rápidas</p><h3>Resolver ahora</h3></div><button type="button" onClick={() => setQuickPanel(null)}>Cerrar</button></div>
       <div className={styles.quickActionList}>
         <Button onClick={() => openQuickPanel("operacion")}>Nuevo movimiento</Button>
-        <Button variant="secondary" onClick={() => { if (sideOperation) startShipment(sideOperation); }} disabled={!sideOperation || !canEdit}>Nueva guía del seleccionado</Button>
-        <Button variant="secondary" onClick={() => { if (sideOperation) startPayment(sideOperation); }} disabled={!sideOperation || !canCollect}>Cobrar seleccionado</Button>
+        <Button variant="secondary" onClick={() => { if (sideOperation) startShipment(sideOperation); }} disabled={!sideOperation || !canEdit}>Nueva guía</Button>
+        <Button variant="secondary" onClick={() => { if (sideOperation) startPayment(sideOperation); }} disabled={!sideOperation || !canCollect}>Cobrar</Button>
         <Button variant="ghost" onClick={() => { if (sideOperation) startMoneyOnAccount(sideOperation); }} disabled={!sideOperation || !canEdit}>Dinero a cuenta</Button>
         <Button variant="ghost" onClick={() => { setQuickPanel(null); setCommandOpen(true); }}>Buscar cliente o guía</Button>
         <Button variant="ghost" onClick={() => { setQuickPanel(null); goToTab("cuenta", "cobros"); }}>Abrir cobros</Button>

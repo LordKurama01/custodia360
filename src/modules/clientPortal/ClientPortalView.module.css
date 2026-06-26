@@ -952,3 +952,28 @@
   .heroActions { grid-template-columns: 1fr; }
   .clientBottomNav { left: 8px; right: 8px; bottom: 42px; }
 }
+
+/* v23 visor cliente más limpio */
+@media (max-width: 420px) {
+  .page { padding: .78rem .78rem 7.8rem; }
+  .clientBanner { padding: .58rem .64rem; border-radius: .78rem; }
+  .clientBanner strong { font-size: .82rem; }
+  .clientBanner small { font-size: .66rem; }
+  .heroStatus, .sectionCard { margin-top: .55rem; padding: .72rem; border-radius: .9rem; gap: .62rem; }
+  .privateStateCard { padding: .62rem; border-radius: .82rem; gap: .5rem; }
+  .heroStatus h1 { font-size: 1.22rem; }
+  .statusDisplay { padding: .58rem; border-radius: .72rem; }
+  .statusDisplay strong { font-size: 1.25rem; }
+  .heroMoney, .accountSummary, .detailGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .42rem; }
+  .heroMoney div, .accountSummary div, .detailGrid div { padding: .5rem; border-radius: .68rem; }
+  .heroMoney span, .accountSummary span, .detailGrid span { font-size: .56rem; }
+  .heroMoney strong, .accountSummary strong, .detailGrid strong { font-size: .78rem; }
+  .heroActions { grid-template-columns: 1fr; }
+  .primaryAction, .secondaryAction, .guideActions a { min-height: 2.35rem; font-size: .76rem; }
+  .quickClientStrip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
+  .quickClientStrip button { min-height: 2.1rem; border-radius: .65rem; font-size: .62rem; }
+  .clientBottomNav { bottom: 40px; left: 8px; right: 8px; border-radius: 20px; padding: 7px 6px; }
+  .clientBottomNav button, .clientBottomNav a { min-height: 40px; border-radius: 14px; }
+  .clientBottomNav button span, .clientBottomNav a span { width: 20px; height: 20px; font-size: 11px; }
+  .clientBottomNav button strong, .clientBottomNav a strong { font-size: 8.5px; }
+}

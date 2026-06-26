@@ -1826,3 +1826,158 @@
     font-size: .65rem;
   }
 }
+
+/* v16 UX Premium Compacta: menos texto visible, cards clickeables y detalle en modales */
+.compactRowHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+}
+.compactRowHead div {
+  min-width: 0;
+  display: grid;
+  gap: .15rem;
+}
+.compactRowHead strong {
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1.08;
+  letter-spacing: -.03em;
+}
+.compactRowHead span:not(.badge) {
+  color: var(--c360-muted);
+  font-size: .72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compactRowMeta,
+.compactNext {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+}
+.compactRowMeta span,
+.compactNext span {
+  min-width: 0;
+  color: var(--c360-muted);
+  font-size: .72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compactRowMeta strong {
+  color: var(--c360-lemon);
+  font-size: .9rem;
+  white-space: nowrap;
+}
+.compactNext {
+  padding-top: .1rem;
+}
+.compactNext span {
+  color: var(--c360-lemon);
+  font-weight: 950;
+}
+.compactNext button,
+.compactNext b {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--c360-line);
+  border-radius: .75rem;
+  color: var(--c360-ink-2);
+  background: rgba(255,255,255,.04);
+  font-weight: 950;
+}
+.guideCard,
+.operationCard,
+.accountRow {
+  cursor: pointer;
+}
+.guideCard:hover,
+.operationCard:hover,
+.accountRow:hover {
+  border-color: rgba(154,255,0,.28);
+  background: linear-gradient(180deg, rgba(154,255,0,.06), rgba(8,18,33,.97));
+}
+@media (max-width: 767px) {
+  .kpiStrip {
+    margin-top: .05rem;
+    margin-bottom: .34rem;
+  }
+  .searchCard {
+    top: 63px;
+    margin-bottom: .36rem;
+  }
+  .contentGrid,
+  .operationList,
+  .mobileOperationCards,
+  .guideGrid,
+  .moreGrid,
+  .accountOnlyGrid,
+  .accountsGrid {
+    gap: .42rem;
+    margin-top: .35rem;
+  }
+  .operationCard,
+  .guideCard,
+  .accountRow {
+    min-height: unset;
+    padding: .58rem .62rem;
+    gap: .38rem;
+    border-radius: .82rem;
+  }
+  .compactRowHead strong {
+    font-size: .92rem;
+  }
+  .compactRowHead span:not(.badge),
+  .compactRowMeta span,
+  .compactNext span {
+    font-size: .64rem;
+  }
+  .compactRowMeta strong {
+    font-size: .82rem;
+  }
+  .mobileFabAction {
+    width: 48px;
+    height: 48px;
+    right: 18px;
+    bottom: 124px;
+    font-size: 1.75rem;
+  }
+  .badge {
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .clientSheetActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ledger h4 {
+    margin-top: .1rem;
+  }
+  .guideDetail[open] {
+    padding-bottom: .55rem;
+  }
+  .panel {
+    max-height: 82dvh;
+  }
+  .panelSteps span:not(:first-child) {
+    opacity: .52;
+  }
+  .moreGrid {
+    padding-bottom: 1.5rem;
+  }
+  .quickGrid {
+    grid-template-columns: 1fr;
+  }
+  .utilityLink {
+    width: 100%;
+    min-height: 2.35rem;
+    justify-content: flex-start;
+    padding-inline: .78rem;
+  }
+}

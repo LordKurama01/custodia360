@@ -90,3 +90,8 @@ Fase 1 continúa limitada a Control de Bultos + Cuenta Corriente Operativa.
 ## v15 — Mobile Operativa Pro
 
 Se aplicó una capa de arquitectura UX/UI mobile para que la app completa sea más ágil: FAB único con bottom sheet, KPIs compactos, cards más chicas, formularios con modo rápido/campos avanzados, cuenta corriente mobile sin tabla larga, bottom nav más fina y visor cliente con menos texto visible.
+
+
+## v16 — UX Premium Compacta + Login Único
+
+Versión enfocada en experiencia mobile premium: landing mínima, login único Gmail, cards clickeables, menos texto visible, menos botones grandes, más modales/bottom sheets y menú Más limpio.

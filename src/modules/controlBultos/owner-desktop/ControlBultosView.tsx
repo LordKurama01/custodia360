@@ -710,17 +710,25 @@ export function ControlBultosView() {
     }
   };
 
-  return <OwnerDesktopShell title="Mesa de control">
+  const tabMeta: Record<MainTab, { title: string; eyebrow: string; hint: string }> = {
+    seguimiento: { title: "Mesa", eyebrow: "Operación activa", hint: `${demoMode ? "Demo" : "Real"} · dólar ${DEFAULT_DOLLAR_RATE} · resolver pendientes` },
+    cuentas: { title: "Clientes", eyebrow: "Planilla digital", hint: "Fichas, saldos, guías y acciones por cliente" },
+    guias: { title: "Guías", eyebrow: "Despacho", hint: "Guías clickeables, estado y condición de pago" },
+    cuenta: { title: "Cuenta", eyebrow: "Cuenta corriente", hint: "Pases, pagos parciales y dinero a cuenta" },
+    mas: { title: "Más", eyebrow: "Sistema", hint: "Configuración, permisos y dueño activo" },
+  };
+  const activeMeta = tabMeta[activeTab];
+
+  return <OwnerDesktopShell title={activeMeta.title}>
     <section id="seguimiento" className={styles.topBar}>
       <div>
-        <p>Flujo de trabajo</p>
-        <h2>Mesa de control</h2>
-        <span>{demoMode ? "Demo" : "Operación real"} · dólar hoy ${DEFAULT_DOLLAR_RATE} · clientes, bultos, guías, cuenta corriente y próxima acción.</span>
+        <p>{activeMeta.eyebrow}</p>
+        <h2>{activeMeta.title}</h2>
+        <span>{activeMeta.hint}</span>
       </div>
       <div className={styles.topActions}>
-        <Button variant="secondary" onClick={() => setCommandOpen(true)}>⌘K Buscar / acción</Button>
-        <Button variant="secondary" onClick={() => goToTab("cuentas", "clientes")}>Clientes</Button>
-        <Button onClick={() => openQuickPanel("operacion")}>+ Carga guiada</Button>
+        <Button variant="secondary" onClick={() => setCommandOpen(true)}>Buscar</Button>
+        <Button onClick={() => setQuickPanel("acciones")}>Resolver</Button>
       </div>
     </section>
 
@@ -736,13 +744,13 @@ export function ControlBultosView() {
     </nav>
 
     <section className={styles.kpiStrip}>
-      <Card className={styles.kpi}><span>Pases pendientes</span><strong>{canSeeMoney ? moneyUsd(kpis.passUsd) : "-"}</strong><small>{canSeeMoney ? formatMoney(kpis.passUsd * DEFAULT_DOLLAR_RATE) : ""}</small></Card>
-      <Card className={styles.kpi}><span>Guías a reintegrar</span><strong>{canSeeMoney ? formatMoney(kpis.guideArs) : "-"}</strong><small>{kpis.pendingPasses} pases abiertos</small></Card>
-      <Card className={styles.kpi}><span>Dinero / especiales</span><strong>{canSeeMoney ? formatMoney(kpis.specialArs) : "-"}</strong><small>A cuenta, proveedor o reintegro</small></Card>
+      <Card className={styles.kpi}><span>Pendiente</span><strong>{canSeeMoney ? moneyUsd(kpis.passUsd) : "-"}</strong><small>{canSeeMoney ? formatMoney(kpis.passUsd * DEFAULT_DOLLAR_RATE) : ""}</small></Card>
+      <Card className={styles.kpi}><span>Reintegrar</span><strong>{canSeeMoney ? formatMoney(kpis.guideArs) : "-"}</strong><small>{kpis.pendingPasses} pases</small></Card>
+      <Card className={styles.kpi}><span>A cuenta</span><strong>{canSeeMoney ? formatMoney(kpis.specialArs) : "-"}</strong><small>Especiales</small></Card>
     </section>
 
     <Card className={styles.searchCard}>
-      <Input value={filters.query} onChange={(event) => setFilters({ ...filters, query: event.target.value })} placeholder="Buscar cliente, guía, proveedor o descripción" />
+      <Input value={filters.query} onChange={(event) => setFilters({ ...filters, query: event.target.value })} placeholder="Buscar cliente o guía" />
       <div className={styles.filterChips}>
         <button onClick={() => setFilters({ ...filters, logistics_status: "", financial_status: "" })}>Todos</button>
         {logisticsStatusOptions.slice(0, 6).map((option) => <button key={option.value} className={filters.logistics_status === option.value ? styles.chipActive : ""} onClick={() => setFilters({ ...filters, logistics_status: option.value })}>{option.label}</button>)}
@@ -806,33 +814,22 @@ export function ControlBultosView() {
 
         <div className={styles.mobileOperationCards}>
           {filteredOperations.length ? filteredOperations.map((operation) => {
-            const totals = calculateOperationTotals(operation);
             const account = accounts.find((item) => item.clientId === operation.client_id);
-            return <article key={operation.id} className={styles.operationCard}>
-              <div className={styles.operationCardHead}>
+            return <article key={operation.id} className={styles.operationCard} onClick={() => { setFocusedOperationId(operation.id); setDetailOperation(operation); }}>
+              <div className={styles.compactRowHead}>
                 <div>
                   <strong>{operation.clients?.name ?? "Sin cliente"}</strong>
-                  <span>{operation.public_code} · {operation.provider_name}</span>
+                  <span>{operation.package_count} bultos · {operation.operation_shipments.length} guías</span>
                 </div>
                 <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}>{logisticsLabels[operation.logistics_status]}</span>
               </div>
-              <div className={styles.mobileCardSummary}>
-                <strong>{operation.package_count} bultos · {operation.operation_shipments.length} guías</strong>
-                <span>Cliente ve {clientLogisticsLabels[operation.logistics_status]} · Cuenta {financialLabels[operation.financial_status]}</span>
-              </div>
-              <div className={styles.mobileMoneySummary}>
-                <span>Pendiente</span>
+              <div className={styles.compactRowMeta}>
+                <span>{operation.provider_name}</span>
                 <strong>{canSeeMoney ? moneyUsd(account?.passUsdPending ?? 0) : "-"}</strong>
-                <small>{guideNumbers(operation)}</small>
               </div>
-              <div className={styles.mobileNextAction}>
-                <span>Próxima acción</span>
-                <strong>{nextActionFor(operation, account)}</strong>
-              </div>
-              <div className={styles.actionsCompact}>
-                <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Ver</Button>
-                <Button variant="secondary" onClick={() => startPayment(operation)} disabled={!canCollect}>Cobrar</Button>
-                <Button variant="ghost" onClick={() => setActionsOperation(operation)}>...</Button>
+              <div className={styles.compactNext}>
+                <span>{nextActionFor(operation, account)}</span>
+                <button type="button" onClick={(event) => { event.stopPropagation(); setActionsOperation(operation); }}>•••</button>
               </div>
             </article>;
           }) : <Card className={styles.empty}>No hay operaciones para estos filtros.</Card>}
@@ -890,7 +887,7 @@ export function ControlBultosView() {
           <div className={styles.clientSheetActions}>
             <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startPayment(selectedAccount.operations[0])} disabled={!canCollect || !selectedAccount.operations[0]}>Cobrar</Button>
             <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startMoneyOnAccount(selectedAccount.operations[0])} disabled={!canEdit || !selectedAccount.operations[0]}>Dinero a cuenta</Button>
-            <Button variant="ghost" onClick={() => copyWhatsAppAccount(selectedAccount)}>WhatsApp</Button>
+
           </div>
         </div>
         <div className={styles.accountTotals}>
@@ -984,7 +981,7 @@ export function ControlBultosView() {
           <div className={styles.clientSheetActions}>
             <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startPayment(selectedAccount.operations[0])} disabled={!canCollect || !selectedAccount.operations[0]}>Cobrar</Button>
             <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startMoneyOnAccount(selectedAccount.operations[0])} disabled={!canEdit || !selectedAccount.operations[0]}>Dinero a cuenta</Button>
-            <Button variant="ghost" onClick={() => copyWhatsAppAccount(selectedAccount)}>WhatsApp</Button>
+
           </div>
         </div>
         <div className={styles.ledgerTwoCols}>
@@ -1024,36 +1021,29 @@ export function ControlBultosView() {
     </section> : null}
 
     {activeTab === "guias" && !loading ? <section className={styles.guideGrid}>
-      {filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).map(({ operation, shipment }) => <Card key={shipment.id} className={styles.guideCard}>
-        <div className={styles.operationCardHead}>
+      {filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).map(({ operation, shipment }) => <article key={shipment.id} className={styles.guideCard} onClick={() => setDetailOperation(operation)}>
+        <div className={styles.compactRowHead}>
           <div><strong>{shipment.guide_number ?? "Sin guía"}</strong><span>{operation.clients?.name ?? "Sin cliente"} · {shipment.company ?? "Sin empresa"}</span></div>
           <span className={`${styles.badge} ${statusClass(shipment.guide_payment_status)}`}>{guidePaymentLabels[shipment.guide_payment_status]}</span>
         </div>
-        <div className={styles.cardFacts}>
-          <span>Destinatario: {shipment.recipient_name ?? "Sin cargar"}</span>
-          <span>Valor real: {formatMoney(toNumber(shipment.guide_amount))}</span>
-          <span>Total cliente: {guideChargeLabel(shipment.company, toNumber(shipment.guide_amount))}</span>
-          <span>Pase: {moneyUsd(toNumber(shipment.pass_usd_amount))}</span>
+        <div className={styles.compactRowMeta}>
+          <span>{shipment.recipient_name ?? "Destinatario pendiente"}</span>
+          <strong>{moneyUsd(toNumber(shipment.pass_usd_amount))}</strong>
         </div>
-        <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Abrir detalle</Button>
-      </Card>)}
+        <div className={styles.compactNext}><span>Detalle</span><b>›</b></div>
+      </article>)}
     </section> : null}
 
     {activeTab === "mas" ? <section className={styles.moreGrid}>
       <Card className={styles.flowCard}>
-        <div className={styles.cardHead}><div><p>Estados visibles</p><h3>Cliente no ve la cocina interna</h3></div></div>
-        <div className={styles.statusMap}>{logisticsStatusOptions.map((option) => <span key={option.value}>{option.label} → {option.clientLabel}</span>)}</div>
-      </Card>
-      <Card className={styles.flowCard}>
-        <div className={styles.cardHead}><div><p>Acciones rápidas</p><h3>Carga controlada</h3></div></div>
+        <div className={styles.cardHead}><div><p>Sistema</p><h3>Configuración</h3></div></div>
         <div className={styles.quickGrid}>
-          <Button onClick={() => openQuickPanel("cliente")}>Crear cliente</Button>
-          <Button onClick={() => openQuickPanel("operacion")}>Nueva operación</Button>
-          <Button variant="secondary" onClick={() => filteredOperations[0] && startSpecial(filteredOperations[0])}>Movimiento especial</Button>
-          <Button variant="secondary" onClick={() => goToTab("cuenta", "cuenta")}>Cuenta corriente</Button>
           <a className={styles.utilityLink} href="/owner/configuracion">Configuración</a>
           <a className={styles.utilityLink} href="/owner/permisos">Permisos</a>
           <a className={styles.utilityLink} href="/platform">Dueños</a>
+          <a className={styles.utilityLink} href="/consulta/demo">Vista cliente</a>
+          <a className={styles.utilityLink} href="/contacto-legal">Soporte legal</a>
+          <button type="button" className={styles.utilityLink} onClick={() => setCommandOpen(true)}>Buscar</button>
         </div>
       </Card>
     </section> : null}
@@ -1180,7 +1170,7 @@ export function ControlBultosView() {
     </section></div> : null}
 
     {detailOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
-      <div className={styles.panelHead}><div><p>Ficha</p><h3>{detailOperation.public_code}</h3></div><button type="button" onClick={() => setDetailOperation(null)}>Cerrar</button></div>
+      <div className={styles.panelHead}><div><p>Ficha cliente</p><h3>{detailOperation.clients?.name ?? detailOperation.public_code}</h3></div><button type="button" onClick={() => setDetailOperation(null)}>Cerrar</button></div>
       <div className={styles.detailGrid}>
         <div><span>Cliente</span><strong>{detailOperation.clients?.name ?? "-"}</strong></div>
         <div><span>Proveedor</span><strong>{detailOperation.provider_name}</strong></div>

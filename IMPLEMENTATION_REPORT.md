@@ -90,3 +90,17 @@ Advertencias:
 ## v15 — Mobile Operativa Pro
 
 Se aplicó una capa de arquitectura UX/UI mobile para que la app completa sea más ágil: FAB único con bottom sheet, KPIs compactos, cards más chicas, formularios con modo rápido/campos avanzados, cuenta corriente mobile sin tabla larga, bottom nav más fina y visor cliente con menos texto visible.
+
+## v16 — UX Premium Compacta + Login Único
+
+- Se recortó la landing mobile a una sola puerta de entrada: Ingresar con Gmail.
+- Se eliminó la lógica visual de múltiples accesos públicos.
+- Se simplificó `/login` para trabajar como acceso único.
+- Se agregó WhatsApp flotante discreto para pedir acceso/contacto.
+- Se corrigió el header dinámico de Control de Bultos según pestaña activa.
+- Se compactaron cards mobile de Mesa y Guías.
+- Se reemplazó “Abrir detalle” grande por cards clickeables.
+- Se limpió la pantalla Más para dejarla como menú de configuración/sistema.
+- Se agregaron overrides v16 de UX premium compacta.
+
+Validación local: `npm run typecheck` OK. `npm run build` compila y luego el entorno sandbox corta por timeout en Collecting page data, igual que en versiones previas.

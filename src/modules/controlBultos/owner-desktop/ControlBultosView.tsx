@@ -377,17 +377,57 @@ export function ControlBultosView() {
   }, []);
 
   useEffect(() => {
-    const applyHash = () => {
-      const hash = window.location.hash.replace("#", "");
-      if (hash === "cuentas") setActiveTab("cuentas");
-      if (hash === "guias") setActiveTab("guias");
-      if (hash === "mas") setActiveTab("mas");
-      if (hash === "seguimiento" || !hash) setActiveTab("seguimiento");
-      if (hash === "nueva") openQuickPanel("operacion");
+    const normalizeHash = (rawHash?: string) => rawHash?.replace(/^#/, "").replace(/^\//, "").trim().toLowerCase() ?? "";
+
+    const openNewOperationFromHash = () => {
+      const firstClient = data.clients[0];
+      setEditingId(null);
+      setOperationForm(emptyOperationForm(firstClient?.id ?? "", toNumber(firstClient?.default_price_per_package)));
+      setQuickPanel("operacion");
     };
+
+    const applyHash = (rawHash?: string) => {
+      const hash = normalizeHash(rawHash ?? window.location.hash);
+      if (["cuentas", "clientes", "cliente", "planillas", "cuenta", "cuenta-corriente", "cta-corriente", "pagos"].includes(hash)) {
+        setActiveTab("cuentas");
+        return;
+      }
+      if (["guias", "guías", "guia", "guía"].includes(hash)) {
+        setActiveTab("guias");
+        return;
+      }
+      if (["mas", "más", "config"].includes(hash)) {
+        setActiveTab("mas");
+        return;
+      }
+      if (hash === "nueva") {
+        setActiveTab("seguimiento");
+        openNewOperationFromHash();
+        return;
+      }
+      setActiveTab("seguimiento");
+    };
+
+    const onHashChange = () => applyHash();
+    const onBultosTab = (event: Event) => applyHash((event as CustomEvent<string>).detail);
+    const onOwnerBultosLinkClick = (event: MouseEvent) => {
+      if (!(event.target instanceof HTMLElement)) return;
+      const anchor = event.target.closest<HTMLAnchorElement>('a[href*="/owner/bultos#"], a[href*="/owner/bultos/#"]');
+      if (!anchor?.hash) return;
+      applyHash(anchor.hash);
+    };
+
     applyHash();
-    window.addEventListener("hashchange", applyHash);
-    return () => window.removeEventListener("hashchange", applyHash);
+    window.addEventListener("hashchange", onHashChange);
+    window.addEventListener("popstate", onHashChange);
+    window.addEventListener("custodia360:bultos-tab", onBultosTab as EventListener);
+    document.addEventListener("click", onOwnerBultosLinkClick, true);
+    return () => {
+      window.removeEventListener("hashchange", onHashChange);
+      window.removeEventListener("popstate", onHashChange);
+      window.removeEventListener("custodia360:bultos-tab", onBultosTab as EventListener);
+      document.removeEventListener("click", onOwnerBultosLinkClick, true);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.clients.length]);
 
@@ -649,6 +689,14 @@ export function ControlBultosView() {
     if (target === "shipment") setShipmentForm((current) => ({ ...current, method, currency }));
   };
 
+  const goToTab = (tab: MainTab, hash = tab) => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", `${window.location.pathname}#${hash}`);
+      window.dispatchEvent(new CustomEvent("custodia360:bultos-tab", { detail: hash }));
+    }
+  };
+
   return <OwnerDesktopShell title="Mesa de control">
     <section id="seguimiento" className={styles.topBar}>
       <div>
@@ -658,7 +706,7 @@ export function ControlBultosView() {
       </div>
       <div className={styles.topActions}>
         <Button variant="secondary" onClick={() => setCommandOpen(true)}>⌘K Buscar / acción</Button>
-        <Button variant="secondary" onClick={() => setActiveTab("cuentas")}>Clientes</Button>
+        <Button variant="secondary" onClick={() => goToTab("cuentas")}>Clientes</Button>
         <Button onClick={() => openQuickPanel("operacion")}>+ Carga guiada</Button>
       </div>
     </section>
@@ -667,11 +715,11 @@ export function ControlBultosView() {
     {error ? <div className={styles.error}>{error}</div> : null}
 
     <nav className={styles.appTabs} aria-label="Navegación operativa">
-      <button className={activeTab === "seguimiento" ? styles.activeTab : ""} onClick={() => setActiveTab("seguimiento")}>Mesa</button>
-      <button id="cuentas" className={activeTab === "cuentas" ? styles.activeTab : ""} onClick={() => setActiveTab("cuentas")}>Clientes</button>
+      <button className={activeTab === "seguimiento" ? styles.activeTab : ""} onClick={() => goToTab("seguimiento")}>Mesa</button>
+      <button id="cuentas" className={activeTab === "cuentas" ? styles.activeTab : ""} onClick={() => goToTab("cuentas")}>Clientes</button>
       <button className={styles.fabTab} onClick={() => openQuickPanel("operacion")}>+</button>
-      <button id="guias" className={activeTab === "guias" ? styles.activeTab : ""} onClick={() => setActiveTab("guias")}>Guías</button>
-      <button className={activeTab === "mas" ? styles.activeTab : ""} onClick={() => setActiveTab("mas")}>Más</button>
+      <button id="guias" className={activeTab === "guias" ? styles.activeTab : ""} onClick={() => goToTab("guias")}>Guías</button>
+      <button className={activeTab === "mas" ? styles.activeTab : ""} onClick={() => goToTab("mas")}>Más</button>
     </nav>
 
     <section className={styles.kpiStrip}>
@@ -1044,11 +1092,11 @@ export function ControlBultosView() {
 
     {commandOpen ? <div className={styles.panelOverlay}><section className={`${styles.panel} ${styles.commandPanel}`}>
       <div className={styles.panelHead}><div><p>Comando rápido</p><h3>Buscar o ejecutar acción</h3></div><button type="button" onClick={() => setCommandOpen(false)}>Cerrar</button></div>
-      <Input autoFocus value={filters.query} onChange={(event) => { setFilters({ ...filters, query: event.target.value }); setActiveTab("seguimiento"); }} placeholder="Cliente, guía, proveedor, destinatario..." />
+      <Input autoFocus value={filters.query} onChange={(event) => { setFilters({ ...filters, query: event.target.value }); goToTab("seguimiento"); }} placeholder="Cliente, guía, proveedor, destinatario..." />
       <div className={styles.quickActionList}>
         <Button onClick={() => { openQuickPanel("operacion"); setCommandOpen(false); }}>Nuevo movimiento guiado</Button>
-        <Button variant="secondary" onClick={() => { setActiveTab("cuentas"); setCommandOpen(false); }}>Abrir clientes / planillas</Button>
-        <Button variant="secondary" onClick={() => { setActiveTab("guias"); setCommandOpen(false); }}>Abrir guías</Button>
+        <Button variant="secondary" onClick={() => { goToTab("cuentas"); setCommandOpen(false); }}>Abrir clientes / planillas</Button>
+        <Button variant="secondary" onClick={() => { goToTab("guias"); setCommandOpen(false); }}>Abrir guías</Button>
         <Button variant="ghost" onClick={() => { if (sideOperation) startPayment(sideOperation); setCommandOpen(false); }} disabled={!sideOperation || !canCollect}>Cobrar cliente seleccionado</Button>
         <Button variant="ghost" onClick={() => { if (sideOperation) startMoneyOnAccount(sideOperation); setCommandOpen(false); }} disabled={!sideOperation || !canEdit}>Dinero a cuenta</Button>
       </div>

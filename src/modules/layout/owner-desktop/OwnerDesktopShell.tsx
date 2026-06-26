@@ -50,9 +50,19 @@ const groups = [
   },
 ] as const;
 
-function isActive(pathname: string, href: string) {
-  const cleanHref = href.split("#")[0];
-  return cleanHref === "/owner/bultos" ? pathname.startsWith("/owner/bultos") : pathname.startsWith(cleanHref);
+function normalizeBultosHash(hash?: string) {
+  return (hash ?? "").replace(/^#/, "").replace(/^\//, "").trim().toLowerCase() || "seguimiento";
+}
+
+function isActive(pathname: string, href: string, currentHash: string) {
+  const [cleanHref, hrefHash] = href.split("#");
+  if (cleanHref === "/owner/bultos") {
+    if (!pathname.startsWith("/owner/bultos")) return false;
+    const normalizedHref = normalizeBultosHash(hrefHash);
+    const normalizedCurrent = normalizeBultosHash(currentHash);
+    return normalizedHref === normalizedCurrent;
+  }
+  return pathname.startsWith(cleanHref);
 }
 
 export function OwnerDesktopShell({ title, children }: { title: string; children: ReactNode }) {
@@ -61,7 +71,26 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
   const { tenant } = useTenantData();
   const { state, actions } = useAppState();
   const [profile, setProfile] = useState<Pick<ProfileRow, "email" | "full_name" | "role"> | null>(null);
+  const [currentHash, setCurrentHash] = useState("seguimiento");
   const activeTenantUsers = state.users.filter((user) => user.tenantId === state.activeTenantId);
+
+  useEffect(() => {
+    const syncHash = () => setCurrentHash(normalizeBultosHash(window.location.hash));
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    window.addEventListener("popstate", syncHash);
+    return () => {
+      window.removeEventListener("hashchange", syncHash);
+      window.removeEventListener("popstate", syncHash);
+    };
+  }, []);
+
+  const dispatchBultosTab = (href: string) => {
+    const hash = href.split("#")[1];
+    if (!hash || typeof window === "undefined") return;
+    setCurrentHash(normalizeBultosHash(hash));
+    window.dispatchEvent(new CustomEvent("custodia360:bultos-tab", { detail: hash }));
+  };
 
   useEffect(() => {
     let alive = true;
@@ -138,7 +167,7 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
       <nav className={styles.nav}>
         {groups.map((group) => <div key={group.title} className={`${styles.navGroup} ${group.mode === "future" ? styles.futureGroup : ""}`}>
           <div className={styles.groupTitle}>{group.title}{group.mode === "future" ? <small>stand-by</small> : null}</div>
-          {group.items.map(([label, href]) => group.mode === "future" ? <span key={href} className={styles.futureLink} aria-disabled="true">{label}<em>En construcción</em></span> : <Link key={href} href={href} className={isActive(pathname, href) ? styles.active : ""}>{label}</Link>)}
+          {group.items.map(([label, href]) => group.mode === "future" ? <span key={href} className={styles.futureLink} aria-disabled="true">{label}<em>En construcción</em></span> : <Link key={href} href={href} onClick={() => dispatchBultosTab(href)} className={isActive(pathname, href, currentHash) ? styles.active : ""}>{label}</Link>)}
         </div>)}
       </nav>
 
@@ -166,25 +195,25 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
       <div className={styles.content}>{children}</div>
     </main>
     <nav className={styles.mobileBottomNav} aria-label="Navegación principal móvil">
-      <Link href="/owner/bultos#seguimiento" className={pathname.startsWith("/owner/bultos") ? styles.mobileNavActive : ""}>
+      <Link href="/owner/bultos#seguimiento" onClick={() => dispatchBultosTab("/owner/bultos#seguimiento")} className={currentHash === "seguimiento" ? styles.mobileNavActive : ""}>
         <span>●</span>
         <strong>Mesa</strong>
       </Link>
-      <Link href="/owner/bultos#cuentas">
+      <Link href="/owner/bultos#cuentas" onClick={() => dispatchBultosTab("/owner/bultos#cuentas")} className={currentHash === "cuentas" ? styles.mobileNavActive : ""}>
         <span>▦</span>
         <strong>Clientes</strong>
       </Link>
-      <Link href="/owner/bultos#nueva" className={styles.mobileFab} aria-label="Nueva carga">
+      <Link href="/owner/bultos#nueva" onClick={() => dispatchBultosTab("/owner/bultos#nueva")} className={styles.mobileFab} aria-label="Nueva carga">
         <span>+</span>
         <strong>Nueva</strong>
       </Link>
-      <Link href="/owner/bultos#cuentas">
+      <Link href="/owner/bultos#guias" onClick={() => dispatchBultosTab("/owner/bultos#guias")} className={currentHash === "guias" ? styles.mobileNavActive : ""}>
+        <span>≡</span>
+        <strong>Guías</strong>
+      </Link>
+      <Link href="/owner/bultos#cuentas" onClick={() => dispatchBultosTab("/owner/bultos#cuentas")} className={currentHash === "cuentas" ? styles.mobileNavActive : ""}>
         <span>$</span>
         <strong>Cuentas</strong>
-      </Link>
-      <Link href="/owner/bultos#mas">
-        <span>⋯</span>
-        <strong>Más</strong>
       </Link>
     </nav>
   </div>;

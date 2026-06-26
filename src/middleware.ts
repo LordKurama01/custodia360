@@ -10,9 +10,12 @@ function loginRedirect(request: NextRequest, error?: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  if (isDemoMode()) return NextResponse.next({ request });
-
   let response = NextResponse.next({ request });
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  if (isDemoMode()) return response;
 
   try {
     const supabase = createSupabaseMiddlewareClient(request, response);

@@ -303,3 +303,204 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* v11 portal cliente: pestañas reales, guías en modal y mensajes contextuales */
+.progressLine {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .35rem;
+}
+
+.progressLine span {
+  min-height: 2rem;
+  display: grid;
+  place-items: center;
+  padding: 0 .35rem;
+  border: 1px solid var(--c360-line);
+  border-radius: 999px;
+  color: var(--c360-muted);
+  background: rgba(255, 255, 255, .035);
+  font-size: .68rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.progressLine .done {
+  color: #07100d;
+  border-color: rgba(154, 255, 0, .45);
+  background: var(--c360-lemon);
+}
+
+.heroActions button,
+.clientBottomNav button,
+.guideRow button,
+.modalHead button,
+.modalActions button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.heroActions button {
+  border: 0;
+}
+
+.orderRow small {
+  display: block;
+  margin-top: .15rem;
+  color: var(--c360-muted);
+  font-size: .76rem;
+}
+
+.guideRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .5rem;
+  align-items: stretch;
+}
+
+.guideRow button:first-child {
+  min-height: 3.5rem;
+  display: grid;
+  gap: .12rem;
+  align-content: center;
+  padding: .7rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .85rem;
+  color: var(--c360-ink-2);
+  background: rgba(255, 255, 255, .035);
+  text-align: left;
+}
+
+.guideRow button:first-child strong {
+  color: #fff;
+}
+
+.guideRow button:first-child span {
+  color: var(--c360-muted);
+  font-size: .78rem;
+}
+
+.guideRow button:last-child {
+  min-width: 4.6rem;
+  border-radius: .85rem;
+  border: 1px solid rgba(154, 255, 0, .22);
+  color: var(--c360-lemon);
+  background: rgba(154, 255, 0, .06);
+  font-size: .72rem;
+  font-weight: 950;
+}
+
+.accountSummary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.clientBottomNav button {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  border-radius: 16px;
+  color: rgba(235, 243, 255, .66);
+  background: transparent;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.clientBottomNav button span {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: rgba(235, 243, 255, .78);
+  background: rgba(255, 255, 255, .045);
+  border: 1px solid rgba(255, 255, 255, .07);
+  font-size: 13px;
+}
+
+.clientBottomNav button strong {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.clientBottomNav .navActive {
+  color: #fff;
+  background: rgba(154, 255, 0, .07);
+}
+
+.clientBottomNav .navActive span {
+  color: #07100d;
+  border-color: rgba(154, 255, 0, .45);
+  background: var(--c360-lemon);
+}
+
+.guideModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  align-items: end;
+  padding: .65rem;
+  background: rgba(3, 10, 19, .76);
+  backdrop-filter: blur(14px);
+}
+
+.guideModal {
+  width: 100%;
+  max-height: calc(100dvh - 1.3rem);
+  overflow: auto;
+  display: grid;
+  gap: .85rem;
+  padding: .95rem;
+  border: 1px solid var(--c360-line);
+  border-radius: 1.1rem 1.1rem .7rem .7rem;
+  background: linear-gradient(180deg, rgba(16, 29, 49, .99), rgba(8, 18, 33, .99));
+  box-shadow: var(--c360-shadow);
+}
+
+.modalHead,
+.modalActions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .7rem;
+}
+
+.modalHead span {
+  color: var(--c360-lemon);
+  font-size: .68rem;
+  font-weight: 950;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.modalHead h2 {
+  margin: .15rem 0 0;
+  color: #fff;
+  font-size: 1.18rem;
+}
+
+.modalHead button {
+  min-height: 2.35rem;
+  padding: 0 .8rem;
+  border: 1px solid var(--c360-line);
+  border-radius: 999px;
+  color: var(--c360-ink-2);
+  background: rgba(255, 255, 255, .04);
+  font-size: .78rem;
+  font-weight: 950;
+}
+
+.modalActions {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .guideModalOverlay { align-items: center; }
+  .guideModal { width: min(720px, 100%); margin: 0 auto; border-radius: 1.2rem; }
+}
+
+@media (max-width: 420px) {
+  .accountSummary { grid-template-columns: 1fr; }
+  .guideRow { grid-template-columns: 1fr; }
+}

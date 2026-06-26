@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ClientPortalView, type ClientPortalData } from "@/modules/clientPortal/ClientPortalView";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 import { getDemoClientPortalData } from "@/modules/clientPortal/demoData";
@@ -12,6 +13,8 @@ function isPortalData(value: unknown): value is ClientPortalData {
   const candidate = value as Partial<ClientPortalData>;
   return !!candidate.client && Array.isArray(candidate.operations);
 }
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function ClientConsultaPage({ params }: PageProps) {
   const { code } = await params;

@@ -1165,3 +1165,78 @@
     align-self: end;
   }
 }
+
+/* v11 flujo guiado: menos página larga, más operación por pasos */
+.workflowRail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .55rem;
+  margin: .75rem 0;
+}
+
+.workflowRail button {
+  min-height: 4.25rem;
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  grid-template-areas: "num title" "num text";
+  align-items: center;
+  gap: .1rem .55rem;
+  padding: .72rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .95rem;
+  color: var(--c360-ink-2);
+  background: linear-gradient(180deg, rgba(16, 29, 49, .96), rgba(8, 18, 33, .97));
+  text-align: left;
+  cursor: pointer;
+}
+
+.workflowRail button:hover:not(:disabled) {
+  border-color: rgba(154,255,0,.28);
+  background: rgba(154,255,0,.055);
+}
+
+.workflowRail button:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+.workflowRail span {
+  grid-area: num;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #07100d;
+  background: var(--c360-lemon);
+  font-size: .8rem;
+  font-weight: 950;
+}
+
+.workflowRail strong {
+  grid-area: title;
+  color: #fff;
+  font-size: .82rem;
+}
+
+.workflowRail small {
+  grid-area: text;
+  color: var(--c360-muted);
+  font-size: .68rem;
+  line-height: 1.25;
+}
+
+@media (max-width: 767px) {
+  .workflowRail {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(10.8rem, 72%);
+    grid-template-columns: none;
+    overflow-x: auto;
+    padding-bottom: .18rem;
+    margin: .55rem 0;
+  }
+  .workflowRail button {
+    min-height: 3.85rem;
+    padding: .6rem;
+  }
+}

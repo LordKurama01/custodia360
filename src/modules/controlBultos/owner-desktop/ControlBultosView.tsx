@@ -142,7 +142,7 @@ function emptySpecialMovementForm(operation?: ControlOperation | null): SpecialM
   return {
     operation_id: operation?.id ?? "",
     client_id: operation?.client_id ?? "",
-    type: "adelanto_jeremias",
+    type: "dinero_recibido",
     status: "pendiente",
     provider_name: "",
     amount: 0,
@@ -188,7 +188,7 @@ function movementLabel(movement: SpecialMovement) {
   const labels: Record<SpecialMovement["type"], string> = {
     pago_proveedor: "Pago a proveedor",
     adelanto_jeremias: "Adelanto Jeremías",
-    dinero_recibido: "Dinero recibido",
+    dinero_recibido: "Dinero a cuenta",
     mercaderia_agotada: "Mercadería agotada",
     devolucion: "Devolución",
     aplicado_otra_compra: "Aplicado a otra compra",
@@ -489,7 +489,20 @@ export function ControlBultosView() {
 
   const startSpecial = (operation: ControlOperation) => {
     setSpecialOperation(operation);
-    setSpecialForm(emptySpecialMovementForm(operation));
+    setSpecialForm({ ...emptySpecialMovementForm(operation), type: "pago_proveedor", money_source: "jeremias_adelanto" });
+    setQuickPanel("especial");
+  };
+
+  const startMoneyOnAccount = (operation: ControlOperation) => {
+    setSpecialOperation(operation);
+    setSpecialForm({
+      ...emptySpecialMovementForm(operation),
+      type: "dinero_recibido",
+      status: "pendiente",
+      provider_name: operation.provider_name || "A cuenta",
+      money_source: "cliente_envio",
+      note: "Dinero recibido del cliente para aplicar a guías, pases o compras futuras.",
+    });
     setQuickPanel("especial");
   };
 
@@ -512,7 +525,7 @@ export function ControlBultosView() {
   };
 
   const syncPaymentAmount = (ids: string[], currency = paymentForm.currency) => {
-    const usd = paymentPassOptions.filter((item) => ids.includes(item.id)).reduce((sum, item) => sum + item.amountUsd, 0);
+    const usd = paymentPassOptions.filter((item) => ids.includes(item.id)).reduce((sum, item) => sum + item.balanceUsd, 0);
     const amount = currency === "USD" ? usd : usd * DEFAULT_DOLLAR_RATE;
     setPaymentForm((current) => ({ ...current, selectedPassIds: ids, currency, amount: amount || current.amount }));
   };
@@ -629,7 +642,7 @@ export function ControlBultosView() {
       </div>
       <div className={styles.topActions}>
         <Button variant="secondary" onClick={() => setActiveTab("cuentas")}>Clientes</Button>
-        <Button onClick={() => openQuickPanel("operacion")}>+ Nuevo movimiento</Button>
+        <Button onClick={() => openQuickPanel("operacion")}>+ Carga guiada</Button>
       </div>
     </section>
 
@@ -647,7 +660,7 @@ export function ControlBultosView() {
     <section className={styles.kpiStrip}>
       <Card className={styles.kpi}><span>Pases pendientes</span><strong>{canSeeMoney ? moneyUsd(kpis.passUsd) : "-"}</strong><small>{canSeeMoney ? formatMoney(kpis.passUsd * DEFAULT_DOLLAR_RATE) : ""}</small></Card>
       <Card className={styles.kpi}><span>Guías a reintegrar</span><strong>{canSeeMoney ? formatMoney(kpis.guideArs) : "-"}</strong><small>{kpis.pendingPasses} pases abiertos</small></Card>
-      <Card className={styles.kpi}><span>Movimientos especiales</span><strong>{canSeeMoney ? formatMoney(kpis.specialArs) : "-"}</strong><small>Proveedor / adelantos</small></Card>
+      <Card className={styles.kpi}><span>Dinero / especiales</span><strong>{canSeeMoney ? formatMoney(kpis.specialArs) : "-"}</strong><small>A cuenta, proveedor o reintegro</small></Card>
     </section>
 
     <Card className={styles.searchCard}>
@@ -657,6 +670,13 @@ export function ControlBultosView() {
         {logisticsStatusOptions.slice(0, 6).map((option) => <button key={option.value} className={filters.logistics_status === option.value ? styles.chipActive : ""} onClick={() => setFilters({ ...filters, logistics_status: option.value })}>{option.label}</button>)}
       </div>
     </Card>
+
+    {activeTab === "seguimiento" ? <section className={styles.workflowRail} aria-label="Próximos pasos">
+      <button type="button" onClick={() => openQuickPanel("operacion")}><span>1</span><strong>Movimiento</strong><small>Cliente, bultos y proveedor</small></button>
+      <button type="button" onClick={() => sideOperation && startShipment(sideOperation)} disabled={!sideOperation || !canEdit}><span>2</span><strong>Guía</strong><small>Número, destinatario y pase</small></button>
+      <button type="button" onClick={() => sideOperation && startPayment(sideOperation)} disabled={!sideOperation || !canCollect}><span>3</span><strong>Cobrar</strong><small>Pago parcial o total</small></button>
+      <button type="button" onClick={() => sideOperation && startMoneyOnAccount(sideOperation)} disabled={!sideOperation || !canEdit}><span>4</span><strong>Dinero a cuenta</strong><small>Adelanto del cliente</small></button>
+    </section> : null}
 
     {loading ? <Card className={styles.empty}>Cargando operaciones...</Card> : null}
 
@@ -754,7 +774,7 @@ export function ControlBultosView() {
           <Button variant="secondary" onClick={() => setDetailOperation(sideOperation)}>Abrir completa</Button>
           <Button variant="secondary" onClick={() => startPayment(sideOperation)} disabled={!canCollect}>Cobrar</Button>
           <Button variant="ghost" onClick={() => startShipment(sideOperation)} disabled={!canEdit}>Guía</Button>
-          <Button variant="ghost" onClick={() => startSpecial(sideOperation)} disabled={!canEdit}>Movimiento especial</Button>
+          <Button variant="ghost" onClick={() => startMoneyOnAccount(sideOperation)} disabled={!canEdit}>Dinero a cuenta</Button><Button variant="ghost" onClick={() => startSpecial(sideOperation)} disabled={!canEdit}>Especial</Button>
         </div>
       </aside> : null}
     </section> : null}
@@ -779,7 +799,8 @@ export function ControlBultosView() {
             <span>Movimientos, guías, pases, pagos y adelantos del cliente en una sola vista.</span>
           </div>
           <div className={styles.clientSheetActions}>
-            <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startPayment(selectedAccount.operations[0])} disabled={!canCollect || !selectedAccount.operations[0]}>Pago / adelanto</Button>
+            <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startPayment(selectedAccount.operations[0])} disabled={!canCollect || !selectedAccount.operations[0]}>Cobrar</Button>
+            <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startMoneyOnAccount(selectedAccount.operations[0])} disabled={!canEdit || !selectedAccount.operations[0]}>Dinero a cuenta</Button>
             <Button variant="ghost" onClick={() => copyWhatsAppAccount(selectedAccount)}>WhatsApp</Button>
           </div>
         </div>
@@ -940,22 +961,22 @@ export function ControlBultosView() {
       </div>
       <Field label="Nota"><Textarea value={paymentForm.note ?? ""} onChange={(event) => setPaymentForm({ ...paymentForm, note: event.target.value })} /></Field>
       {paymentOperation.operation_shipments.some((shipment) => shipment.guide_payment_status === "pendiente_reintegro") ? <label className={styles.checkRow}><input type="checkbox" checked={!!paymentForm.markGuideReimbursed} onChange={(event) => setPaymentForm({ ...paymentForm, markGuideReimbursed: event.target.checked })} /><span>Marcar guías a reintegrar como reintegradas</span></label> : null}
-      <div className={styles.formFooter}><span>El pago queda en historial. Si el monto no cubre todo, el pase queda parcial con saldo abierto.</span><Button onClick={submitPayment} disabled={saving}>Registrar pago</Button></div>
+      <div className={styles.formFooter}><span>El pago queda en historial. Podés cancelar completo, aplicar parcial o dejar saldo abierto por guía/pase.</span><Button onClick={submitPayment} disabled={saving}>Registrar pago</Button></div>
     </section></div> : null}
 
     {quickPanel === "especial" && specialOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>
-      <div className={styles.panelHead}><div><p>Movimiento especial</p><h3>{specialOperation.clients?.name ?? specialOperation.public_code}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
-      <div className={styles.panelSteps}><span>1 Tipo</span><span>2 Proveedor</span><span>3 Monto</span><span>4 Estado</span><span>5 Guardar</span></div>
+      <div className={styles.panelHead}><div><p>{specialForm.type === "dinero_recibido" ? "Dinero a cuenta" : "Movimiento especial"}</p><h3>{specialOperation.clients?.name ?? specialOperation.public_code}</h3></div><button onClick={() => setQuickPanel(null)}>Cerrar</button></div>
+      <div className={styles.panelSteps}><span>1 Tipo</span><span>2 Origen</span><span>3 Monto</span><span>4 Aplicación</span><span>5 Guardar</span></div>
       <div className={styles.formGrid}>
-        <Field label="Tipo"><Select value={specialForm.type} onChange={(event) => setSpecialForm({ ...specialForm, type: event.target.value as SpecialMovementInput["type"] })}><option value="adelanto_jeremias">Adelanto Jeremías</option><option value="pago_proveedor">Pago a proveedor</option><option value="dinero_recibido">Dinero recibido del cliente</option><option value="mercaderia_agotada">Mercadería agotada</option><option value="devolucion">Devolución</option><option value="aplicado_otra_compra">Aplicado a otra compra</option></Select></Field>
-        <Field label="Proveedor / tienda"><Input value={specialForm.provider_name} onChange={(event) => setSpecialForm({ ...specialForm, provider_name: event.target.value })} placeholder="Atacado UZA" /></Field>
-        <Field label="Quién puso la plata"><Select value={specialForm.money_source} onChange={(event) => setSpecialForm({ ...specialForm, money_source: event.target.value as SpecialMovementInput["money_source"] })}><option value="jeremias_adelanto">Jeremías adelantó</option><option value="cliente_envio">Cliente envió primero</option></Select></Field>
+        <Field label="Tipo"><Select value={specialForm.type} onChange={(event) => setSpecialForm({ ...specialForm, type: event.target.value as SpecialMovementInput["type"] })}><option value="adelanto_jeremias">Adelanto Jeremías</option><option value="pago_proveedor">Pago a proveedor</option><option value="dinero_recibido">Dinero a cuenta del cliente</option><option value="mercaderia_agotada">Mercadería agotada</option><option value="devolucion">Devolución</option><option value="aplicado_otra_compra">Aplicado a otra compra</option></Select></Field>
+        <Field label={specialForm.type === "dinero_recibido" ? "Referencia" : "Proveedor / tienda"}><Input value={specialForm.provider_name} onChange={(event) => setSpecialForm({ ...specialForm, provider_name: event.target.value })} placeholder={specialForm.type === "dinero_recibido" ? "A cuenta / guía / compra futura" : "Atacado UZA"} /></Field>
+        <Field label="Quién puso la plata"><Select value={specialForm.money_source} onChange={(event) => setSpecialForm({ ...specialForm, money_source: event.target.value as SpecialMovementInput["money_source"] })}><option value="jeremias_adelanto">Jeremías adelantó</option><option value="cliente_envio">Cliente entregó dinero a cuenta</option></Select></Field>
         <Field label="Estado"><Select value={specialForm.status} onChange={(event) => setSpecialForm({ ...specialForm, status: event.target.value as SpecialMovementInput["status"] })}><option value="pendiente">Pendiente</option><option value="pagado_proveedor">Pagado al proveedor</option><option value="mercaderia_confirmada">Mercadería confirmada</option><option value="mercaderia_agotada">Mercadería agotada</option><option value="a_devolver">A devolver</option><option value="aplicado_otra_compra">Aplicado a otra compra</option><option value="reintegrado">Reintegrado</option><option value="cerrado">Cerrado</option></Select></Field>
         <Field label="Moneda"><Select value={specialForm.currency} onChange={(event) => setSpecialForm({ ...specialForm, currency: event.target.value as Currency })}><option value="ARS">ARS</option><option value="USD">USD</option></Select></Field>
         <Field label="Monto"><Input type="number" min="0" value={specialForm.amount} onChange={(event) => setSpecialForm({ ...specialForm, amount: Number(event.target.value || 0) })} /></Field>
       </div>
-      <Field label="Observación"><Textarea value={specialForm.note ?? ""} onChange={(event) => setSpecialForm({ ...specialForm, note: event.target.value })} placeholder="Ej: proveedor no acepta USDT; Jeremías lleva/transfiere el dinero" /></Field>
-      <div className={styles.formFooter}><span>Queda como ítem excepcional dentro de la cuenta corriente.</span><Button onClick={submitSpecialMovement} disabled={saving}>Guardar movimiento</Button></div>
+      <Field label="Observación"><Textarea value={specialForm.note ?? ""} onChange={(event) => setSpecialForm({ ...specialForm, note: event.target.value })} placeholder={specialForm.type === "dinero_recibido" ? "Ej: Estela deja USD 200 a cuenta para aplicar después" : "Ej: proveedor no acepta USDT; Jeremías lleva/transfiere el dinero"} /></Field>
+      <div className={styles.formFooter}><span>{specialForm.type === "dinero_recibido" ? "Queda visible como dinero a cuenta dentro de la cuenta corriente del cliente." : "Queda como ítem excepcional dentro de la cuenta corriente."}</span><Button onClick={submitSpecialMovement} disabled={saving}>{specialForm.type === "dinero_recibido" ? "Guardar dinero a cuenta" : "Guardar movimiento"}</Button></div>
     </section></div> : null}
 
 
@@ -966,6 +987,7 @@ export function ControlBultosView() {
         <Button variant="secondary" onClick={() => { startShipment(actionsOperation); setActionsOperation(null); }} disabled={!canEdit}>Nueva guía</Button>
         <Button variant="ghost" onClick={() => { copyWhatsAppOperation(actionsOperation); setActionsOperation(null); }}>Enviar WhatsApp</Button>
         <Button variant="ghost" onClick={() => { copyClientLink(actionsOperation); setActionsOperation(null); }}>Copiar link cliente</Button>
+        <Button variant="ghost" onClick={() => { startMoneyOnAccount(actionsOperation); setActionsOperation(null); }}>Dinero a cuenta</Button>
         <Button variant="ghost" onClick={() => { startSpecial(actionsOperation); setActionsOperation(null); }}>Movimiento especial</Button>
       </div>
     </section></div> : null}
@@ -1001,7 +1023,7 @@ export function ControlBultosView() {
           </div>
         </details>) : <p>Sin guías cargadas.</p>}
       </div>
-      <div className={styles.actions}><Button variant="secondary" onClick={() => startPayment(detailOperation)}>Cobrar</Button><Button variant="ghost" onClick={() => startShipment(detailOperation)}>Agregar guía</Button><Button variant="ghost" onClick={() => startSpecial(detailOperation)}>Movimiento especial</Button><Button variant="ghost" onClick={() => copyClientLink(detailOperation)}>Copiar link</Button></div>
+      <div className={styles.actions}><Button variant="secondary" onClick={() => startPayment(detailOperation)}>Cobrar</Button><Button variant="ghost" onClick={() => startMoneyOnAccount(detailOperation)}>Dinero a cuenta</Button><Button variant="ghost" onClick={() => startShipment(detailOperation)}>Agregar guía</Button><Button variant="ghost" onClick={() => startSpecial(detailOperation)}>Especial</Button><Button variant="ghost" onClick={() => copyClientLink(detailOperation)}>Copiar link</Button></div>
     </section></div> : null}
   </OwnerDesktopShell>;
 }

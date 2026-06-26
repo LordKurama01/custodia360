@@ -2314,3 +2314,36 @@
   .clientScreenTotals div { padding: .48rem .52rem; }
   .stickyClientActions { position: sticky; bottom: -.8rem; background: linear-gradient(180deg, transparent, rgba(8,18,33,.99) 28%); padding-top: .55rem; }
 }
+
+/* v21: módulos más completos y premium */
+.statusTabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .34rem;
+  padding: .3rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .9rem;
+  background: rgba(255,255,255,.032);
+}
+.statusTabs button {
+  min-height: 2.1rem;
+  border: 0;
+  border-radius: .68rem;
+  color: rgba(235,243,255,.68);
+  background: transparent;
+  font-size: .72rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+.statusTabs .statusTabActive {
+  color: #07100d;
+  background: var(--c360-lemon);
+}
+@media (max-width: 767px) {
+  .statusTabs { gap: .22rem; padding: .24rem; border-radius: .78rem; }
+  .statusTabs button { min-height: 1.9rem; font-size: .61rem; border-radius: .58rem; }
+  .settingsRow > span { width: 2rem; height: 2rem; border-radius: .68rem; font-size: .95rem; }
+  .settingsRow strong { font-size: .88rem; }
+  .settingsRow { grid-template-columns: 2rem 1fr auto; }
+  .compactNext { display: flex; }
+}

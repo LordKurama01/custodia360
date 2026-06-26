@@ -210,7 +210,7 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
         <strong>Mesa</strong>
       </Link>
       <Link href="/owner/bultos#guias" onClick={() => dispatchBultosTab("/owner/bultos#guias")} className={currentHash === "guias" ? styles.mobileNavActive : ""}>
-        <span>≡</span>
+        <span>▤</span>
         <strong>Guías</strong>
       </Link>
       <Link href="/owner/bultos#mas" onClick={() => dispatchBultosTab("/owner/bultos#mas")} className={currentHash === "mas" ? styles.mobileNavActive : ""}>

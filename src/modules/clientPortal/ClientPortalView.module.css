@@ -926,3 +926,29 @@
   .secondaryAction { display: none; }
   .quickClientStrip { display: none; }
 }
+
+/* v21: visor cliente más limpio */
+.clientBanner {
+  display: grid;
+  gap: .12rem;
+  margin-top: .65rem;
+  padding: .7rem .78rem;
+  border: 1px solid rgba(154,255,0,.14);
+  border-radius: .92rem;
+  background: rgba(154,255,0,.045);
+}
+.clientBanner span { color: var(--c360-lemon); font-size: .62rem; font-weight: 950; letter-spacing:.08em; text-transform:uppercase; }
+.clientBanner strong { color:#fff; font-size:.9rem; }
+.clientBanner small { color:var(--c360-muted); line-height:1.3; }
+.privateStateCard { display:grid; gap:.5rem; }
+.statusDisplay { display:grid; gap:.1rem; }
+.statusDisplay strong { color:#fff; font-size:1.15rem; }
+.statusDisplay small { color:var(--c360-muted); font-size:.74rem; }
+.quickClientStrip { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.45rem; }
+.quickClientStrip button { min-height:2.2rem; border:1px solid var(--c360-line); border-radius:.75rem; color:var(--c360-ink-2); background:rgba(255,255,255,.04); font-weight:900; }
+@media (max-width: 520px) {
+  .page { padding: .75rem .75rem 8.4rem; }
+  .heroStatus, .sectionCard { border-radius: .95rem; padding: .78rem; }
+  .heroActions { grid-template-columns: 1fr; }
+  .clientBottomNav { left: 8px; right: 8px; bottom: 42px; }
+}

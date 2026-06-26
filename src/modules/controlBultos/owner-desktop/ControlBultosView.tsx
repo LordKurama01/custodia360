@@ -337,6 +337,8 @@ export function ControlBultosView() {
   const [clientDetailId, setClientDetailId] = useState<string | null>(null);
   const [clientDetailTab, setClientDetailTab] = useState<"resumen" | "guias" | "cuenta" | "historial">("resumen");
   const [contactKind, setContactKind] = useState<"clientes" | "proveedores">("clientes");
+  const [cobrosView, setCobrosView] = useState<"pendientes" | "parciales" | "a_cuenta" | "cerrados">("pendientes");
+  const [guiasView, setGuiasView] = useState<"activas" | "sin_numero" | "confirmar" | "cerradas">("activas");
   const [providerDetailName, setProviderDetailName] = useState<string | null>(null);
 
   const demoMode = isDemoMode();
@@ -943,16 +945,32 @@ export function ControlBultosView() {
         <div><span>A cuenta</span><strong>{formatMoney(kpis.specialArs)}</strong></div>
         <div><span>Reintegrar</span><strong>{formatMoney(kpis.guideArs)}</strong></div>
       </div>
-      <div className={styles.sectionTitleRow}><strong>Pendientes</strong><span>{debtorAccounts.length}</span></div>
-      {debtorAccounts.length ? debtorAccounts.map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}>
-        <div>
-          <strong>{account.clientName}</strong>
-          <span>{account.pendingPasses.length} pases · {account.guideReimbursements.length} guías · {account.specialPending.length} especiales</span>
-        </div>
-        <b>{account.passUsdPending > 0.01 ? moneyUsd(account.passUsdPending) : formatMoney(account.guideArsPending + account.specialArsPending)}</b>
-        <i>›</i>
-      </button>) : <Card className={styles.empty}>Sin cobros pendientes.</Card>}
-      <div className={styles.sectionTitleRow}><strong>Parciales / a cuenta</strong><span>{accounts.filter((account) => account.specialPending.length || account.pendingPasses.some((item) => item.paidUsd > 0)).length}</span></div>
+      <nav className={styles.statusTabs} aria-label="Vista de cobros">
+        <button type="button" className={cobrosView === "pendientes" ? styles.statusTabActive : ""} onClick={() => setCobrosView("pendientes")}>Pendientes</button>
+        <button type="button" className={cobrosView === "parciales" ? styles.statusTabActive : ""} onClick={() => setCobrosView("parciales")}>Parciales</button>
+        <button type="button" className={cobrosView === "a_cuenta" ? styles.statusTabActive : ""} onClick={() => setCobrosView("a_cuenta")}>A cuenta</button>
+        <button type="button" className={cobrosView === "cerrados" ? styles.statusTabActive : ""} onClick={() => setCobrosView("cerrados")}>Cerrados</button>
+      </nav>
+      {cobrosView === "pendientes" ? <>
+        <div className={styles.sectionTitleRow}><strong>Pendientes</strong><span>{debtorAccounts.length}</span></div>
+        {debtorAccounts.length ? debtorAccounts.map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}>
+          <div>
+            <strong>{account.clientName}</strong>
+            <span>{account.pendingPasses.length} pases · {account.guideReimbursements.length} guías · {account.specialPending.length} especiales</span>
+          </div>
+          <b>{account.passUsdPending > 0.01 ? moneyUsd(account.passUsdPending) : formatMoney(account.guideArsPending + account.specialArsPending)}</b>
+          <i>›</i>
+        </button>) : <Card className={styles.empty}>Sin cobros pendientes.</Card>}
+      </> : null}
+      {cobrosView === "parciales" ? <>
+        <div className={styles.sectionTitleRow}><strong>Parciales</strong><span>{accounts.filter((account) => account.pendingPasses.some((item) => item.paidUsd > 0)).length}</span></div>
+        {accounts.filter((account) => account.pendingPasses.some((item) => item.paidUsd > 0)).map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}><div><strong>{account.clientName}</strong><span>Pagos parciales registrados</span></div><b>{moneyUsd(account.passUsdPending)}</b><i>›</i></button>)}
+      </> : null}
+      {cobrosView === "a_cuenta" ? <>
+        <div className={styles.sectionTitleRow}><strong>Dinero a cuenta</strong><span>{accounts.filter((account) => account.specialPending.length).length}</span></div>
+        {accounts.filter((account) => account.specialPending.length).map((account) => <button key={account.clientId} type="button" className={styles.screenRow} onClick={() => openClientScreen(account, "cuenta")}><div><strong>{account.clientName}</strong><span>{account.specialPending.length} movimientos especiales abiertos</span></div><b>{formatMoney(account.specialArsPending)}</b><i>›</i></button>)}
+      </> : null}
+      {cobrosView === "cerrados" ? <Card className={styles.empty}>Los cobros cerrados quedan dentro de cada cliente.</Card> : null}
     </section> : null}
 
     {activeTab === "guias" && !loading ? <section className={styles.guideGrid}>
@@ -961,7 +979,13 @@ export function ControlBultosView() {
         <div><span>Sin número</span><strong>{filteredOperations.flatMap((operation) => operation.operation_shipments).filter((shipment) => !shipment.guide_number).length}</strong></div>
         <div><span>A confirmar</span><strong>{filteredOperations.filter((operation) => operation.logistics_status === "despachado").length}</strong></div>
       </div>
-      {filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).length ? filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).map(({ operation, shipment }) => <article key={shipment.id} className={styles.guideCard} onClick={() => openOperationScreen(operation, "guias")}>
+      <nav className={styles.statusTabs} aria-label="Vista de guías">
+        <button type="button" className={guiasView === "activas" ? styles.statusTabActive : ""} onClick={() => setGuiasView("activas")}>Activas</button>
+        <button type="button" className={guiasView === "sin_numero" ? styles.statusTabActive : ""} onClick={() => setGuiasView("sin_numero")}>Sin número</button>
+        <button type="button" className={guiasView === "confirmar" ? styles.statusTabActive : ""} onClick={() => setGuiasView("confirmar")}>A confirmar</button>
+        <button type="button" className={guiasView === "cerradas" ? styles.statusTabActive : ""} onClick={() => setGuiasView("cerradas")}>Cerradas</button>
+      </nav>
+      {filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).filter(({ operation, shipment }) => guiasView === "activas" ? true : guiasView === "sin_numero" ? !shipment.guide_number : guiasView === "confirmar" ? operation.logistics_status === "despachado" : ["pagada_por_cliente", "reintegrada"].includes(shipment.guide_payment_status)).length ? filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).filter(({ operation, shipment }) => guiasView === "activas" ? true : guiasView === "sin_numero" ? !shipment.guide_number : guiasView === "confirmar" ? operation.logistics_status === "despachado" : ["pagada_por_cliente", "reintegrada"].includes(shipment.guide_payment_status)).map(({ operation, shipment }) => <article key={shipment.id} className={styles.guideCard} onClick={() => openOperationScreen(operation, "guias")}>
         <div className={styles.compactRowHead}>
           <div><strong>{shipment.guide_number ?? "Sin número"}</strong><span>{operation.clients?.name ?? "Sin cliente"} · {shipment.company ?? "Empresa pendiente"}</span></div>
           <span className={`${styles.badge} ${statusClass(shipment.guide_payment_status)}`}>{guidePaymentLabels[shipment.guide_payment_status]}</span>
@@ -971,15 +995,18 @@ export function ControlBultosView() {
           <strong>{moneyUsd(toNumber(shipment.pass_usd_amount))}</strong>
         </div>
         <div className={styles.compactNext}><span>{logisticsLabels[operation.logistics_status]}</span><b>›</b></div>
-      </article>) : <Card className={styles.empty}>Sin guías activas.</Card>}
+      </article>) : <Card className={styles.empty}>Sin guías en esta vista.</Card>}
     </section> : null}
 
     {activeTab === "mas" ? <section className={styles.moreGrid}>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/owner/configuracion"}><span>⚙</span><div><strong>Configuración</strong><small>Datos del espacio, dólar, WhatsApp y banner cliente.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/owner/permisos"}><span>◉</span><div><strong>Permisos</strong><small>Empleados, roles y accesos autorizados.</small></div><i>›</i></button>
-      <button type="button" className={styles.settingsRow} onClick={() => location.href = "/platform"}><span>◆</span><div><strong>Dueños</strong><small>Espacios separados y límite comercial.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => location.href = "/platform"}><span>◆</span><div><strong>Dueños</strong><small>Espacios separados, límite comercial y solo lectura.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => setCommandOpen(true)}><span>⌕</span><div><strong>Buscar</strong><small>Cliente, guía, proveedor o cobro.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => setQuickPanel("cliente")}><span>＋</span><div><strong>Nuevo contacto</strong><small>Alta rápida de cliente o movimiento inicial.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => setQuickPanel("acciones")}><span>⚡</span><div><strong>Acciones rápidas</strong><small>Movimiento, guía, cobro o dinero a cuenta.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/contacto-legal"}><span>?</span><div><strong>Soporte</strong><small>Ayuda, contacto legal y datos del sistema.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => location.href = "/login"}><span>↩</span><div><strong>Salir</strong><small>Cerrar el espacio operativo.</small></div><i>›</i></button>
     </section> : null}
 
     {clientDetailAccount ? <div className={styles.panelOverlay}>

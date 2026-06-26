@@ -30,3 +30,10 @@ Versión de cierre para dejar el sistema final sin referencias visibles a demo y
 ## Regla comercial
 
 No agregar módulos nuevos. Esta versión afina entrada, landing, acceso y arquitectura visual para vender/operar como producto final.
+
+
+## V22 — Landing Comercial Premium
+- Landing pública rearmada como pieza comercial corta.
+- Un solo botón visible: Ingresar al sistema.
+- Sin secciones largas ni botones repetidos.
+- Login operativo queda separado.

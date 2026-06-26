@@ -29,3 +29,10 @@ Contactos | Cobros | Guías | Más
 ## Cliente
 
 El cliente ve solo su visor y su información. WhatsApp aparece solo en contexto cliente y usa el WhatsApp del dueño/tenant.
+
+
+## V22 — Landing Comercial Premium
+- Landing pública rearmada como pieza comercial corta.
+- Un solo botón visible: Ingresar al sistema.
+- Sin secciones largas ni botones repetidos.
+- Login operativo queda separado.

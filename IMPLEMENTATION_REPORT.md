@@ -25,3 +25,10 @@ Cuando se conecte Supabase definitivo:
 3. Configurar Google OAuth en Supabase.
 4. Poner `NEXT_PUBLIC_LOCAL_ACCESS=false`.
 5. Cargar usuarios/perfiles reales por tenant.
+
+
+## V22 — Landing Comercial Premium
+- Landing pública rearmada como pieza comercial corta.
+- Un solo botón visible: Ingresar al sistema.
+- Sin secciones largas ni botones repetidos.
+- Login operativo queda separado.

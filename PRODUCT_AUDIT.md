@@ -25,3 +25,10 @@ La app queda enfocada en producto final operativo, sin mensajes visibles de prue
 - Cargar tenant/dueño real.
 - Configurar WhatsApp por dueño.
 - Cargar datos reales de clientes/proveedores/guías/cobros.
+
+
+## V22 — Landing Comercial Premium
+- Landing pública rearmada como pieza comercial corta.
+- Un solo botón visible: Ingresar al sistema.
+- Sin secciones largas ni botones repetidos.
+- Login operativo queda separado.

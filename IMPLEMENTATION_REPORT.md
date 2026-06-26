@@ -37,3 +37,11 @@ Cuando se conecte Supabase definitivo:
 ## v23 — Pasada fina entregable
 
 Pulido visual final: navegación mobile más fina, ficha cliente compacta, botón `+` menos invasivo, Más sin vacío y ajustes de densidad para dejar el sistema más presentable sin sumar funciones.
+
+## v25 — Pulido visual senior final
+
+- Se corrigió el halo/ring visual del botón central Mesa.
+- Se bajó intensidad del verde en navegación, FAB, tabs y botones.
+- Se alinearon mejor íconos y estados del bottom nav.
+- Se ajustaron cards, paneles, ficha cliente y módulos para una entrega más fina.
+- No se agregaron funciones nuevas.

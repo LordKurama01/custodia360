@@ -44,3 +44,7 @@ No agregar módulos nuevos. Esta versión afina entrada, landing, acceso y arqui
 ## v23 — Pasada fina entregable
 
 Pulido visual final: navegación mobile más fina, ficha cliente compacta, botón `+` menos invasivo, Más sin vacío y ajustes de densidad para dejar el sistema más presentable sin sumar funciones.
+
+### v25 — Pulido visual senior final
+
+Pasada visual fina sobre la app operativa: navegación inferior más limpia, Mesa central sin halo, verde reducido, mejor brillo, cards más premium y módulos más entregables. Sin funciones nuevas.

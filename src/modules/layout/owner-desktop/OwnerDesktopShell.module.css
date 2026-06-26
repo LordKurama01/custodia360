@@ -853,3 +853,129 @@
     letter-spacing: -.04em;
   }
 }
+
+/* v25 entrega fina: bottom nav sin halo, iconos alineados y Mesa central limpia */
+@media (max-width: 960px) {
+  .content {
+    padding-bottom: 120px !important;
+  }
+
+  .mobileBottomNav {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 39px !important;
+    min-height: 62px !important;
+    padding: 6px 8px 7px !important;
+    gap: 2px !important;
+    border-radius: 22px !important;
+    border-color: rgba(255,255,255,.08) !important;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255,255,255,.035), transparent 42%),
+      linear-gradient(180deg, rgba(8,19,32,.86), rgba(3,9,18,.97)) !important;
+    box-shadow:
+      0 16px 44px rgba(0,0,0,.48),
+      inset 0 1px 0 rgba(255,255,255,.045) !important;
+    backdrop-filter: blur(22px) saturate(1.08) !important;
+    overflow: visible !important;
+  }
+
+  .mobileBottomNav a {
+    min-height: 37px !important;
+    gap: 2px !important;
+    border-radius: 14px !important;
+    color: rgba(218,230,244,.58) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .mobileBottomNav a span {
+    width: 21px !important;
+    height: 21px !important;
+    border-radius: 9px !important;
+    color: rgba(218,230,244,.66) !important;
+    background: rgba(255,255,255,.028) !important;
+    border-color: rgba(255,255,255,.05) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+  }
+
+  .mobileBottomNav a span svg {
+    width: 14px !important;
+    height: 14px !important;
+    stroke-width: 2.05 !important;
+  }
+
+  .mobileBottomNav a strong {
+    font-size: 8.25px !important;
+    font-weight: 780 !important;
+    color: inherit !important;
+  }
+
+  .mobileBottomNav .mobileNavActive:not(.mobileMesaButton) {
+    color: rgba(246,250,255,.9) !important;
+    background: rgba(141,215,42,.045) !important;
+    box-shadow: inset 0 0 0 1px rgba(141,215,42,.055) !important;
+  }
+
+  .mobileBottomNav .mobileNavActive:not(.mobileMesaButton) span {
+    color: #06100b !important;
+    background: linear-gradient(145deg, #b9f567, #86cf24) !important;
+    box-shadow: 0 7px 15px rgba(141,215,42,.12) !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton {
+    min-height: 53px !important;
+    transform: translateY(-9px) !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    filter: none !important;
+    isolation: isolate !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton::before,
+  .mobileBottomNav .mobileMesaButton::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton span {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 999px !important;
+    color: #07100d !important;
+    background:
+      radial-gradient(circle at 31% 21%, rgba(255,255,255,.58), rgba(255,255,255,.08) 18%, transparent 19%),
+      linear-gradient(145deg, #c7ff70 0%, #8ed42a 57%, #58c67a 100%) !important;
+    border: 1px solid rgba(255,255,255,.22) !important;
+    box-shadow:
+      0 10px 20px rgba(141,215,42,.14),
+      inset 0 1px 0 rgba(255,255,255,.28),
+      inset 0 -5px 12px rgba(4,16,10,.18) !important;
+    outline: 0 !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton span::before,
+  .mobileBottomNav .mobileMesaButton span::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton span svg {
+    width: 20px !important;
+    height: 20px !important;
+    stroke-width: 2.35 !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton strong {
+    margin-top: -2px !important;
+    color: rgba(246,250,255,.88) !important;
+    font-size: 8.4px !important;
+    font-weight: 840 !important;
+    text-shadow: none !important;
+  }
+
+  .header {
+    min-height: 48px !important;
+    background: linear-gradient(180deg, rgba(6,18,32,.90), rgba(5,15,27,.60)) !important;
+  }
+}

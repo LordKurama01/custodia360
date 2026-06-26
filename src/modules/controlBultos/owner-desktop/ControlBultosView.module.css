@@ -2550,3 +2550,165 @@
     box-shadow: 0 12px 26px rgba(155,231,45,.14) !important;
   }
 }
+
+/* v25 pasada senior final: menos verde, más aire, brillo controlado */
+@media (max-width: 767px) {
+  .mobileFabAction {
+    width: 40px !important;
+    height: 40px !important;
+    right: 18px !important;
+    bottom: 104px !important;
+    font-size: 1.22rem !important;
+    color: #07100d !important;
+    background:
+      radial-gradient(circle at 30% 18%, rgba(255,255,255,.54), transparent 18%),
+      linear-gradient(145deg, #c4fb70, #8bd12a 58%, #56c77a) !important;
+    border: 1px solid rgba(255,255,255,.22) !important;
+    box-shadow:
+      0 10px 22px rgba(141,215,42,.15),
+      inset 0 1px 0 rgba(255,255,255,.24),
+      inset 0 -5px 12px rgba(4,16,10,.15) !important;
+  }
+
+  .searchCard {
+    top: 48px !important;
+    padding: .50rem !important;
+    border-radius: .82rem !important;
+    background: rgba(5,15,27,.88) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  }
+
+  .searchCard input {
+    min-height: 2.1rem !important;
+    border-radius: .66rem !important;
+  }
+
+  .operationCard,
+  .guideCard,
+  .screenRow,
+  .screenRowStatic,
+  .accountRow,
+  .settingsRow {
+    border-radius: .78rem !important;
+    border-color: rgba(255,255,255,.06) !important;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(255,255,255,.026), transparent 28%),
+      linear-gradient(180deg, rgba(15,29,48,.94), rgba(6,16,29,.985)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.032),
+      0 10px 26px rgba(0,0,0,.18) !important;
+  }
+
+  .operationCard,
+  .guideCard {
+    padding: .60rem .64rem !important;
+  }
+
+  .compactRowHead strong,
+  .screenRow strong,
+  .screenRowStatic strong {
+    font-size: .88rem !important;
+    letter-spacing: -.025em;
+  }
+
+  .compactRowHead span:not(.badge),
+  .compactRowMeta span,
+  .screenRow span,
+  .screenRowStatic span,
+  .guideDetail p,
+  .ledgerItem span {
+    color: rgba(150,160,174,.82) !important;
+  }
+
+  .compactRowMeta strong,
+  .screenRow b,
+  .screenRowStatic b,
+  .ledgerItem b,
+  .checkRow strong {
+    color: #a9ee5f !important;
+    text-shadow: 0 0 14px rgba(169,238,95,.08);
+  }
+
+  .badge.ok,
+  .ok {
+    color: #bbf3cc !important;
+    background: rgba(46,190,113,.105) !important;
+    border-color: rgba(46,190,113,.20) !important;
+  }
+
+  .badge.info,
+  .info {
+    color: #b9d7ff !important;
+    background: rgba(68,128,214,.115) !important;
+    border-color: rgba(116,169,255,.18) !important;
+  }
+
+  .badge.warn,
+  .warn {
+    color: #f4dca7 !important;
+    background: rgba(217,154,33,.105) !important;
+    border-color: rgba(217,154,33,.20) !important;
+  }
+
+  .statusTabs .statusTabActive,
+  .innerTabs .innerTabActive,
+  .contactSwitch button[aria-pressed="true"] {
+    background: linear-gradient(145deg, #baf66c, #86cf24) !important;
+    color: #06100b !important;
+    box-shadow: 0 7px 16px rgba(141,215,42,.12) !important;
+  }
+
+  .statusTabs,
+  .innerTabs,
+  .contactSwitch {
+    background: rgba(255,255,255,.024) !important;
+    border-color: rgba(255,255,255,.06) !important;
+  }
+
+  .settingsRow > span {
+    background: linear-gradient(145deg, #baf66c, #86cf24) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 7px 16px rgba(141,215,42,.10) !important;
+  }
+
+  .settingsRow small {
+    color: rgba(150,160,174,.78) !important;
+  }
+
+  .clientScreenPanel,
+  .panel {
+    border-color: rgba(255,255,255,.075) !important;
+    background:
+      radial-gradient(circle at 94% 6%, rgba(141,215,42,.035), transparent 28%),
+      linear-gradient(180deg, rgba(15,29,48,.99), rgba(6,16,29,.995)) !important;
+    box-shadow:
+      0 24px 66px rgba(0,0,0,.56),
+      inset 0 1px 0 rgba(255,255,255,.04) !important;
+  }
+
+  .clientScreenPanel .panelHead button {
+    border-radius: 999px !important;
+    background: rgba(255,255,255,.032) !important;
+  }
+
+  .clientScreenTotals div,
+  .accountTotals div,
+  .moduleSummaryGrid div,
+  .ledgerItem,
+  .checkRow {
+    border-color: rgba(255,255,255,.06) !important;
+    background: rgba(255,255,255,.028) !important;
+  }
+
+  .stickyClientActions button:first-child,
+  .quickActionList button:first-child,
+  .formFooter button,
+  .actions button:first-child {
+    background: linear-gradient(145deg, #baf66c, #86cf24) !important;
+    color: #06100b !important;
+    box-shadow: 0 10px 22px rgba(141,215,42,.12) !important;
+  }
+
+  .moreGrid {
+    padding-bottom: .85rem !important;
+  }
+}

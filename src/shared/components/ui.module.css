@@ -69,3 +69,26 @@
   border-color: rgba(155,231,45,.30) !important;
   box-shadow: 0 0 0 3px rgba(155,231,45,.06) !important;
 }
+
+/* v25 shared controls: verde más fino y glow controlado */
+.primary {
+  background: linear-gradient(145deg, #baf66c, #86cf24) !important;
+  border-color: rgba(232,255,178,.28) !important;
+  box-shadow: 0 10px 22px rgba(141,215,42,.12) !important;
+}
+.primary:hover {
+  box-shadow: 0 12px 28px rgba(141,215,42,.16) !important;
+}
+.secondary {
+  background: rgba(141,215,42,.045) !important;
+  color: #baf66c !important;
+  border-color: rgba(141,215,42,.14) !important;
+}
+.ghost {
+  background: rgba(255,255,255,.028) !important;
+  border-color: rgba(255,255,255,.065) !important;
+}
+.input:focus, .select:focus, .textarea:focus {
+  border-color: rgba(141,215,42,.25) !important;
+  box-shadow: 0 0 0 3px rgba(141,215,42,.045) !important;
+}

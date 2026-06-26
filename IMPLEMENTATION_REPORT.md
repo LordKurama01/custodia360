@@ -73,3 +73,15 @@ Advertencias:
 - Usar Node 20 en local/Render.
 - La separación multi-tenant queda preparada visual y documentalmente; la base real debe aplicar `tenant_id`/`owner_id` y RLS antes de producción real.
 - Las secciones fuera de Fase 1 deben mantenerse en construcción hasta tener CRUD y permisos reales.
+
+
+## v14 — App mobile completa
+
+- Se agregó navegación owner mobile completa: Mesa, Clientes, Guías, Cuenta y Más.
+- Se separó Cliente / planilla de Cuenta corriente para evitar confusión operativa.
+- Se agregó vista Cuenta corriente dedicada a pagos parciales, saldos, guías a reintegrar y dinero a cuenta.
+- Se incorporó Próxima acción en mesa desktop y cards mobile.
+- Se agregaron acciones rápidas mobile: Movimiento, Guía, Cobrar y A cuenta.
+- Se corrigió el bottom nav cliente para usar botones reales con estilos activos.
+- Se agregaron accesos rápidos cliente desde Inicio: Pedidos, Pagos y Ayuda.
+- Se mantiene Fase 1: Control de Bultos + Cuenta Corriente. No se agregan módulos fuera de alcance.

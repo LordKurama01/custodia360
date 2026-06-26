@@ -261,7 +261,8 @@
   backdrop-filter: blur(22px);
 }
 
-.clientBottomNav a {
+.clientBottomNav a,
+.clientBottomNav button {
   min-height: 48px;
   display: grid;
   place-items: center;
@@ -272,7 +273,8 @@
   border-radius: 16px;
 }
 
-.clientBottomNav a span {
+.clientBottomNav a span,
+.clientBottomNav button span {
   width: 24px;
   height: 24px;
   display: grid;
@@ -284,9 +286,100 @@
   font-size: 13px;
 }
 
-.clientBottomNav a strong {
+.clientBottomNav a strong,
+.clientBottomNav button strong {
   font-size: 10px;
   line-height: 1;
+}
+
+
+.clientBottomNav button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.clientBottomNav .navActive {
+  color: #fff;
+  background: rgba(154, 255, 0, .08);
+}
+
+.clientBottomNav .navActive span {
+  color: #07100d;
+  background: var(--c360-lemon);
+  box-shadow: 0 0 26px rgba(154, 255, 0, .25);
+}
+
+.guideRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .45rem;
+  align-items: stretch;
+}
+
+.guideRow button {
+  min-height: 3.1rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .85rem;
+  color: var(--c360-ink-2);
+  background: rgba(255,255,255,.035);
+  text-align: left;
+  font-family: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.guideRow button:first-child {
+  display: grid;
+  gap: .12rem;
+  padding: .62rem .7rem;
+}
+
+.guideRow button:last-child {
+  padding: 0 .72rem;
+  color: #07100d;
+  background: var(--c360-lemon);
+  text-align: center;
+}
+
+.guideRow strong { color: #fff; }
+.guideRow button:last-child strong { color: #07100d; }
+.guideRow span { color: var(--c360-muted); font-size: .76rem; }
+
+.modalActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
+
+/* v14 cliente: app completa, navegación abajo y lectura en 5 segundos */
+.quickClientStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+}
+
+.quickClientStrip button {
+  min-height: 2.65rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .82rem;
+  color: var(--c360-ink-2);
+  background: rgba(255,255,255,.04);
+  font-size: .76rem;
+  font-weight: 950;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.quickClientStrip button:first-child {
+  color: #07100d;
+  background: var(--c360-lemon);
+}
+
+@media (max-width: 420px) {
+  .quickClientStrip { grid-template-columns: 1fr; }
+  .modalActions { grid-template-columns: 1fr; }
 }
 
 @media (min-width: 768px) {

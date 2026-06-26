@@ -49,7 +49,7 @@
   top: 78px;
   z-index: 15;
   display: grid;
-  grid-template-columns: 1fr 1fr 58px 1fr 1fr;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
   gap: .4rem;
   margin: .8rem 0;
@@ -652,7 +652,7 @@
   .tableHead,
   .tableRow {
     display: grid;
-    grid-template-columns: minmax(14rem, 1.4fr) minmax(10rem, .9fr) minmax(11rem, .9fr) minmax(9rem, .7fr) minmax(15rem, auto);
+    grid-template-columns: minmax(13rem, 1.35fr) minmax(9rem, .75fr) minmax(10rem, .8fr) minmax(7rem, .5fr) minmax(9rem, .8fr) minmax(13rem, auto);
     gap: .7rem;
     align-items: center;
   }
@@ -846,7 +846,7 @@
 
   .tableHead,
   .tableRow {
-    grid-template-columns: minmax(15rem, 1.45fr) minmax(9rem, .8fr) minmax(10rem, .85fr) minmax(8rem, .55fr) minmax(13rem, auto);
+    grid-template-columns: minmax(14rem, 1.35fr) minmax(8rem, .7fr) minmax(9rem, .78fr) minmax(7rem, .5fr) minmax(9rem, .75fr) minmax(12rem, auto);
   }
 
   .tableHead {
@@ -1253,4 +1253,143 @@
 .commandPanel input {
   min-height: 3rem;
   font-size: .96rem;
+}
+
+/* v14 mobile app completa: navegación abajo + acciones claras sin recortar funciones */
+.mobileQuickActions {
+  display: none;
+}
+
+.nextActionCell strong,
+.mobileNextAction strong {
+  color: var(--c360-lemon);
+}
+
+.nextActionCell small {
+  color: var(--c360-muted);
+}
+
+.mobileNextAction {
+  display: grid;
+  gap: .18rem;
+  padding: .58rem .65rem;
+  border: 1px solid rgba(154, 255, 0, .16);
+  border-radius: .8rem;
+  background: rgba(154, 255, 0, .045);
+}
+
+.mobileNextAction span {
+  color: var(--c360-muted);
+  font-size: .68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.mobileNextAction strong {
+  font-size: .9rem;
+}
+
+.accountOnlyGrid {
+  display: grid;
+  grid-template-columns: minmax(15rem, .34fr) 1fr;
+  gap: .75rem;
+  align-items: start;
+  margin-top: .8rem;
+}
+
+.accountHero {
+  grid-column: 1 / -1;
+}
+
+.utilityLink {
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 .9rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .8rem;
+  color: var(--c360-ink-2);
+  background: rgba(255,255,255,.04);
+  font-size: .8rem;
+  font-weight: 900;
+}
+
+@media (max-width: 960px) {
+  .accountOnlyGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .appTabs {
+    position: sticky;
+    top: 64px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .26rem;
+    padding: .32rem;
+  }
+
+  .appTabs .fabTab {
+    display: none;
+  }
+
+  .mobileQuickActions {
+    position: sticky;
+    top: 116px;
+    z-index: 14;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .34rem;
+    margin: .55rem 0;
+    padding: .45rem;
+    border: 1px solid var(--c360-line);
+    border-radius: .95rem;
+    background: rgba(6, 17, 31, .90);
+    backdrop-filter: blur(16px);
+  }
+
+  .mobileQuickActions button {
+    min-height: 2.25rem;
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: .72rem;
+    color: var(--c360-ink-2);
+    background: rgba(255,255,255,.045);
+    font-size: .66rem;
+    font-weight: 950;
+  }
+
+  .mobileQuickActions button:first-child {
+    color: #07100d;
+    background: var(--c360-lemon);
+  }
+
+  .mobileQuickActions button:disabled {
+    opacity: .42;
+  }
+
+  .accountOnlyGrid {
+    margin-top: .55rem;
+  }
+
+  .accountOnlyGrid .accountList {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(13rem, 76%);
+    overflow-x: auto;
+    padding-bottom: .2rem;
+  }
+
+  .ledgerTwoCols {
+    grid-template-columns: 1fr;
+  }
+
+  .clientSheetActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .clientSheetActions button {
+    flex: 1 1 0;
+  }
 }

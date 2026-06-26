@@ -18,9 +18,9 @@ const groups = [
     mode: "primary",
     items: [
       ["Mesa de control", "/owner/bultos#seguimiento"],
-      ["Clientes / planillas", "/owner/bultos#cuentas"],
+      ["Clientes / planillas", "/owner/bultos#clientes"],
       ["Guías", "/owner/bultos#guias"],
-      ["Cuenta corriente", "/owner/bultos#cuentas"],
+      ["Cuenta corriente", "/owner/bultos#cuenta"],
     ],
   },
   {
@@ -51,7 +51,10 @@ const groups = [
 ] as const;
 
 function normalizeBultosHash(hash?: string) {
-  return (hash ?? "").replace(/^#/, "").replace(/^\//, "").trim().toLowerCase() || "seguimiento";
+  const value = (hash ?? "").replace(/^#/, "").replace(/^\//, "").trim().toLowerCase() || "seguimiento";
+  if (["clientes", "cliente", "planillas", "cuentas"].includes(value)) return "cuentas";
+  if (["cuenta", "cuenta-corriente", "cta-corriente", "pagos", "cobros", "saldos"].includes(value)) return "cuenta";
+  return value;
 }
 
 function isActive(pathname: string, href: string, currentHash: string) {
@@ -199,21 +202,21 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
         <span>●</span>
         <strong>Mesa</strong>
       </Link>
-      <Link href="/owner/bultos#cuentas" onClick={() => dispatchBultosTab("/owner/bultos#cuentas")} className={currentHash === "cuentas" ? styles.mobileNavActive : ""}>
+      <Link href="/owner/bultos#clientes" onClick={() => dispatchBultosTab("/owner/bultos#clientes")} className={currentHash === "cuentas" ? styles.mobileNavActive : ""}>
         <span>▦</span>
         <strong>Clientes</strong>
-      </Link>
-      <Link href="/owner/bultos#nueva" onClick={() => dispatchBultosTab("/owner/bultos#nueva")} className={styles.mobileFab} aria-label="Nueva carga">
-        <span>+</span>
-        <strong>Nueva</strong>
       </Link>
       <Link href="/owner/bultos#guias" onClick={() => dispatchBultosTab("/owner/bultos#guias")} className={currentHash === "guias" ? styles.mobileNavActive : ""}>
         <span>≡</span>
         <strong>Guías</strong>
       </Link>
-      <Link href="/owner/bultos#cuentas" onClick={() => dispatchBultosTab("/owner/bultos#cuentas")} className={currentHash === "cuentas" ? styles.mobileNavActive : ""}>
+      <Link href="/owner/bultos#cuenta" onClick={() => dispatchBultosTab("/owner/bultos#cuenta")} className={currentHash === "cuenta" ? styles.mobileNavActive : ""}>
         <span>$</span>
-        <strong>Cuentas</strong>
+        <strong>Cuenta</strong>
+      </Link>
+      <Link href="/owner/bultos#mas" onClick={() => dispatchBultosTab("/owner/bultos#mas")} className={currentHash === "mas" ? styles.mobileNavActive : ""}>
+        <span>•••</span>
+        <strong>Más</strong>
       </Link>
     </nav>
   </div>;

@@ -72,3 +72,16 @@ NEXT_PUBLIC_APP_URL=https://custodia360.onrender.com
 ## v12 — Sistema guiado premium
 
 Esta versión incorpora visor cliente premium con estado único y fecha/hora, command palette, Fase 1 activa con módulos futuros en construcción, footer Prestige global y ajustes de flujo guiado para operación real.
+
+## v14 — App mobile completa
+
+Esta versión agrega la regla de producto mobile-first completa:
+
+- Cliente con bottom nav: Inicio, Pedidos, Guías, Pagos, Ayuda.
+- Owner con bottom nav: Mesa, Clientes, Guías, Cuenta, Más.
+- Cuenta corriente separada de Clientes / planillas.
+- Acciones rápidas mobile para operar desde celular.
+- Próxima acción visible para reducir decisiones manuales.
+- Más contiene configuración, permisos, dueños y acciones secundarias.
+
+Fase 1 continúa limitada a Control de Bultos + Cuenta Corriente Operativa.

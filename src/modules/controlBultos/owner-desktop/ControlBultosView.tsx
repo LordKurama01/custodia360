@@ -50,7 +50,7 @@ import styles from "./ControlBultosView.module.css";
 const today = () => new Date().toISOString().slice(0, 10);
 const accountOpenStatuses = new Set(["pendiente", "pagado_proveedor", "a_devolver", "mercaderia_agotada"]);
 
-type MainTab = "seguimiento" | "cuentas" | "guias" | "mas";
+type MainTab = "seguimiento" | "cuentas" | "guias" | "cuenta" | "mas";
 type QuickPanel = "cliente" | "operacion" | "guia" | "pago" | "especial" | null;
 
 type AccountPass = {
@@ -175,6 +175,15 @@ function guideChargeLabel(company: string | null | undefined, amount: number) {
     return `${formatMoney(charge)} incl. 2%`;
   }
   return formatMoney(charge);
+}
+
+function nextActionFor(operation: ControlOperation, account?: ClientAccount | null) {
+  if (!operation.operation_shipments.length) return "Cargar guía";
+  if (operation.operation_shipments.some((shipment) => !shipment.guide_number)) return "Completar guía";
+  if ((account?.passUsdPending ?? 0) > 0) return "Cobrar saldo";
+  if ((account?.specialPending.length ?? 0) > 0) return "Aplicar a cuenta";
+  if (operation.logistics_status !== "despachado") return "Cambiar estado";
+  return "Enviar WhatsApp";
 }
 
 function shipmentPassStatus(shipment: ControlShipment): AccountPass["status"] {
@@ -388,8 +397,12 @@ export function ControlBultosView() {
 
     const applyHash = (rawHash?: string) => {
       const hash = normalizeHash(rawHash ?? window.location.hash);
-      if (["cuentas", "clientes", "cliente", "planillas", "cuenta", "cuenta-corriente", "cta-corriente", "pagos"].includes(hash)) {
+      if (["cuentas", "clientes", "cliente", "planillas"].includes(hash)) {
         setActiveTab("cuentas");
+        return;
+      }
+      if (["cuenta", "cuenta-corriente", "cta-corriente", "pagos", "cobros", "saldos"].includes(hash)) {
+        setActiveTab("cuenta");
         return;
       }
       if (["guias", "guías", "guia", "guía"].includes(hash)) {
@@ -689,7 +702,7 @@ export function ControlBultosView() {
     if (target === "shipment") setShipmentForm((current) => ({ ...current, method, currency }));
   };
 
-  const goToTab = (tab: MainTab, hash = tab) => {
+  const goToTab = (tab: MainTab, hash: string = tab) => {
     setActiveTab(tab);
     if (typeof window !== "undefined") {
       window.history.replaceState(null, "", `${window.location.pathname}#${hash}`);
@@ -706,7 +719,7 @@ export function ControlBultosView() {
       </div>
       <div className={styles.topActions}>
         <Button variant="secondary" onClick={() => setCommandOpen(true)}>⌘K Buscar / acción</Button>
-        <Button variant="secondary" onClick={() => goToTab("cuentas")}>Clientes</Button>
+        <Button variant="secondary" onClick={() => goToTab("cuentas", "clientes")}>Clientes</Button>
         <Button onClick={() => openQuickPanel("operacion")}>+ Carga guiada</Button>
       </div>
     </section>
@@ -716,9 +729,9 @@ export function ControlBultosView() {
 
     <nav className={styles.appTabs} aria-label="Navegación operativa">
       <button className={activeTab === "seguimiento" ? styles.activeTab : ""} onClick={() => goToTab("seguimiento")}>Mesa</button>
-      <button id="cuentas" className={activeTab === "cuentas" ? styles.activeTab : ""} onClick={() => goToTab("cuentas")}>Clientes</button>
-      <button className={styles.fabTab} onClick={() => openQuickPanel("operacion")}>+</button>
+      <button id="cuentas" className={activeTab === "cuentas" ? styles.activeTab : ""} onClick={() => goToTab("cuentas", "clientes")}>Clientes</button>
       <button id="guias" className={activeTab === "guias" ? styles.activeTab : ""} onClick={() => goToTab("guias")}>Guías</button>
+      <button id="cuenta" className={activeTab === "cuenta" ? styles.activeTab : ""} onClick={() => goToTab("cuenta", "cuenta")}>Cuenta</button>
       <button className={activeTab === "mas" ? styles.activeTab : ""} onClick={() => goToTab("mas")}>Más</button>
     </nav>
 
@@ -735,6 +748,13 @@ export function ControlBultosView() {
         {logisticsStatusOptions.slice(0, 6).map((option) => <button key={option.value} className={filters.logistics_status === option.value ? styles.chipActive : ""} onClick={() => setFilters({ ...filters, logistics_status: option.value })}>{option.label}</button>)}
       </div>
     </Card>
+
+    <section className={styles.mobileQuickActions} aria-label="Acciones rápidas móvil">
+      <button type="button" onClick={() => openQuickPanel("operacion")}>+ Movimiento</button>
+      <button type="button" onClick={() => sideOperation && startShipment(sideOperation)} disabled={!sideOperation || !canEdit}>+ Guía</button>
+      <button type="button" onClick={() => sideOperation && startPayment(sideOperation)} disabled={!sideOperation || !canCollect}>Cobrar</button>
+      <button type="button" onClick={() => sideOperation && startMoneyOnAccount(sideOperation)} disabled={!sideOperation || !canEdit}>A cuenta</button>
+    </section>
 
     {activeTab === "seguimiento" ? <section className={styles.workflowRail} aria-label="Próximos pasos">
       <button type="button" onClick={() => openQuickPanel("operacion")}><span>1</span><strong>Movimiento</strong><small>Cliente, bultos y proveedor</small></button>
@@ -753,6 +773,7 @@ export function ControlBultosView() {
             <span>Etapa</span>
             <span>Cuenta</span>
             <span>Guías</span>
+            <span>Próxima acción</span>
             <span>Acciones</span>
           </div>
           {filteredOperations.length ? filteredOperations.map((operation) => {
@@ -774,6 +795,10 @@ export function ControlBultosView() {
               <div>
                 <strong>{operation.operation_shipments.length}</strong>
                 <small>{guideNumbers(operation)}</small>
+              </div>
+              <div className={styles.nextActionCell}>
+                <strong>{nextActionFor(operation, account)}</strong>
+                <small>Acción recomendada</small>
               </div>
               <div className={styles.rowActions}>
                 <button type="button" onClick={(event) => { event.stopPropagation(); setFocusedOperationId(operation.id); }}>Ver</button>
@@ -804,6 +829,10 @@ export function ControlBultosView() {
                 <span>Pendiente</span>
                 <strong>{canSeeMoney ? moneyUsd(account?.passUsdPending ?? 0) : "-"}</strong>
                 <small>{guideNumbers(operation)}</small>
+              </div>
+              <div className={styles.mobileNextAction}>
+                <span>Próxima acción</span>
+                <strong>{nextActionFor(operation, account)}</strong>
               </div>
               <div className={styles.actionsCompact}>
                 <Button variant="secondary" onClick={() => setDetailOperation(operation)}>Ver</Button>
@@ -925,6 +954,80 @@ export function ControlBultosView() {
       </Card> : null}
     </section> : null}
 
+    {activeTab === "cuenta" && !loading ? <section className={styles.accountOnlyGrid}>
+      <Card className={styles.accountHero}>
+        <div className={styles.cardHead}>
+          <div><p>Cuenta corriente</p><h3>Saldos, pagos parciales y dinero a cuenta</h3></div>
+          <Button onClick={() => selectedAccount?.operations[0] && startPayment(selectedAccount.operations[0])} disabled={!selectedAccount?.operations[0] || !canCollect}>Registrar pago</Button>
+        </div>
+        <div className={styles.accountTotals}>
+          <div><span>Pases pendientes</span><strong>{canSeeMoney ? moneyUsd(kpis.passUsd) : "-"}</strong><small>{canSeeMoney ? formatMoney(kpis.passUsd * DEFAULT_DOLLAR_RATE) : "Sin permiso financiero"}</small></div>
+          <div><span>Guías a reintegrar</span><strong>{canSeeMoney ? formatMoney(kpis.guideArs) : "-"}</strong><small>{kpis.pendingPasses} pases abiertos</small></div>
+          <div><span>Dinero a cuenta / especiales</span><strong>{canSeeMoney ? formatMoney(kpis.specialArs) : "-"}</strong><small>Movimientos abiertos</small></div>
+        </div>
+      </Card>
+
+      <div className={styles.accountList}>
+        <div className={styles.accountListTitle}>
+          <strong>Clientes con saldo</strong>
+          <span>Seleccioná un cliente para cobrar, aplicar dinero a cuenta o enviar resumen por WhatsApp.</span>
+        </div>
+        {accounts.map((account) => <button key={account.clientId} className={`${styles.accountRow} ${selectedAccount?.clientId === account.clientId ? styles.accountActive : ""}`} onClick={() => setSelectedAccountId(account.clientId)}>
+          <span>{account.clientName}</span>
+          <strong>{moneyUsd(account.passUsdPending)}</strong>
+          <small>{account.pendingPasses.length} pases · {formatMoney(account.guideArsPending + account.specialArsPending)} ARS · {account.payments.length} pagos</small>
+        </button>)}
+      </div>
+
+      {selectedAccount ? <Card className={styles.accountDetail}>
+        <div className={styles.clientSheetHead}>
+          <div>
+            <p>Cliente seleccionado</p>
+            <h3>{selectedAccount.clientName}</h3>
+            <span>Cuenta viva: pases, guías a reintegrar, pagos y movimientos especiales.</span>
+          </div>
+          <div className={styles.clientSheetActions}>
+            <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startPayment(selectedAccount.operations[0])} disabled={!canCollect || !selectedAccount.operations[0]}>Cobrar</Button>
+            <Button variant="secondary" onClick={() => selectedAccount.operations[0] && startMoneyOnAccount(selectedAccount.operations[0])} disabled={!canEdit || !selectedAccount.operations[0]}>Dinero a cuenta</Button>
+            <Button variant="ghost" onClick={() => copyWhatsAppAccount(selectedAccount)}>WhatsApp</Button>
+          </div>
+        </div>
+        <div className={styles.ledgerTwoCols}>
+          <div className={styles.ledger}>
+            <h4>Pases pendientes / parciales</h4>
+            {selectedAccount.pendingPasses.length ? selectedAccount.pendingPasses.map((item) => <div key={item.id} className={styles.ledgerItem}>
+              <div><strong>{item.guideNumber}</strong><span>{item.provider} · {item.company} · pagado {moneyUsd(item.paidUsd)}</span></div>
+              <b>{moneyUsd(item.balanceUsd)}</b>
+            </div>) : <p>Sin pases pendientes.</p>}
+          </div>
+          <div className={styles.ledger}>
+            <h4>Pagos registrados</h4>
+            {selectedAccount.payments.length ? selectedAccount.payments.slice(0, 8).map((payment) => <div key={payment.id} className={styles.ledgerItem}>
+              <div><strong>{formatDate(payment.paid_at)}</strong><span>{payment.concept} · {paymentMethodLabels[payment.method]}</span></div>
+              <b>{payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)}</b>
+            </div>) : <p>Sin pagos registrados.</p>}
+          </div>
+        </div>
+
+        <div className={styles.ledgerTwoCols}>
+          <div className={styles.ledger}>
+            <h4>Guías a reintegrar</h4>
+            {selectedAccount.guideReimbursements.length ? selectedAccount.guideReimbursements.map((item) => <div key={item.id} className={styles.ledgerItem}>
+              <div><strong>{item.guideNumber}</strong><span>{item.operationCode} · {item.company}</span></div>
+              <b>{formatMoney(item.amountArs)}</b>
+            </div>) : <p>Sin guías a reintegrar.</p>}
+          </div>
+          <div className={styles.ledger}>
+            <h4>Dinero a cuenta / especiales</h4>
+            {selectedAccount.specialPending.length ? selectedAccount.specialPending.map((item) => <div key={item.id} className={styles.ledgerItem}>
+              <div><strong>{movementLabel(item)}</strong><span>{item.provider_name} · {item.status.replaceAll("_", " ")}</span></div>
+              <b>{item.currency === "ARS" ? formatMoney(item.amount) : moneyUsd(item.amount)}</b>
+            </div>) : <p>Sin dinero a cuenta abierto.</p>}
+          </div>
+        </div>
+      </Card> : <Card className={styles.empty}>No hay cuentas para mostrar.</Card>}
+    </section> : null}
+
     {activeTab === "guias" && !loading ? <section className={styles.guideGrid}>
       {filteredOperations.flatMap((operation) => operation.operation_shipments.map((shipment) => ({ operation, shipment }))).map(({ operation, shipment }) => <Card key={shipment.id} className={styles.guideCard}>
         <div className={styles.operationCardHead}>
@@ -952,6 +1055,10 @@ export function ControlBultosView() {
           <Button onClick={() => openQuickPanel("cliente")}>Crear cliente</Button>
           <Button onClick={() => openQuickPanel("operacion")}>Nueva operación</Button>
           <Button variant="secondary" onClick={() => filteredOperations[0] && startSpecial(filteredOperations[0])}>Movimiento especial</Button>
+          <Button variant="secondary" onClick={() => goToTab("cuenta", "cuenta")}>Cuenta corriente</Button>
+          <a className={styles.utilityLink} href="/owner/configuracion">Configuración</a>
+          <a className={styles.utilityLink} href="/owner/permisos">Permisos</a>
+          <a className={styles.utilityLink} href="/platform">Dueños</a>
         </div>
       </Card>
     </section> : null}

@@ -241,6 +241,11 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
         <button className={styles.primaryAction} type="button" onClick={() => setActiveTab("guias")}>Ver guías</button>
         <a className={styles.secondaryAction} href={whatsappHref(contextMessage("general", data.client.name))} target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
       </div>
+      <div className={styles.quickClientStrip} aria-label="Accesos rápidos cliente">
+        <button type="button" onClick={() => setActiveTab("pedidos")}>Mis pedidos</button>
+        <button type="button" onClick={() => setActiveTab("pagos")}>Ver pagos</button>
+        <button type="button" onClick={() => setActiveTab("ayuda")}>Ayuda</button>
+      </div>
       <details className={styles.statusHistory}>
         <summary>Ver historial del pedido</summary>
         <div className={styles.timelineList}>

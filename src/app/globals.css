@@ -30,3 +30,118 @@ code { background: rgba(183,255,60,.10); color: var(--c360-lemon-2); padding: 2p
   gap:8px;
 }
 .mobile-card p { margin:0; color:var(--c360-muted); font-size:13px; }
+
+:root {
+  --prestige-footer-height: 36px;
+  --prestige-footer-mobile-height: 34px;
+  --prestige-footer-bg: rgba(7, 18, 34, 0.98);
+  --prestige-footer-border: rgba(215, 179, 86, 0.22);
+  --prestige-footer-text: rgba(255, 255, 255, 0.92);
+}
+
+body {
+  padding-bottom: calc(var(--prestige-footer-height) + 4px);
+}
+
+.main-layout,
+.app-shell,
+.page,
+main {
+  padding-bottom: calc(var(--prestige-footer-height) + 4px);
+}
+
+.prestige-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--prestige-footer-height);
+  z-index: 999;
+  background: var(--prestige-footer-bg);
+  border-top: 1px solid var(--prestige-footer-border);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.prestige-footer-inner {
+  width: 100%;
+  height: var(--prestige-footer-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--prestige-footer-text);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.prestige-footer-inner:hover {
+  color: #ffffff;
+}
+
+.prestige-diamond {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  display: block;
+}
+
+@media (max-width: 720px) {
+  body {
+    padding-bottom: calc(var(--prestige-footer-mobile-height) + 4px);
+  }
+
+  .main-layout,
+  .app-shell,
+  .page,
+  main {
+    padding-bottom: calc(var(--prestige-footer-mobile-height) + 4px);
+  }
+
+  .prestige-footer,
+  .prestige-footer-inner {
+    height: var(--prestige-footer-mobile-height);
+  }
+
+  .prestige-diamond {
+    width: 17px;
+    height: 17px;
+  }
+
+  .prestige-footer-inner {
+    font-size: 11.5px;
+  }
+}
+
+.whatsapp-float,
+.cart-float,
+.chat-float,
+.ai-float,
+.floating-action,
+.floating-button,
+.fab,
+.genesis-float,
+.quick-action,
+.mobile-action {
+  bottom: 54px;
+  z-index: 1001;
+}
+
+@media (max-width: 720px) {
+  .whatsapp-float,
+  .cart-float,
+  .chat-float,
+  .ai-float,
+  .floating-action,
+  .floating-button,
+  .fab,
+  .genesis-float,
+  .quick-action,
+  .mobile-action {
+    bottom: 52px;
+  }
+}

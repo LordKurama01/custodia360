@@ -324,6 +324,7 @@ export function ControlBultosView() {
   const [actionsOperation, setActionsOperation] = useState<ControlOperation | null>(null);
   const [focusedOperationId, setFocusedOperationId] = useState<string | null>(null);
   const [filters, setFilters] = useState({ query: "", logistics_status: "", financial_status: "" });
+  const [commandOpen, setCommandOpen] = useState(false);
 
   const demoMode = isDemoMode();
   const canEdit = canEditOperations(profile?.role);
@@ -358,6 +359,21 @@ export function ControlBultosView() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandOpen(true);
+      }
+      if (event.key === "Escape") {
+        setCommandOpen(false);
+        setActionsOperation(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   useEffect(() => {
@@ -641,6 +657,7 @@ export function ControlBultosView() {
         <span>{demoMode ? "Demo" : "Operación real"} · dólar hoy ${DEFAULT_DOLLAR_RATE} · clientes, bultos, guías, cuenta corriente y próxima acción.</span>
       </div>
       <div className={styles.topActions}>
+        <Button variant="secondary" onClick={() => setCommandOpen(true)}>⌘K Buscar / acción</Button>
         <Button variant="secondary" onClick={() => setActiveTab("cuentas")}>Clientes</Button>
         <Button onClick={() => openQuickPanel("operacion")}>+ Carga guiada</Button>
       </div>
@@ -888,7 +905,6 @@ export function ControlBultosView() {
           <Button onClick={() => openQuickPanel("operacion")}>Nueva operación</Button>
           <Button variant="secondary" onClick={() => filteredOperations[0] && startSpecial(filteredOperations[0])}>Movimiento especial</Button>
         </div>
-        <small>The Prestige Group · firma discreta</small>
       </Card>
     </section> : null}
 
@@ -1025,5 +1041,18 @@ export function ControlBultosView() {
       </div>
       <div className={styles.actions}><Button variant="secondary" onClick={() => startPayment(detailOperation)}>Cobrar</Button><Button variant="ghost" onClick={() => startMoneyOnAccount(detailOperation)}>Dinero a cuenta</Button><Button variant="ghost" onClick={() => startShipment(detailOperation)}>Agregar guía</Button><Button variant="ghost" onClick={() => startSpecial(detailOperation)}>Especial</Button><Button variant="ghost" onClick={() => copyClientLink(detailOperation)}>Copiar link</Button></div>
     </section></div> : null}
+
+    {commandOpen ? <div className={styles.panelOverlay}><section className={`${styles.panel} ${styles.commandPanel}`}>
+      <div className={styles.panelHead}><div><p>Comando rápido</p><h3>Buscar o ejecutar acción</h3></div><button type="button" onClick={() => setCommandOpen(false)}>Cerrar</button></div>
+      <Input autoFocus value={filters.query} onChange={(event) => { setFilters({ ...filters, query: event.target.value }); setActiveTab("seguimiento"); }} placeholder="Cliente, guía, proveedor, destinatario..." />
+      <div className={styles.quickActionList}>
+        <Button onClick={() => { openQuickPanel("operacion"); setCommandOpen(false); }}>Nuevo movimiento guiado</Button>
+        <Button variant="secondary" onClick={() => { setActiveTab("cuentas"); setCommandOpen(false); }}>Abrir clientes / planillas</Button>
+        <Button variant="secondary" onClick={() => { setActiveTab("guias"); setCommandOpen(false); }}>Abrir guías</Button>
+        <Button variant="ghost" onClick={() => { if (sideOperation) startPayment(sideOperation); setCommandOpen(false); }} disabled={!sideOperation || !canCollect}>Cobrar cliente seleccionado</Button>
+        <Button variant="ghost" onClick={() => { if (sideOperation) startMoneyOnAccount(sideOperation); setCommandOpen(false); }} disabled={!sideOperation || !canEdit}>Dinero a cuenta</Button>
+      </div>
+    </section></div> : null}
+
   </OwnerDesktopShell>;
 }

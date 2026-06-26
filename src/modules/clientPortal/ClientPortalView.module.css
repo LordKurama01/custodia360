@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
   padding: 1rem;
-  padding-bottom: 7.4rem;
+  padding-bottom: 8.4rem;
   color: var(--c360-ink);
   background:
     radial-gradient(circle at 18% -12%, rgba(154, 255, 0, .10), transparent 30%),
@@ -248,7 +248,7 @@
   position: fixed;
   left: 10px;
   right: 10px;
-  bottom: 10px;
+  bottom: 44px;
   z-index: 45;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -290,7 +290,7 @@
 }
 
 @media (min-width: 768px) {
-  .page { padding: 1.5rem; padding-bottom: 2rem; }
+  .page { padding: 1.5rem; padding-bottom: 3.1rem; }
   .heroStatus, .sectionCard, .notFound { max-width: 880px; margin-left: auto; margin-right: auto; padding: 1.1rem; }
   .heroStatus h1 { font-size: 2rem; }
   .clientBottomNav { display: none; }
@@ -302,6 +302,85 @@
   .detailGrid {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* v12 visor premium: estado unico + historial oculto */
+.privateStateCard {
+  display: grid;
+  gap: .65rem;
+  padding: .78rem;
+  border: 1px solid rgba(154, 255, 0, .14);
+  border-radius: .95rem;
+  background:
+    radial-gradient(circle at 100% 0, rgba(154, 255, 0, .10), transparent 32%),
+    rgba(255, 255, 255, .028);
+}
+
+.statusDisplay {
+  display: grid;
+  gap: .18rem;
+  padding: .72rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .85rem;
+  background: rgba(3, 10, 19, .36);
+}
+
+.statusDisplay strong {
+  color: #fff;
+  font-size: 1.55rem;
+  letter-spacing: -.04em;
+}
+
+.statusDisplay small {
+  color: var(--c360-muted);
+  font-size: .76rem;
+}
+
+.statusHistory {
+  padding: .72rem;
+  border: 1px solid var(--c360-line);
+  border-radius: .85rem;
+  background: rgba(255, 255, 255, .028);
+}
+
+.statusHistory summary {
+  cursor: pointer;
+  color: #fff;
+  font-weight: 950;
+}
+
+.timelineList {
+  display: grid;
+  gap: .55rem;
+  margin-top: .7rem;
+}
+
+.timelineList div {
+  position: relative;
+  display: grid;
+  gap: .12rem;
+  padding-left: 1.1rem;
+}
+
+.timelineList i {
+  position: absolute;
+  top: .24rem;
+  left: 0;
+  width: .55rem;
+  height: .55rem;
+  border-radius: 999px;
+  background: var(--c360-lemon);
+  box-shadow: 0 0 18px rgba(154, 255, 0, .35);
+}
+
+.timelineList strong { color: #fff; font-size: .86rem; }
+.timelineList span, .timelineList small { color: var(--c360-muted); font-size: .76rem; line-height: 1.32; }
+
+.sectionHead p {
+  margin: .2rem 0 0;
+  color: var(--c360-muted);
+  font-size: .78rem;
 }
 
 /* v11 portal cliente: pestañas reales, guías en modal y mensajes contextuales */
@@ -437,7 +516,7 @@
 .guideModalOverlay {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 1200;
   display: grid;
   align-items: end;
   padding: .65rem;

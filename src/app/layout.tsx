@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { AppStateProvider } from "@/shared/state/AppStateProvider";
 import { CookieBanner } from "@/shared/components/CookieBanner";
+import { PrestigeFooter } from "@/shared/components/PrestigeFooter";
 
 export const dynamic = "force-dynamic";
 
@@ -39,5 +40,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <html lang="es"><body><AppStateProvider>{children}</AppStateProvider><CookieBanner /></body></html>;
+  return <html lang="es"><body><AppStateProvider>{children}</AppStateProvider><CookieBanner /><PrestigeFooter /></body></html>;
 }

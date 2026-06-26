@@ -10,7 +10,6 @@ import styles from "./LoginView.module.css";
 
 const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "+54 9 3757 65-3075";
 const whatsappLink = process.env.NEXT_PUBLIC_WHATSAPP_LINK ?? "https://wa.me/5493757653075";
-const prestigeUrl = process.env.NEXT_PUBLIC_PRESTIGE_URL ?? "https://theprestige-group.com/";
 
 export function LoginView() {
   const searchParams = useSearchParams();
@@ -127,7 +126,6 @@ export function LoginView() {
       <footer className={styles.footer}>
         <span>Custodia360 · Sistema privado operativo</span>
         <a href={whatsappLink} target="_blank" rel="noreferrer">{whatsappNumber}</a>
-        <a href={prestigeUrl} target="_blank" rel="noopener noreferrer">The Prestige Group</a>
       </footer>
     </main>
   );

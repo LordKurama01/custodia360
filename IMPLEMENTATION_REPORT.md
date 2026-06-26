@@ -45,3 +45,31 @@
 - `npm install`: OK. Warning esperado por Node local v22; el proyecto requiere Node 20.x.
 - `npm run typecheck`: OK.
 - `npm run build`: compiló correctamente, con warning conocido de Supabase en Edge Runtime; el proceso fue cortado por timeout durante `Collecting page data` en el sandbox. Validar build final en local/Render con Node 20.
+
+## v12 — Sistema guiado premium
+
+Cambios aplicados:
+
+- Portal cliente convertido en visor privado premium.
+- Estado cliente reducido a estado actual + fecha/hora de última actualización.
+- Historial de estados oculto en acordeón “Ver historial del pedido”.
+- Se removió la línea de estados abierta para cliente, evitando mostrar la cocina interna.
+- Guías mantenidas como documentos privados con detalle en modal full screen.
+- WhatsApp contextual mantenido por landing, estado, guía, pagos y ayuda.
+- Mesa de control suma command palette / buscador rápido con `Ctrl + K` para buscar y ejecutar acciones.
+- Menús futuros del sidebar quedan en gris y como “En construcción”, sin simular función activa.
+- Footer Prestige global implementado con diamante dorado y texto único `The Prestige Group`.
+- Se eliminaron firmas Prestige anteriores duplicadas dentro de login, owner mobile y pantallas internas.
+- Bottom nav mobile ajustado para no quedar tapado por el footer fijo.
+
+Validación ejecutada:
+
+- `npm install`: OK con warning por Node 22; el proyecto solicita Node 20.x.
+- `npm run typecheck`: OK.
+- `npm run build`: compilación OK con warning de Supabase/Edge Runtime; el proceso quedó cortado por timeout en `Collecting page data` dentro del sandbox.
+
+Advertencias:
+
+- Usar Node 20 en local/Render.
+- La separación multi-tenant queda preparada visual y documentalmente; la base real debe aplicar `tenant_id`/`owner_id` y RLS antes de producción real.
+- Las secciones fuera de Fase 1 deben mantenerse en construcción hasta tener CRUD y permisos reales.

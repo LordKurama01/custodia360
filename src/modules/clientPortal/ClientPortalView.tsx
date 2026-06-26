@@ -8,7 +8,7 @@ import {
   guidePaymentLabels,
   paymentMethodLabels,
 } from "@/modules/controlBultos/types";
-import { formatDate, formatMoney } from "@/shared/lib/format";
+import { formatDate, formatDateTime, formatMoney } from "@/shared/lib/format";
 import type { Currency, FinancialStatus, GuidePaidBy, GuidePaymentStatus, LogisticsStatus, PaymentMethod } from "@/infrastructure/supabase/types";
 import { BrandLockup } from "@/shared/components/BrandLockup";
 import styles from "./ClientPortalView.module.css";
@@ -44,6 +44,12 @@ type PortalPayment = {
   note: string | null;
 };
 
+type PortalStatusEvent = {
+  label: string;
+  at: string;
+  note?: string | null;
+};
+
 type PortalOperation = {
   id: string;
   public_code: string;
@@ -60,6 +66,7 @@ type PortalOperation = {
   balance_amount: number;
   shipments: PortalShipment[];
   payments: PortalPayment[];
+  status_history?: PortalStatusEvent[];
 };
 
 export type ClientPortalData = {
@@ -139,7 +146,8 @@ function whatsappHref(message: string) {
   return `https://wa.me/5493757653075?text=${encodeURIComponent(message)}`;
 }
 
-function contextMessage(type: "general" | "guide" | "payment" | "help", clientName: string, guideNumber?: string | null) {
+function contextMessage(type: "landing" | "general" | "guide" | "payment" | "help", clientName: string, guideNumber?: string | null) {
+  if (type === "landing") return "Hola, quiero hacer un pedido o consultar por Custodia360.";
   if (type === "guide") return `Hola, quiero consultar por la guía ${guideNumber || "de mi pedido"}.`;
   if (type === "payment") return "Hola, quiero consultar mi saldo pendiente y pagos registrados.";
   if (type === "help") return "Hola, necesito ayuda con mi pedido en Custodia360.";
@@ -149,6 +157,33 @@ function contextMessage(type: "general" | "guide" | "payment" | "help", clientNa
 function copyText(value: string) {
   if (typeof navigator === "undefined" || !navigator.clipboard) return;
   void navigator.clipboard.writeText(value);
+}
+
+function inferStatusEvents(operation?: PortalOperation | null): PortalStatusEvent[] {
+  if (!operation) return [];
+  const base = new Date(operation.operation_date || new Date().toISOString());
+  const at = (hours: number, minutes: number) => {
+    const next = new Date(base);
+    next.setHours(hours, minutes, 0, 0);
+    return next.toISOString();
+  };
+  if (operation.status_history?.length) return [...operation.status_history].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  const events: PortalStatusEvent[] = [
+    { label: "Pedido en preparación", at: at(9, 20), note: "Movimiento cargado en mesa operativa." },
+  ];
+  if (["deposito_a", "deposito_b", "despachado"].includes(operation.logistics_status)) {
+    events.push({ label: "Pedido en tránsito", at: at(14, 35), note: "El pedido salió de preparación." });
+  }
+  if (operation.logistics_status === "despachado") {
+    events.push({ label: "Pedido despachado", at: operation.shipments[0]?.dispatch_date ? at(18, 10) : at(18, 10), note: "Guías disponibles para consultar." });
+  }
+  return events.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+}
+
+function currentStatusCopy(status: LogisticsStatus | undefined, guidesCount: number) {
+  if (status === "despachado") return `Tu pedido ya fue despachado. Tenés ${guidesCount} guías disponibles.`;
+  if (status === "deposito_a" || status === "deposito_b") return "Tu pedido está en tránsito interno. Te avisamos cuando se despache.";
+  return "Tu pedido está en preparación. Te avisamos cuando tenga guías disponibles.";
 }
 
 export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
@@ -161,7 +196,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
         <span>Custodia360</span>
         <h1>No encontramos tu consulta</h1>
         <p>El código no existe, expiró o todavía no tenés acceso activado. Si necesitás hacer un pedido o consultar, escribinos por WhatsApp.</p>
-        <a className={styles.primaryAction} href={whatsappHref("Hola, quiero hacer un pedido o consultar por Custodia360.")} target="_blank" rel="noreferrer">Hablar por WhatsApp</a>
+        <a className={styles.primaryAction} href={whatsappHref(contextMessage("landing", ""))} target="_blank" rel="noreferrer">Hablar por WhatsApp</a>
       </section>
     </main>;
   }
@@ -177,32 +212,46 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
   }))), [data.operations]);
   const lastOperation = data.operations[0];
   const visibleStatus = lastOperation ? clientLogisticsLabels[lastOperation.logistics_status] : "En preparación";
-  const lastUpdate = lastOperation?.operation_date ?? new Date().toISOString();
+  const statusEvents = inferStatusEvents(lastOperation);
+  const latestEvent = statusEvents[0];
+  const lastUpdate = latestEvent?.at ?? lastOperation?.operation_date ?? new Date().toISOString();
 
   return <main className={styles.page}>
     <header className={styles.headerCompact}>
-      <div className={styles.portalBrand}><BrandLockup subtitle="Consulta privada" /></div>
+      <div className={styles.portalBrand}><BrandLockup subtitle="Visor privado" /></div>
       <a className={styles.helpLink} href={whatsappHref(contextMessage("general", data.client.name))} target="_blank" rel="noreferrer">WhatsApp</a>
     </header>
 
     {activeTab === "inicio" ? <section className={styles.heroStatus}>
-      <span className={`${styles.badge} ${statusTone(lastOperation?.logistics_status ?? "para_retirar")}`}>{visibleStatus}</span>
-      <h1>Hola, {data.client.name}</h1>
-      <p>{lastOperation?.logistics_status === "despachado" ? `Tu pedido está despachado. Tenés ${allShipments.length} guías disponibles.` : "Tu pedido está en seguimiento privado."}</p>
-      <div className={styles.progressLine} aria-label="Estado del pedido">
-        <span className={styles.done}>Preparación</span>
-        <span className={lastOperation?.logistics_status === "deposito_a" || lastOperation?.logistics_status === "deposito_b" || lastOperation?.logistics_status === "despachado" ? styles.done : ""}>En tránsito</span>
-        <span className={lastOperation?.logistics_status === "despachado" ? styles.done : ""}>Despachado</span>
+      <div className={styles.privateStateCard}>
+        <span className={`${styles.badge} ${statusTone(lastOperation?.logistics_status ?? "para_retirar")}`}>Estado actual</span>
+        <h1>Hola, {data.client.name}</h1>
+        <div className={styles.statusDisplay}>
+          <strong>{visibleStatus}</strong>
+          <small>Actualizado: {formatDateTime(lastUpdate)}</small>
+        </div>
+        <p>{currentStatusCopy(lastOperation?.logistics_status, allShipments.length)}</p>
       </div>
+
       <div className={styles.heroMoney}>
-        <div><span>Pendiente actual</span><strong>{moneyUsd(pendingUsd)}</strong><small>{formatMoney(pendingUsd * DEFAULT_DOLLAR_RATE)} hoy</small></div>
-        <div><span>Guías</span><strong>{allShipments.length}</strong><small>Dólar ${DEFAULT_DOLLAR_RATE}</small></div>
+        <div><span>Saldo pendiente</span><strong>{moneyUsd(pendingUsd)}</strong><small>{formatMoney(pendingUsd * DEFAULT_DOLLAR_RATE)} hoy</small></div>
+        <div><span>Guías del pedido</span><strong>{allShipments.length}</strong><small>Dólar usado: ${DEFAULT_DOLLAR_RATE}</small></div>
       </div>
       <div className={styles.heroActions}>
         <button className={styles.primaryAction} type="button" onClick={() => setActiveTab("guias")}>Ver guías</button>
-        <a className={styles.secondaryAction} href={whatsappHref(contextMessage("general", data.client.name))} target="_blank" rel="noreferrer">Consultar</a>
+        <a className={styles.secondaryAction} href={whatsappHref(contextMessage("general", data.client.name))} target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
       </div>
-      <small className={styles.updated}>Última actualización: {formatDate(lastUpdate)}</small>
+      <details className={styles.statusHistory}>
+        <summary>Ver historial del pedido</summary>
+        <div className={styles.timelineList}>
+          {statusEvents.map((event) => <div key={`${event.label}-${event.at}`}>
+            <i />
+            <strong>{event.label}</strong>
+            <span>{formatDateTime(event.at)}</span>
+            {event.note ? <small>{event.note}</small> : null}
+          </div>)}
+        </div>
+      </details>
     </section> : null}
 
     {activeTab === "pedidos" ? <section className={styles.sectionCard}>
@@ -222,7 +271,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
 
     {activeTab === "guias" ? <section className={styles.sectionCard}>
       <div className={styles.sectionHead}>
-        <div><span>Guías disponibles</span><h2>Tocá una guía para abrir detalle</h2></div>
+        <div><span>Guías del pedido</span><h2>Documentos privados</h2><p>Tocá una guía para ver destinatario, condición y pase.</p></div>
         <strong>{allShipments.length}</strong>
       </div>
       <div className={styles.guideList}>
@@ -246,14 +295,14 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
         <div><span>Pendiente</span><strong>{moneyUsd(pendingUsd)}</strong><small>{formatMoney(pendingUsd * DEFAULT_DOLLAR_RATE)} hoy</small></div>
       </div>
       <details className={styles.accordion}>
-        <summary>Ver pagos registrados</summary>
+        <summary>Ver historial de pagos</summary>
         {data.operations.some((operation) => operation.payments.length) ? data.operations.flatMap((operation) => operation.payments.map((payment, index) => <div key={`${operation.id}-${index}`} className={styles.paymentRow}>
           <strong>{payment.concept}</strong>
-          <span>{paymentMethodLabels[payment.method]} · {payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)}</span>
+          <span>{paymentMethodLabels[payment.method]} · {payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)} · {formatDateTime(payment.paid_at)}</span>
         </div>)) : <p className={styles.empty}>Sin pagos visibles registrados.</p>}
       </details>
       <p className={styles.disclaimer}>El equivalente en pesos puede variar según el dólar del día.</p>
-      <a className={styles.secondaryAction} href={whatsappHref(contextMessage("payment", data.client.name))} target="_blank" rel="noreferrer">Consultar saldo</a>
+      <a className={styles.secondaryAction} href={whatsappHref(contextMessage("payment", data.client.name))} target="_blank" rel="noreferrer">Consultar saldo por WhatsApp</a>
     </section> : null}
 
     {activeTab === "ayuda" ? <section className={styles.sectionCard}>
@@ -283,7 +332,7 @@ export function ClientPortalView({ data }: { data: ClientPortalData | null }) {
           <div><span>Operación</span><strong>{selectedGuide.operationCode}</strong></div>
           <div><span>Destinatario</span><strong>{selectedGuide.recipient_name ?? "Sin cargar"}</strong></div>
           <div><span>DNI / CUIT</span><strong>{selectedGuide.recipient_identity_number ?? "Sin cargar"}</strong></div>
-          <div><span>Fecha despacho</span><strong>{formatDate(selectedGuide.dispatch_date ?? undefined)}</strong></div>
+          <div><span>Fecha despacho</span><strong>{formatDateTime(selectedGuide.dispatch_date ?? selectedGuide.operationDate)}</strong></div>
           <div><span>Destino</span><strong>{selectedGuide.destination_detail ?? "Sin cargar"}</strong></div>
           <div><span>Condición guía</span><strong>{guidePaymentLabels[selectedGuide.guide_payment_status]}</strong></div>
           <div><span>Resumen guía</span><strong>{guidePaymentDetail(selectedGuide)}</strong></div>

@@ -67,3 +67,8 @@ NEXT_PUBLIC_APP_URL=https://custodia360.onrender.com
 ## v10 — Flujo operativo real
 
 Última iteración: landing simple, mesa de control reorganizada, mobile admin compacto, portal cliente corto, ficha cliente como planilla digital, cuenta corriente con pagos parciales/adelantos y guías clickeables. Ver `docs/V10_FLUJO_OPERATIVO_REAL.md`.
+
+
+## v12 — Sistema guiado premium
+
+Esta versión incorpora visor cliente premium con estado único y fecha/hora, command palette, Fase 1 activa con módulos futuros en construcción, footer Prestige global y ajustes de flujo guiado para operación real.

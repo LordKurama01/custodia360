@@ -333,7 +333,7 @@
 .panelOverlay {
   position: fixed;
   inset: 0;
-  z-index: 70;
+  z-index: 1200;
   display: grid;
   align-items: end;
   padding: .7rem;
@@ -1239,4 +1239,18 @@
     min-height: 3.85rem;
     padding: .6rem;
   }
+}
+
+
+.commandPanel {
+  max-width: 42rem;
+  border-color: rgba(154, 255, 0, .18);
+  background:
+    radial-gradient(circle at 100% 0, rgba(154, 255, 0, .08), transparent 28%),
+    linear-gradient(180deg, rgba(16, 29, 49, .99), rgba(8, 18, 33, .99));
+}
+
+.commandPanel input {
+  min-height: 3rem;
+  font-size: .96rem;
 }

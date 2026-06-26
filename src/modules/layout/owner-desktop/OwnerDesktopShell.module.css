@@ -182,10 +182,29 @@
   opacity: .72;
 }
 
-.nav a.futureLink {
-  font-size: 12px;
+.futureLink {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 12px;
   padding: 8px 10px;
-  color: rgba(235, 243, 255, .48);
+  color: rgba(235, 243, 255, .42);
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, .018);
+  border: 1px dashed rgba(255, 255, 255, .07);
+  cursor: not-allowed;
+}
+
+.futureLink em {
+  flex: 0 0 auto;
+  color: rgba(235, 243, 255, .34);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .tenantBox {
@@ -509,7 +528,7 @@
   .mobileBottomNav {
     left: 8px;
     right: 8px;
-    bottom: 8px;
+    bottom: 44px;
     padding: 8px 8px 12px;
     border-radius: 22px;
   }

@@ -27,3 +27,33 @@
 - La base real debe incluir payment_allocations para auditoría fina.
 - En demo se simula parte de la asignación de pagos.
 - Los textos legales usan placeholders y requieren revisión del titular.
+
+## v12 — Criterio de cierre de Fase 1
+
+Activo en Fase 1:
+
+- Mesa de control.
+- Clientes / planilla digital.
+- Guías.
+- Cuenta corriente.
+- Pagos parciales.
+- Dinero a cuenta.
+- WhatsApp contextual.
+- Visor cliente por invitación.
+- Permisos básicos.
+- Dueños / multi-dueño preparado.
+
+En construcción:
+
+- Dashboard anterior.
+- Solicitudes.
+- Órdenes.
+- Tareas.
+- Viajes / Lotes.
+- Choferes.
+- Operarios.
+- Evidencias.
+- Incidencias.
+- Auditoría avanzada.
+
+Regla: si una función no está realmente operativa, debe mostrarse en gris como “En construcción” o no mostrarse.

@@ -145,3 +145,41 @@ main {
     bottom: 52px;
   }
 }
+
+/* v31 Custodia360: experiencia PWA nativa, barra del navegador oscura y footer más discreto */
+html {
+  background: #050b10;
+  overscroll-behavior-y: none;
+}
+
+body {
+  background: #050b10;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --prestige-footer-height: 34px;
+  --prestige-footer-mobile-height: 32px;
+  --prestige-footer-bg: rgba(3, 9, 18, 0.985);
+  --prestige-footer-border: rgba(255,255,255,0.07);
+}
+
+.prestige-footer {
+  box-shadow: 0 -6px 18px rgba(0,0,0,.18);
+}
+
+.prestige-footer-inner {
+  font-size: 11.5px;
+  font-weight: 620;
+}
+
+@media (max-width: 720px) {
+  .prestige-footer-inner {
+    font-size: 10.8px;
+  }
+
+  .prestige-diamond {
+    width: 15px;
+    height: 15px;
+  }
+}

@@ -1115,3 +1115,78 @@
     letter-spacing: .075em !important;
   }
 }
+
+/* v31 shell app nativa: barra superior oscura, nav inferior más instalado */
+@media (max-width: 960px) {
+  .shell {
+    background:
+      radial-gradient(circle at 12% -8%, rgba(141,215,42,.06), transparent 32%),
+      linear-gradient(180deg, #050b10 0%, #07121f 52%, #050b10 100%) !important;
+  }
+
+  .main {
+    background: transparent !important;
+  }
+
+  .content {
+    padding: .58rem .58rem calc(116px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .header {
+    min-height: 43px !important;
+    padding: .42rem .64rem !important;
+    background: rgba(5,13,23,.78) !important;
+    backdrop-filter: blur(16px) saturate(1.02) !important;
+  }
+
+  .header h1 {
+    font-size: 16px !important;
+  }
+
+  .eyebrow {
+    font-size: 8px !important;
+    color: rgba(184,233,107,.78) !important;
+  }
+
+  .mobileBottomNav {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: calc(36px + env(safe-area-inset-bottom)) !important;
+    min-height: 56px !important;
+    padding: 5px 7px 6px !important;
+    border-radius: 19px !important;
+    background: linear-gradient(180deg, rgba(7,17,30,.90), rgba(2,7,14,.98)) !important;
+    box-shadow: 0 12px 34px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.035) !important;
+  }
+
+  .mobileBottomNav a {
+    min-height: 34px !important;
+    border-radius: 12px !important;
+  }
+
+  .mobileBottomNav a strong {
+    font-size: 7.6px !important;
+  }
+
+  .mobileBottomNav a span {
+    width: 19px !important;
+    height: 19px !important;
+    border-radius: 7px !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton {
+    min-height: 48px !important;
+    transform: translateY(-6px) !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton span {
+    width: 40px !important;
+    height: 40px !important;
+    background: linear-gradient(145deg, #b8ef68 0%, #75b928 58%, #49ac66 100%) !important;
+    box-shadow: 0 7px 15px rgba(117,185,40,.12), inset 0 1px 0 rgba(255,255,255,.18) !important;
+  }
+
+  .mobileBottomNav .mobileMesaButton strong {
+    font-size: 7.8px !important;
+  }
+}

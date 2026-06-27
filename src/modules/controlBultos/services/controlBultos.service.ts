@@ -32,6 +32,15 @@ function cleanText(value: string) {
   return value.trim() || null;
 }
 
+function cleanOptionalPrice(value: number | "" | null | undefined) {
+  if (value === "" || value === null || value === undefined) return 0;
+  return Number(value || 0);
+}
+
+function mergeCityNotes(city?: string, notes?: string) {
+  return [city?.trim() ? `Ciudad: ${city.trim()}` : "", notes?.trim() ?? ""].filter(Boolean).join("\n") || "";
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -157,13 +166,13 @@ function getDemoSeed(): ControlBultosData {
       client_id: "demo-client-estela",
       serial_number: 1,
       operation_date: today,
-      provider_name: "Génesis / compra 5 teléfonos",
+      provider_name: "Génesis",
       package_count: 5,
       price_per_package: 0,
       total_packages_amount: 0,
       logistics_status: "despachado",
       financial_status: "pendiente",
-      note: "Operación con cinco destinos. Estela paga; cada guía identifica un pedido/envío para un destinatario diferente.",
+      note: "Compra 5 teléfonos. Estela paga; cada guía identifica un pedido/envío para un destinatario diferente.",
       pass_amount: 550,
       total_amount: 0,
       paid_amount_ars: 0,
@@ -316,13 +325,13 @@ function getDemoSeed(): ControlBultosData {
       client_id: "demo-client-matias",
       serial_number: 2,
       operation_date: today,
-      provider_name: "Compras varias / pases pendientes",
+      provider_name: "Atacado Game",
       package_count: 3,
       price_per_package: 0,
       total_packages_amount: 0,
       logistics_status: "deposito_a",
       financial_status: "pendiente",
-      note: "Pases variables: USD 80 + USD 150 + USD 200. El equivalente en pesos se actualiza con el dólar del día.",
+      note: "Compras varias con pases pendientes: USD 80 + USD 150 + USD 200. El equivalente en pesos se actualiza con el dólar del día.",
       pass_amount: 430,
       total_amount: 0,
       paid_amount_ars: 0,
@@ -532,8 +541,8 @@ export async function createQuickClient(input: ClientQuickInput) {
       name: input.name.trim(),
       phone: cleanText(input.phone),
       email: cleanText(input.email ?? ""),
-      default_price_per_package: Number(input.default_price_per_package || 0),
-      notes: cleanText(input.notes ?? ""),
+      default_price_per_package: cleanOptionalPrice(input.default_price_per_package),
+      notes: cleanText(mergeCityNotes(input.city, input.notes)),
       private_code: makePublicCode("CLI"),
       active: true,
       created_at: nowIso(),
@@ -550,8 +559,8 @@ export async function createQuickClient(input: ClientQuickInput) {
       name: input.name.trim(),
       phone: cleanText(input.phone),
       email: cleanText(input.email ?? ""),
-      default_price_per_package: input.default_price_per_package,
-      notes: cleanText(input.notes ?? ""),
+      default_price_per_package: cleanOptionalPrice(input.default_price_per_package),
+      notes: cleanText(mergeCityNotes(input.city, input.notes)),
     })
     .select("*")
     .single();

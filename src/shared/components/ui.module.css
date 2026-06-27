@@ -92,3 +92,57 @@
   border-color: rgba(141,215,42,.25) !important;
   box-shadow: 0 0 0 3px rgba(141,215,42,.045) !important;
 }
+
+/* v31 app nativa: controles más compactos y táctiles */
+.button {
+  min-height: 2.35rem;
+  padding: .58rem .88rem;
+  border-radius: .78rem;
+  box-shadow: none !important;
+}
+
+.input,
+.select,
+.textarea {
+  min-height: 2.38rem;
+  padding: .58rem .72rem;
+  border-radius: .74rem;
+  background: rgba(2, 9, 17, .76);
+}
+
+.textarea {
+  min-height: 5.25rem;
+}
+
+.label {
+  gap: .32rem;
+  font-size: .68rem;
+  letter-spacing: .01em;
+}
+
+@media (max-width: 767px) {
+  .button {
+    min-height: 2.18rem;
+    padding: .48rem .66rem;
+    border-radius: .66rem;
+    font-size: .72rem;
+  }
+
+  .input,
+  .select,
+  .textarea {
+    min-height: 2.18rem;
+    padding: .48rem .62rem;
+    border-radius: .62rem;
+    font-size: .76rem;
+  }
+
+  .textarea {
+    min-height: 4.65rem;
+  }
+
+  .label {
+    gap: .25rem;
+    font-size: .60rem;
+  }
+}

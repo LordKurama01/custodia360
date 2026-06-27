@@ -3084,3 +3084,367 @@
   .statusUpdateBlock { margin-top: .55rem; padding: .65rem; }
   .statusStepGrid button { min-height: 1.94rem; font-size: .64rem; }
 }
+
+/* v30 cierre operativo: contactos/cobros/guías más compactos y menos glow */
+.moduleSummaryGrid div,
+.statusTabs,
+.screenRow,
+.screenRowStatic,
+.accountRow,
+.guideCard,
+.operationCard {
+  box-shadow: none !important;
+}
+
+.moduleSummaryGrid div {
+  border-color: rgba(255,255,255,.075) !important;
+  background: rgba(255,255,255,.028) !important;
+}
+
+.statusTabs {
+  border-color: rgba(255,255,255,.07) !important;
+  background: rgba(255,255,255,.025) !important;
+}
+
+.statusTabs .statusTabActive {
+  border-color: rgba(156, 220, 65, .36) !important;
+  background: rgba(156, 220, 65, .14) !important;
+  color: #dfffba !important;
+  box-shadow: none !important;
+}
+
+.inlineAddClientButton,
+.inlineNotice {
+  box-shadow: none !important;
+}
+
+@media (max-width: 767px) {
+  .moduleSummaryGrid {
+    gap: .32rem !important;
+  }
+
+  .moduleSummaryGrid div {
+    min-height: 3.1rem !important;
+  }
+
+  .statusTabs button {
+    white-space: nowrap;
+  }
+}
+
+/* v31 pulido app nativa: compactación, sheets reales y acciones blindadas */
+.contactImportRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: .55rem;
+  padding: .5rem .58rem;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: .82rem;
+  background: rgba(255,255,255,.026);
+}
+
+.contactImportRow button {
+  min-height: 2.1rem;
+  padding: 0 .78rem;
+  border: 1px solid rgba(141,215,42,.20);
+  border-radius: .7rem;
+  color: #dfffba;
+  background: rgba(141,215,42,.07);
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.contactImportRow button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.contactImportRow span {
+  min-width: 0;
+  color: rgba(214,226,239,.58);
+  font-size: .68rem;
+  line-height: 1.25;
+}
+
+.panel::before {
+  content: "";
+  width: 38px;
+  height: 4px;
+  justify-self: center;
+  border-radius: 999px;
+  background: rgba(235,243,255,.18);
+}
+
+.panelHead button {
+  font-size: 0 !important;
+  width: 2.15rem !important;
+  min-width: 2.15rem !important;
+  height: 2.15rem !important;
+  min-height: 2.15rem !important;
+  padding: 0 !important;
+}
+
+.panelHead button::before {
+  content: "×";
+  font-size: 1.05rem;
+  line-height: 1;
+  color: rgba(235,243,255,.74);
+}
+
+.panelHead h3 {
+  letter-spacing: -.045em;
+}
+
+.formGrid {
+  gap: .52rem !important;
+}
+
+.formFooter {
+  gap: .52rem !important;
+}
+
+.screenRow,
+.screenRowStatic,
+.operationCard,
+.guideCard,
+.settingsRow {
+  border-color: rgba(255,255,255,.062) !important;
+  background: linear-gradient(180deg, rgba(13,26,43,.92), rgba(6,16,29,.965)) !important;
+}
+
+.operationCard:active,
+.guideCard:active,
+.screenRow:active,
+.settingsRow:active {
+  transform: scale(.992);
+}
+
+.badge {
+  letter-spacing: -.01em;
+}
+
+.mobileFabAction {
+  background: linear-gradient(145deg, #b5ed63, #79be24) !important;
+  border-color: rgba(255,255,255,.16) !important;
+  box-shadow: 0 12px 28px rgba(121,190,36,.18), 0 18px 46px rgba(0,0,0,.42) !important;
+}
+
+.empty {
+  border: 1px dashed rgba(255,255,255,.10) !important;
+  border-radius: .92rem !important;
+  background: rgba(255,255,255,.022) !important;
+  color: rgba(218,230,244,.62) !important;
+  text-align: center;
+  box-shadow: none !important;
+}
+
+@media (max-width: 767px) {
+  .screenList,
+  .guideGrid,
+  .moreGrid,
+  .mobileOperationCards {
+    gap: .34rem !important;
+  }
+
+  .operationCard,
+  .guideCard,
+  .screenRow,
+  .screenRowStatic,
+  .settingsRow {
+    min-height: 3.12rem !important;
+    padding: .50rem .54rem !important;
+    border-radius: .74rem !important;
+  }
+
+  .compactRowHead,
+  .compactRowMeta,
+  .compactNext {
+    gap: .42rem !important;
+  }
+
+  .compactRowHead strong,
+  .screenRow strong,
+  .screenRowStatic strong,
+  .settingsRow strong {
+    font-size: .80rem !important;
+  }
+
+  .compactRowHead span:not(.badge),
+  .compactRowMeta span,
+  .compactNext span,
+  .screenRow span,
+  .screenRowStatic span,
+  .settingsRow small {
+    font-size: .58rem !important;
+  }
+
+  .compactRowMeta strong,
+  .screenRow b,
+  .screenRowStatic b {
+    font-size: .68rem !important;
+  }
+
+  .compactNext button,
+  .compactNext b,
+  .screenRow i {
+    width: 1.8rem !important;
+    height: 1.8rem !important;
+    border-radius: .62rem !important;
+  }
+
+  .moduleSummaryGrid {
+    grid-template-columns: repeat(4, minmax(6.35rem, 1fr)) !important;
+    gap: .28rem !important;
+    scrollbar-width: none;
+  }
+
+  .moduleSummaryGrid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .moduleSummaryGrid div {
+    min-width: 6.35rem !important;
+    min-height: 2.75rem !important;
+    padding: .42rem .48rem !important;
+    border-radius: .70rem !important;
+  }
+
+  .moduleSummaryGrid span {
+    font-size: .50rem !important;
+  }
+
+  .moduleSummaryGrid strong {
+    font-size: .70rem !important;
+  }
+
+  .contactSwitch,
+  .statusTabs,
+  .innerTabs {
+    gap: .18rem !important;
+    padding: .20rem !important;
+    border-radius: .70rem !important;
+  }
+
+  .contactSwitch button,
+  .statusTabs button,
+  .innerTabs button {
+    min-height: 1.72rem !important;
+    border-radius: .52rem !important;
+    font-size: .56rem !important;
+  }
+
+  .panelOverlay {
+    padding: 0 !important;
+    align-items: end !important;
+  }
+
+  .panel,
+  .clientScreenPanel {
+    width: 100% !important;
+    max-height: 86dvh !important;
+    gap: .48rem !important;
+    padding: .56rem .62rem calc(.62rem + env(safe-area-inset-bottom)) !important;
+    border-radius: 1rem 1rem 0 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+  }
+
+  .panel::before {
+    width: 34px;
+    height: 4px;
+    margin-bottom: -.05rem;
+  }
+
+  .panelHead {
+    padding: .02rem 0 .28rem !important;
+  }
+
+  .panelHead p {
+    font-size: .50rem !important;
+    letter-spacing: .08em !important;
+  }
+
+  .panelHead h3 {
+    font-size: .88rem !important;
+  }
+
+  .panelHead button {
+    width: 1.9rem !important;
+    min-width: 1.9rem !important;
+    height: 1.9rem !important;
+    min-height: 1.9rem !important;
+  }
+
+  .formGrid,
+  .detailGrid {
+    gap: .38rem !important;
+  }
+
+  .contactImportRow {
+    grid-template-columns: 1fr;
+    gap: .28rem;
+    padding: .44rem;
+    border-radius: .70rem;
+  }
+
+  .contactImportRow button {
+    min-height: 2rem;
+    font-size: .68rem;
+  }
+
+  .contactImportRow span {
+    display: none;
+  }
+
+  .inlineNotice {
+    margin: 0 !important;
+    padding: .46rem .52rem !important;
+    border-radius: .68rem !important;
+    font-size: .62rem !important;
+  }
+
+  .clientSelectStack {
+    gap: .34rem !important;
+  }
+
+  .inlineAddClientButton {
+    min-height: 2rem !important;
+    border-radius: .62rem !important;
+    font-size: .66rem !important;
+  }
+
+  .quickActionList {
+    grid-template-columns: 1fr !important;
+    gap: .32rem !important;
+  }
+
+  .quickActionList button {
+    min-height: 2.18rem !important;
+    border-radius: .68rem !important;
+    font-size: .68rem !important;
+  }
+
+  .formFooter {
+    bottom: calc(-.62rem - env(safe-area-inset-bottom)) !important;
+    padding-top: .42rem !important;
+  }
+
+  .formFooter button,
+  .stickyClientActions button {
+    min-height: 2.22rem !important;
+    border-radius: .68rem !important;
+    font-size: .70rem !important;
+  }
+
+  .mobileFabAction {
+    width: 44px !important;
+    height: 44px !important;
+    right: 16px !important;
+    bottom: calc(106px + env(safe-area-inset-bottom)) !important;
+    font-size: 1.45rem !important;
+  }
+}

@@ -82,8 +82,10 @@ export type OperationFormInput = {
 export type ClientQuickInput = {
   name: string;
   phone: string;
+  city?: string;
   email?: string;
-  default_price_per_package: number;
+  /** Campo de UI editable/limpiable: puede quedar vacío sin forzar 0 visual. */
+  default_price_per_package?: number | "" | null;
   notes?: string;
 };
 
@@ -200,8 +202,8 @@ export const paymentMethodLabels = Object.fromEntries(paymentMethodOptions.map((
 
 export const guidePaymentLabels: Record<GuidePaymentStatus, string> = {
   pendiente: "Pendiente",
-  pagada_por_jeremias: "Pagada por Jeremias",
-  pagada_por_cliente: "Paga en destino / cliente",
-  pendiente_reintegro: "Pendiente reintegro",
+  pagada_por_jeremias: "A reintegrar",
+  pagada_por_cliente: "Pagada por cliente / destino",
+  pendiente_reintegro: "A reintegrar",
   reintegrada: "Reintegrada",
 };

@@ -3448,3 +3448,83 @@
     font-size: 1.45rem !important;
   }
 }
+
+/* v32 Bloque Mesa: estados operativos con color propio y chips compactos. */
+.statusParaRetirar {
+  color: #fff3bf;
+  background: rgba(245, 174, 45, .13);
+  border-color: rgba(245, 174, 45, .34);
+}
+
+.statusRetirado {
+  color: #b9efff;
+  background: rgba(56, 189, 248, .13);
+  border-color: rgba(56, 189, 248, .32);
+}
+
+.statusCd {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, .15);
+  border-color: rgba(139, 92, 246, .34);
+}
+
+.statusDepositoA {
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, .14);
+  border-color: rgba(59, 130, 246, .34);
+}
+
+.statusDepositoB {
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, .15);
+  border-color: rgba(99, 102, 241, .34);
+}
+
+.statusEnTransito {
+  color: #fed7aa;
+  background: rgba(249, 115, 22, .14);
+  border-color: rgba(249, 115, 22, .34);
+}
+
+.statusDespachado {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, .14);
+  border-color: rgba(34, 197, 94, .34);
+}
+
+.statusRecibido {
+  color: #e2e8f0;
+  background: rgba(148, 163, 184, .12);
+  border-color: rgba(148, 163, 184, .28);
+}
+
+.cardMiniChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .36rem;
+  align-items: center;
+}
+
+.miniChip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 1.34rem;
+  padding: .14rem .46rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: .61rem;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.statusStepGrid button.statusStepActive,
+.statusStepGrid button:hover {
+  transform: translateY(-1px);
+}
+
+.statusStepGrid button {
+  text-align: left;
+  padding-inline: .58rem;
+}

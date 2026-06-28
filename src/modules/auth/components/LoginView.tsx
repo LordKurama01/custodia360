@@ -13,7 +13,6 @@ function hasRealSupabaseConfig() {
   return Boolean(url && key && !url.includes("demo.supabase") && !url.includes("placeholder"));
 }
 
-const accessNotes = ["Gmail autorizado", "Espacio por dueño", "Operación privada"];
 
 export function LoginView() {
   const router = useRouter();
@@ -59,25 +58,22 @@ export function LoginView() {
 
       <div className={styles.loginGrid}>
         <div className={styles.copyPanel}>
-          <p>ACCESO AUTORIZADO</p>
-          <h1>Entrá a tu mesa privada.</h1>
-          <span>Usá el Gmail habilitado por el dueño para operar pedidos, clientes, guías y cobros desde Custodia360.</span>
-          <div className={styles.notes}>
-            {accessNotes.map((item) => <strong key={item}>{item}</strong>)}
-          </div>
+          <p>ACCESO PRIVADO</p>
+          <h1>Acceso autorizado.</h1>
+          <span>Entrá con el Gmail habilitado para operar en Custodia360.</span>
         </div>
 
         <section className={styles.card} aria-label="Ingreso a Custodia360">
           <div className={styles.copy}>
             <p>Ingresar</p>
-            <h2>Acceso al sistema</h2>
-            <span>Continuá con tu cuenta habilitada.</span>
+            <h2>Continuar al sistema</h2>
+            <span>El acceso está limitado a usuarios autorizados.</span>
           </div>
           {(errorMessage || authError) ? <div className={styles.notice}>{authError || errorMessage}</div> : null}
           <button type="button" className={styles.googleButton} onClick={continueAccess} disabled={loading}>
             {loading ? "Ingresando..." : "Continuar con Gmail"}
           </button>
-          <small>Email autorizado por el dueño del espacio.</small>
+          <small>Solo cuentas habilitadas por el dueño del espacio.</small>
         </section>
       </div>
     </section>

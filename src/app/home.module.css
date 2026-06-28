@@ -1,12 +1,26 @@
 .page {
+  position: relative;
   min-height: 100dvh;
   color: var(--c360-ink);
   background:
-    radial-gradient(circle at 12% 20%, rgba(154,255,0,.10), transparent 28%),
-    radial-gradient(circle at 92% 10%, rgba(71,134,255,.10), transparent 30%),
+    linear-gradient(120deg, rgba(255,255,255,.022) 0 1px, transparent 1px 34px),
+    radial-gradient(circle at 10% 22%, rgba(154,255,0,.105), transparent 27%),
+    radial-gradient(circle at 92% 10%, rgba(71,134,255,.085), transparent 30%),
     linear-gradient(135deg, #030a13 0%, #071326 50%, #050b10 100%);
   padding: clamp(1rem, 2.3vw, 1.75rem) clamp(.95rem, 2.6vw, 2rem) 4.25rem;
   overflow: hidden;
+}
+
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .34;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,.12) 1px, transparent 0);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,.95), transparent 78%);
 }
 
 .landingShell {
@@ -87,24 +101,24 @@
   line-height: 1.45;
 }
 
-.accessTracks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .55rem;
-  margin-top: .35rem;
+.operationLine {
+  width: fit-content;
+  margin-top: .16rem;
+  padding-top: .18rem;
+  color: rgba(235,243,255,.72);
+  font-size: clamp(.78rem, 1.1vw, .9rem);
+  font-weight: 850;
+  letter-spacing: .03em;
 }
 
-.accessTracks strong {
-  min-height: 2.15rem;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 .82rem;
-  border: 1px solid rgba(255,255,255,.09);
+.operationLine::before {
+  content: "";
+  display: block;
+  width: 2.7rem;
+  height: 2px;
+  margin-bottom: .68rem;
   border-radius: 999px;
-  color: rgba(235,243,255,.82);
-  background: rgba(255,255,255,.035);
-  font-size: .76rem;
-  font-weight: 900;
+  background: linear-gradient(90deg, var(--c360-lemon), transparent);
 }
 
 .desktopPreview {
@@ -262,9 +276,10 @@
   }
 
   .heroCopy h1 {
-    max-width: 9.9ch;
-    font-size: clamp(3.2rem, 15vw, 4.8rem);
-    line-height: .88;
+    max-width: 11.6ch;
+    font-size: clamp(2.95rem, 13.8vw, 4.35rem);
+    line-height: .9;
+    letter-spacing: -.078em;
   }
 
   .heroCopy > span {
@@ -273,18 +288,12 @@
     line-height: 1.42;
   }
 
-  .accessTracks {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: .4rem;
-    margin-top: .15rem;
+  .operationLine {
+    font-size: .76rem;
   }
 
-  .accessTracks strong {
-    width: fit-content;
-    min-height: 1.86rem;
-    padding: 0 .68rem;
-    font-size: .66rem;
+  .operationLine::before {
+    margin-bottom: .56rem;
   }
 
   .desktopPreview {
@@ -304,8 +313,5 @@
 @media (max-width: 380px) {
   .heroCopy h1 {
     font-size: 3rem;
-  }
-  .accessTracks strong:nth-child(3) {
-    display: none;
   }
 }

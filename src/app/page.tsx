@@ -3,7 +3,6 @@ import Image from "next/image";
 import { BrandLockup } from "@/shared/components/BrandLockup";
 import styles from "./home.module.css";
 
-const accessTracks = ["Operación interna", "Clientes", "Implementación privada"];
 const operations = [
   ["Pedidos", "Cliente, proveedor y bultos en una mesa."],
   ["Guías", "Despacho, número y condición de cobro."],
@@ -29,9 +28,7 @@ export default function HomePage() {
           <h1>Entrás, pedís y te despachamos.</h1>
           <span>Custodia360 ordena pedidos, bultos, proveedores, guías y cobros en una mesa privada de operación.</span>
 
-          <div className={styles.accessTracks} aria-label="Tipos de acceso">
-            {accessTracks.map((item) => <strong key={item}>{item}</strong>)}
-          </div>
+          <div className={styles.operationLine} aria-label="Alcance operativo">Pedidos · Bultos · Guías · Cobros</div>
         </div>
 
         <aside className={styles.desktopPreview} aria-label="Vista rápida del sistema">

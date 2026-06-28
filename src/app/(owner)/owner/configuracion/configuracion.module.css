@@ -1,0 +1,22 @@
+.configCard { display: grid; gap: 1rem; }
+.configIntro { display: grid; gap: .35rem; }
+.configIntro h2, .configIntro p { margin: 0; }
+.configIntro h2 { color: #fff; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.02; letter-spacing: -.055em; }
+.configIntro p { max-width: 56rem; color: var(--c360-muted); line-height: 1.45; }
+.mobileConfigList { display: none; }
+.mobileConfigItem { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .65rem; padding: .75rem .8rem; border: 1px solid var(--c360-line); border-radius: .95rem; background: rgba(255,255,255,.032); }
+.mobileConfigItem div { min-width: 0; display: grid; gap: .16rem; }
+.mobileConfigItem strong { color: #fff; font-size: .92rem; }
+.mobileConfigItem span { color: var(--c360-muted); font-size: .72rem; line-height: 1.28; }
+.mobileConfigItem b { color: var(--c360-lemon); font-size: .74rem; white-space: nowrap; }
+.mobileConfigItem a { width: fit-content; }
+.desktopTable { display: block; }
+@media (max-width: 960px), (pointer: coarse) and (max-width: 1200px) {
+  .configCard { gap: .8rem; padding: 1.05rem !important; border-radius: 1rem !important; }
+  .configIntro h2 { font-size: 1.7rem; letter-spacing: -.05em; }
+  .configIntro p { font-size: .86rem; }
+  .desktopTable { display: none !important; }
+  .mobileConfigList { display: grid; gap: .5rem; }
+  .mobileConfigItem { min-width: 0; }
+  .mobileConfigItem span { overflow-wrap: anywhere; }
+}

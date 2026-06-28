@@ -1365,7 +1365,7 @@ export function ControlBultosView() {
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/owner/permisos"}><span>◉</span><div><strong>Permisos</strong><small>Empleados, roles y accesos autorizados.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/platform"}><span>◆</span><div><strong>Dueños</strong><small>Espacios separados, límite comercial y solo lectura.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => setCommandOpen(true)}><span>⌕</span><div><strong>Buscar</strong><small>Cliente, guía, proveedor o cobro.</small></div><i>›</i></button>
-      <button type="button" className={styles.settingsRow} onClick={() => setQuickPanel("cliente")}><span>＋</span><div><strong>Nuevo contacto</strong><small>Alta rápida de cliente o pedido inicial.</small></div><i>›</i></button>
+      <button type="button" className={styles.settingsRow} onClick={() => setQuickPanel("cliente")}><span>＋</span><div><strong>Nuevo contacto</strong><small>Alta rápida de cliente o proveedor.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/contacto-legal"}><span>?</span><div><strong>Soporte</strong><small>Ayuda, contacto legal y datos del sistema.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/login"}><span>↩</span><div><strong>Salir</strong><small>Cerrar el espacio operativo.</small></div><i>›</i></button>
     </section> : null}

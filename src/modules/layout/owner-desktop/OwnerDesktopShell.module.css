@@ -1191,8 +1191,8 @@
   }
 }
 
-/* v34: desktop operativo real sin tocar mobile */
-@media (min-width: 961px) {
+/* v34/v35: desktop operativo real solo en escritorio */
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
   .shell {
     grid-template-columns: 252px minmax(0, 1fr);
     background:
@@ -1291,5 +1291,78 @@
     width: min(100%, 1180px);
     margin-inline: auto;
     padding: 18px clamp(18px, 2vw, 28px) 58px;
+  }
+}
+
+/* v35: mobile interno restaurado y desktop aislado por pointer fino */
+@media (max-width: 960px), (pointer: coarse) and (max-width: 1200px) {
+  .shell {
+    min-height: 100dvh !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    overflow-x: hidden !important;
+  }
+
+  .sidebar {
+    display: none !important;
+  }
+
+  .main,
+  .content,
+  .header {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .main {
+    display: block !important;
+    overflow-x: hidden !important;
+  }
+
+  .content {
+    margin: 0 !important;
+    padding: .58rem .58rem calc(120px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+  }
+
+  .header {
+    min-height: 47px !important;
+    padding: .42rem .64rem !important;
+  }
+
+  .header h1 {
+    font-size: 16px !important;
+  }
+
+  .eyebrow {
+    max-width: 100% !important;
+    font-size: 8px !important;
+  }
+
+  .headerActions a,
+  .user,
+  .logoutButton {
+    display: none !important;
+  }
+
+  .mobileBottomNav {
+    display: grid !important;
+    left: 10px !important;
+    right: 10px !important;
+    bottom: calc(36px + env(safe-area-inset-bottom)) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: end !important;
+    min-height: 56px !important;
+    padding: 5px 7px 6px !important;
+    border-radius: 19px !important;
+    overflow: visible !important;
+  }
+}
+
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .mobileBottomNav {
+    display: none !important;
   }
 }

@@ -1190,3 +1190,106 @@
     font-size: 7.8px !important;
   }
 }
+
+/* v34: desktop operativo real sin tocar mobile */
+@media (min-width: 961px) {
+  .shell {
+    grid-template-columns: 252px minmax(0, 1fr);
+    background:
+      radial-gradient(circle at 12% -10%, rgba(154,255,0,.08), transparent 30%),
+      radial-gradient(circle at 100% 0, rgba(71,134,255,.08), transparent 30%),
+      linear-gradient(135deg, #030a13 0%, #071326 48%, #050b10 100%);
+  }
+
+  .sidebar {
+    gap: 11px;
+    padding: 14px 12px 46px;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(154,255,0,.07), transparent 26%),
+      linear-gradient(180deg, rgba(3,12,22,.992), rgba(3,10,19,.998));
+  }
+
+  .brandWrap {
+    min-height: 52px;
+    padding: 4px 3px 7px;
+  }
+
+  .platformMode,
+  .tenantSwitch,
+  .tenantBox {
+    border-radius: 14px;
+  }
+
+  .platformMode {
+    padding: 10px;
+  }
+
+  .tenantSwitch {
+    padding: 10px;
+  }
+
+  .nav {
+    gap: 10px;
+  }
+
+  .navGroup {
+    gap: 5px;
+  }
+
+  .nav a {
+    min-height: 34px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+
+  .futureGroup {
+    margin-top: 5px;
+    padding-top: 9px;
+  }
+
+  .futureLink {
+    min-height: 31px;
+    padding: 7px 9px;
+    border-radius: 10px;
+    font-size: 11px;
+  }
+
+  .main {
+    min-width: 0;
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  .header {
+    min-height: 64px;
+    padding: 0 clamp(18px, 2vw, 28px);
+    background:
+      linear-gradient(90deg, rgba(6,18,32,.94), rgba(6,18,32,.74));
+    border-bottom-color: rgba(255,255,255,.075);
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .headerActions {
+    gap: 8px;
+  }
+
+  .user {
+    font-size: 11px;
+  }
+
+  .logoutButton {
+    min-height: 32px;
+    padding: 7px 11px;
+    font-size: 11px;
+  }
+
+  .content {
+    width: min(100%, 1180px);
+    margin-inline: auto;
+    padding: 18px clamp(18px, 2vw, 28px) 58px;
+  }
+}

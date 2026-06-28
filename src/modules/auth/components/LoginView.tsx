@@ -13,6 +13,8 @@ function hasRealSupabaseConfig() {
   return Boolean(url && key && !url.includes("demo.supabase") && !url.includes("placeholder"));
 }
 
+const accessNotes = ["Gmail autorizado", "Espacio por dueño", "Operación privada"];
+
 export function LoginView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -49,18 +51,35 @@ export function LoginView() {
   };
 
   return <main className={styles.page}>
-    <section className={styles.card}>
-      <Link href="/" className={styles.brand} aria-label="Custodia360 inicio"><BrandLockup subtitle="Acceso" /></Link>
-      <div className={styles.copy}>
-        <p>Acceso</p>
-        <h1>Ingresar</h1>
-        <span>Usá tu Gmail autorizado para abrir tu espacio.</span>
+    <section className={styles.shell}>
+      <header className={styles.topbar}>
+        <Link href="/" className={styles.brand} aria-label="Custodia360 inicio"><BrandLockup subtitle="Acceso privado" /></Link>
+        <Link href="/" className={styles.backLink}>Inicio</Link>
+      </header>
+
+      <div className={styles.loginGrid}>
+        <div className={styles.copyPanel}>
+          <p>ACCESO AUTORIZADO</p>
+          <h1>Entrá a tu mesa privada.</h1>
+          <span>Usá el Gmail habilitado por el dueño para operar pedidos, clientes, guías y cobros desde Custodia360.</span>
+          <div className={styles.notes}>
+            {accessNotes.map((item) => <strong key={item}>{item}</strong>)}
+          </div>
+        </div>
+
+        <section className={styles.card} aria-label="Ingreso a Custodia360">
+          <div className={styles.copy}>
+            <p>Ingresar</p>
+            <h2>Acceso al sistema</h2>
+            <span>Continuá con tu cuenta habilitada.</span>
+          </div>
+          {(errorMessage || authError) ? <div className={styles.notice}>{authError || errorMessage}</div> : null}
+          <button type="button" className={styles.googleButton} onClick={continueAccess} disabled={loading}>
+            {loading ? "Ingresando..." : "Continuar con Gmail"}
+          </button>
+          <small>Email autorizado por el dueño del espacio.</small>
+        </section>
       </div>
-      {(errorMessage || authError) ? <div className={styles.notice}>{authError || errorMessage}</div> : null}
-      <button type="button" className={styles.googleButton} onClick={continueAccess} disabled={loading}>
-        {loading ? "Ingresando..." : "Continuar con Gmail"}
-      </button>
-      <small>Email autorizado por el dueño del espacio.</small>
     </section>
   </main>;
 }

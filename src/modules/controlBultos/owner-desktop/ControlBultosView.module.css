@@ -3753,3 +3753,346 @@
     border-radius: .76rem;
   }
 }
+
+/* v34: desktop responsive con lógica mobile, sin tocar mobile */
+@media (min-width: 961px) {
+  .topBar {
+    min-height: 4.65rem;
+    margin-bottom: .55rem;
+    padding: .86rem .95rem;
+    border-radius: 1.05rem;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(154,255,0,.10), transparent 28%),
+      linear-gradient(90deg, rgba(11,24,40,.98), rgba(6,18,32,.96));
+  }
+
+  .topBar p {
+    font-size: .62rem;
+    letter-spacing: .13em;
+  }
+
+  .topBar h2 {
+    font-size: 1.22rem;
+  }
+
+  .topBar span {
+    font-size: .76rem;
+  }
+
+  .topActions button {
+    min-height: 2.18rem;
+    border-radius: .72rem;
+  }
+
+  .appTabs {
+    position: sticky;
+    top: 76px;
+    z-index: 12;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .32rem;
+    margin: .55rem 0;
+    padding: .32rem;
+    border-radius: .95rem;
+    border: 1px solid rgba(255,255,255,.075);
+    background: rgba(6,17,31,.88);
+    backdrop-filter: blur(18px);
+  }
+
+  .appTabs button {
+    min-height: 2.18rem;
+    border-radius: .72rem;
+    font-size: .72rem;
+    background: rgba(255,255,255,.035);
+  }
+
+  .appTabs .activeTab {
+    color: #07100d;
+    background: var(--c360-lemon);
+    box-shadow: 0 8px 22px rgba(154,255,0,.14);
+  }
+
+  .kpiStrip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .55rem;
+    margin-top: .55rem;
+  }
+
+  .kpi {
+    min-height: 4.05rem;
+    padding: .72rem .82rem !important;
+    border-radius: .95rem !important;
+    box-shadow: none !important;
+  }
+
+  .kpi span {
+    font-size: .62rem;
+  }
+
+  .kpi strong {
+    font-size: .96rem;
+  }
+
+  .kpi small {
+    font-size: .66rem;
+  }
+
+  .searchCard {
+    top: 123px;
+    grid-template-columns: minmax(20rem, 1fr) auto;
+    gap: .7rem;
+    margin: .58rem 0 .7rem;
+    padding: .62rem .72rem !important;
+    border-radius: .92rem !important;
+    background: rgba(6,17,31,.88) !important;
+    box-shadow: none !important;
+  }
+
+  .searchCard input {
+    min-height: 2.28rem;
+    border-radius: .72rem;
+  }
+
+  .filterChips {
+    gap: .35rem;
+    justify-content: flex-end;
+  }
+
+  .filterChips button {
+    min-height: 1.9rem;
+    padding-inline: .65rem;
+    font-size: .68rem;
+  }
+
+  .refreshPill {
+    position: fixed;
+    right: 22px;
+    bottom: 48px;
+    z-index: 80;
+    min-height: 2.1rem;
+    padding: 0 .82rem;
+    border: 1px solid rgba(154,255,0,.16);
+    border-radius: 999px;
+    color: rgba(235,243,255,.82);
+    background: rgba(6,17,31,.92);
+    backdrop-filter: blur(14px);
+    font-size: .72rem;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .mobileFabAction {
+    display: none !important;
+  }
+
+  .contentGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(285px, 340px);
+    gap: .75rem;
+    margin-top: .65rem;
+  }
+
+  .tableShell {
+    padding: .42rem;
+    border-radius: .95rem;
+    box-shadow: none;
+  }
+
+  .tableHead,
+  .tableRow {
+    grid-template-columns: minmax(13rem, 1.35fr) minmax(8rem, .72fr) minmax(8.5rem, .78fr) minmax(5.8rem, .42fr) minmax(8.5rem, .75fr) minmax(12rem, auto);
+    gap: .52rem;
+  }
+
+  .tableHead {
+    padding: .42rem .55rem;
+    font-size: .62rem;
+  }
+
+  .tableRow {
+    min-height: 3.75rem;
+    padding: .56rem .58rem;
+    border-radius: .78rem;
+  }
+
+  .tableRow strong,
+  .clientCell strong,
+  .moneyCell strong {
+    font-size: .8rem;
+  }
+
+  .tableRow span,
+  .tableRow small,
+  .clientCell span,
+  .moneyCell small {
+    font-size: .66rem;
+  }
+
+  .rowActions {
+    gap: .32rem;
+  }
+
+  .rowActions button {
+    min-height: 1.74rem;
+    padding: 0 .56rem;
+    border-radius: .58rem;
+    font-size: .66rem;
+  }
+
+  .desktopDetail {
+    top: 184px;
+    gap: .58rem;
+    padding: .72rem;
+    border-radius: .95rem;
+    box-shadow: none;
+  }
+
+  .desktopDetail .detailGrid div,
+  .desktopDetail .ledgerItem,
+  .cardFacts span,
+  .moneyLine div,
+  .accountTotals div {
+    padding: .48rem .52rem;
+    border-radius: .68rem;
+  }
+
+  .screenList,
+  .guideGrid,
+  .moreGrid {
+    margin-top: .7rem;
+    gap: .55rem;
+  }
+
+  .screenList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .screenSummary,
+  .contactSwitch,
+  .moduleSummaryGrid,
+  .statusTabs,
+  .sectionTitleRow {
+    grid-column: 1 / -1;
+  }
+
+  .screenRow,
+  .screenRowStatic,
+  .guideCard,
+  .settingsRow {
+    min-height: 3.45rem;
+    padding: .58rem .64rem;
+    border-radius: .82rem;
+    box-shadow: none;
+  }
+
+  .screenRow strong,
+  .screenRowStatic strong,
+  .compactRowHead strong {
+    font-size: .84rem;
+  }
+
+  .screenRow span,
+  .screenRowStatic span,
+  .compactRowHead span:not(.badge),
+  .compactRowMeta span,
+  .compactNext span {
+    font-size: .64rem;
+  }
+
+  .screenRow b,
+  .screenRowStatic b,
+  .compactRowMeta strong {
+    font-size: .78rem;
+  }
+
+  .contactSwitch,
+  .statusTabs,
+  .innerTabs {
+    padding: .26rem;
+    border-radius: .82rem;
+  }
+
+  .contactSwitch button,
+  .statusTabs button,
+  .innerTabs button {
+    min-height: 2rem;
+    border-radius: .62rem;
+    font-size: .68rem;
+  }
+
+  .moduleSummaryGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .5rem;
+  }
+
+  .moduleSummaryGrid div {
+    min-height: 3.7rem;
+    padding: .62rem .68rem;
+    border-radius: .82rem;
+  }
+
+  .moduleSummaryGrid span {
+    font-size: .62rem;
+  }
+
+  .moduleSummaryGrid strong {
+    font-size: .9rem;
+  }
+
+  .guideGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .guideGrid .moduleSummaryGrid,
+  .guideGrid .statusTabs {
+    grid-column: 1 / -1;
+  }
+
+  .moreGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .settingsRow {
+    grid-template-columns: 34px minmax(0, 1fr) 22px;
+  }
+
+  .settingsRow span {
+    width: 34px;
+    height: 34px;
+  }
+
+  .panelOverlay {
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .panel {
+    width: min(58rem, 100%);
+    max-height: calc(100dvh - 2rem);
+    padding: .95rem;
+    border-radius: 1.05rem;
+    box-shadow: 0 24px 80px rgba(0,0,0,.42);
+  }
+
+  .clientScreenPanel {
+    width: min(64rem, 100%);
+  }
+
+  .formGrid,
+  .detailGrid {
+    gap: .52rem;
+  }
+
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .clientScreenTotals {
+    gap: .42rem;
+  }
+
+  .clientScreenTotals div {
+    padding: .5rem .55rem;
+    border-radius: .7rem;
+  }
+}

@@ -1,12 +1,18 @@
 import Link from "next/link";
+import Image from "next/image";
 import { BrandLockup } from "@/shared/components/BrandLockup";
 import styles from "./home.module.css";
 
-const sellingPoints = ["Mesa tipo pizarrón", "Contactos ordenados", "Cobros y guías activas"];
-const flow = [
-  ["01", "Pedís", "Compra o consulta"],
-  ["02", "Controlás", "Proveedor, bultos y estado"],
-  ["03", "Despachás", "Guías, cobros y confirmación"],
+const accessTracks = ["Operación interna", "Clientes", "Implementación privada"];
+const operations = [
+  ["Pedidos", "Cliente, proveedor y bultos en una mesa."],
+  ["Guías", "Despacho, número y condición de cobro."],
+  ["Cobros", "Saldos, adelantos y dinero a cuenta."],
+];
+const boardRows = [
+  ["Mesa", "Retirar", "5 pedidos"],
+  ["Guías", "Sin número", "2 pendientes"],
+  ["Cobros", "A cuenta", "$ 500.000"],
 ];
 
 export default function HomePage() {
@@ -14,39 +20,45 @@ export default function HomePage() {
     <section className={styles.landingShell}>
       <header className={styles.topbar}>
         <BrandLockup subtitle="Mesa privada de logística" />
-        <span className={styles.privateTag}>Acceso privado</span>
+        <Link className={styles.loginPill} href="/login">Ingresar</Link>
       </header>
 
-      <div className={styles.heroGrid}>
+      <section className={styles.heroStage} aria-label="Custodia360 acceso principal">
         <div className={styles.heroCopy}>
           <p>COMPRA · CUSTODIA · DESPACHO</p>
           <h1>Entrás, pedís y te despachamos.</h1>
-          <span>Custodia360 ordena compras, bultos, proveedores, guías y cobros en una mesa privada para no perder el rastro de cada pedido.</span>
+          <span>Custodia360 ordena pedidos, bultos, proveedores, guías y cobros en una mesa privada de operación.</span>
 
-          <div className={styles.heroActions}>
-            <Link className={styles.primaryCta} href="/login">Ingresar al sistema</Link>
+          <div className={styles.accessTracks} aria-label="Tipos de acceso">
+            {accessTracks.map((item) => <strong key={item}>{item}</strong>)}
           </div>
         </div>
 
-        <aside className={styles.sideCard} aria-label="Resumen de Custodia360">
-          <p>MESA PRIVADA</p>
-          <h2>Todo bajo control.</h2>
-          <span>Ves qué está en proveedor, qué se retiró, qué quedó en depósito, qué salió con guía y qué falta cobrar.</span>
-          <div className={styles.sideList}>
-            {sellingPoints.map((item) => <strong key={item}>{item}</strong>)}
+        <aside className={styles.desktopPreview} aria-label="Vista rápida del sistema">
+          <div className={styles.previewTop}>
+            <Image src="/brand/custodia360_isotipo.png" alt="" width={42} height={42} />
+            <div>
+              <strong>Control operativo</strong>
+              <span>Pedidos · Guías · Cobros</span>
+            </div>
+          </div>
+          <div className={styles.previewRows}>
+            {boardRows.map(([label, state, value]) => <article key={label}>
+              <div>
+                <span>{label}</span>
+                <strong>{state}</strong>
+              </div>
+              <b>{value}</b>
+            </article>)}
+          </div>
+          <div className={styles.previewFooter}>
+            {operations.map(([title, text]) => <div key={title}>
+              <strong>{title}</strong>
+              <span>{text}</span>
+            </div>)}
           </div>
         </aside>
-      </div>
-
-      <div className={styles.flowStrip} aria-label="Cómo trabaja Custodia360">
-        {flow.map(([number, title, text]) => <article key={number}>
-          <b>{number}</b>
-          <div>
-            <strong>{title}</strong>
-            <span>{text}</span>
-          </div>
-        </article>)}
-      </div>
+      </section>
 
       <nav className={styles.legal} aria-label="Legal">
         <Link href="/terminos-y-condiciones">Términos</Link>

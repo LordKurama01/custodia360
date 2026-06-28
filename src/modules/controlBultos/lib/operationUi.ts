@@ -53,6 +53,38 @@ export function statusVisualClass(status: LogisticsStatus | GuidePaymentStatus |
   return map[status] ?? "neutral";
 }
 
+export function statusGlyph(status: LogisticsStatus | string) {
+  const map: Record<string, string> = {
+    para_retirar: "●",
+    retirado: "✓",
+    cd: "□",
+    deposito_a: "A",
+    deposito_b: "B",
+    en_transito: "↗",
+    despachado: "↦",
+    recibido: "✓",
+  };
+  return map[status] ?? "•";
+}
+
+export function operationProgress(status: LogisticsStatus) {
+  const steps: LogisticsStatus[] = ["para_retirar", "retirado", "cd", "deposito_a", "deposito_b", "en_transito", "despachado", "recibido"];
+  const index = Math.max(steps.indexOf(status), 0);
+  return Math.round((index / (steps.length - 1)) * 100);
+}
+
+export function operationProgressLabel(status: LogisticsStatus) {
+  if (status === "para_retirar") return "Retiro pendiente";
+  if (status === "retirado") return "Retirado";
+  if (status === "cd") return "En CD";
+  if (status === "deposito_a") return "Depósito A";
+  if (status === "deposito_b") return "Depósito B";
+  if (status === "en_transito") return "En tránsito";
+  if (status === "despachado") return "Despachado";
+  if (status === "recibido") return "Recibido";
+  return "En curso";
+}
+
 export function guideStateLabel(operation: ControlOperation) {
   const shipments = operation.operation_shipments;
   if (!shipments.length) return "Guía: sin cargar";
@@ -66,4 +98,14 @@ export function guideStateTone(operation: ControlOperation) {
   if (label.includes("sin cargar") || label.includes("completar")) return "warn";
   if (label.includes("cerrada")) return "ok";
   return "info";
+}
+
+export function guideActionLabel(operation: ControlOperation) {
+  if (!operation.operation_shipments.length) return "Crear guía";
+  if (operation.operation_shipments.some((shipment) => !shipment.guide_number)) return "Completar guía";
+  return "Ver / agregar guía";
+}
+
+export function hasGuideWork(operation: ControlOperation) {
+  return !operation.operation_shipments.length || operation.operation_shipments.some((shipment) => !shipment.guide_number);
 }

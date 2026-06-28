@@ -11,7 +11,7 @@ import { Card } from "@/shared/components/Card";
 import { Field, Input, Select, Textarea } from "@/shared/components/Fields";
 import { formatDate, formatMoney } from "@/shared/lib/format";
 import { calculateOperationDraftTotal, calculateOperationTotals, toNumber } from "../lib/calculations";
-import { guideStateLabel, guideStateTone, leavesMesaOnStatus, shouldShowOnMesa, statusVisualClass } from "../lib/operationUi";
+import { guideActionLabel, guideStateLabel, guideStateTone, hasGuideWork, leavesMesaOnStatus, operationProgress, operationProgressLabel, shouldShowOnMesa, statusGlyph, statusVisualClass } from "../lib/operationUi";
 import {
   createOperation,
   createPayment,
@@ -407,6 +407,9 @@ export function ControlBultosView() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [swipedOperationId, setSwipedOperationId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<MainTab>("seguimiento");
   const [quickPanel, setQuickPanel] = useState<QuickPanel>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -439,6 +442,20 @@ export function ControlBultosView() {
   const canEdit = canEditOperations(profile?.role);
   const canCollect = canCreatePayments(profile?.role);
   const canSeeMoney = canViewFinancials(profile?.role);
+
+  const nativeFeedback = (pattern: number | number[] = 12) => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate(pattern);
+    }
+  };
+
+  const refreshNative = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    nativeFeedback(8);
+    await load();
+    setRefreshing(false);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -484,6 +501,15 @@ export function ControlBultosView() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!message && !error) return;
+    const timer = window.setTimeout(() => {
+      setMessage("");
+      setError("");
+    }, 3200);
+    return () => window.clearTimeout(timer);
+  }, [message, error]);
 
   useEffect(() => {
     const normalizeHash = (rawHash?: string) => rawHash?.replace(/^#/, "").replace(/^\//, "").trim().toLowerCase() ?? "";
@@ -841,9 +867,11 @@ export function ControlBultosView() {
     try {
       if (editingId) {
         await updateOperation(editingId, operationForm);
+        nativeFeedback(14);
         setMessage("Pedido actualizado.");
       } else {
         await createOperation(operationForm);
+        nativeFeedback(14);
         setMessage("Pedido creado.");
       }
       setEditingId(null);
@@ -912,6 +940,7 @@ export function ControlBultosView() {
     setError("");
     try {
       await saveShipment(shipmentForm);
+      nativeFeedback(14);
       setMessage("Guía guardada.");
       setShipmentOperation(null);
       setQuickPanel(null);
@@ -937,6 +966,7 @@ export function ControlBultosView() {
     setSaving(true);
     setError("");
     try {
+      nativeFeedback(18);
       await createPayment({
         ...paymentForm,
         amount,
@@ -1103,9 +1133,10 @@ export function ControlBultosView() {
       </div> : null}
     </Card> : null}
 
-    {hasActionSheetActions ? <button type="button" className={styles.mobileFabAction} onClick={openActionSheet} aria-label={actionSheetCopy[activeTab].title}>+</button> : null}
+    {hasActionSheetActions ? <button type="button" className={styles.mobileFabAction} onClick={() => { nativeFeedback(8); openActionSheet(); }} aria-label={actionSheetCopy[activeTab].title}>+</button> : null}
+    {activeTab !== "mas" && !loading ? <button type="button" className={styles.refreshPill} onClick={refreshNative} disabled={refreshing}>{refreshing ? "Actualizando..." : "Actualizar"}</button> : null}
 
-    {loading ? <Card className={styles.empty}>Cargando operaciones...</Card> : null}
+    {loading ? <div className={styles.skeletonStack} aria-label="Cargando operaciones"><span /><span /><span /></div> : null}
 
     {activeTab === "seguimiento" && !loading ? <section className={styles.contentGrid}>
       <div className={styles.operationList}>
@@ -1127,7 +1158,7 @@ export function ControlBultosView() {
                 <span>{operation.public_code} · {operation.provider_name}</span>
               </div>
               <div>
-                <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}>{logisticsLabels[operation.logistics_status]}</span>
+                <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}><span aria-hidden="true" className={styles.statusDot}>{statusGlyph(operation.logistics_status)}</span>{logisticsLabels[operation.logistics_status]}</span>
                 <small>Cliente ve {clientLogisticsLabels[operation.logistics_status]}</small>
               </div>
               <div className={styles.moneyCell}>
@@ -1155,13 +1186,31 @@ export function ControlBultosView() {
         <div className={styles.mobileOperationCards}>
           {mesaOperations.length ? mesaOperations.map((operation) => {
             const account = accounts.find((item) => item.clientId === operation.client_id);
-            return <article key={operation.id} className={styles.operationCard} onClick={() => { setFocusedOperationId(operation.id); openOperationScreen(operation); }}>
+            const progress = operationProgress(operation.logistics_status);
+            const swiped = swipedOperationId === operation.id;
+            return <article
+              key={operation.id}
+              className={`${styles.operationCard} ${swiped ? styles.operationCardSwiped : ""}`}
+              onClick={() => { setFocusedOperationId(operation.id); openOperationScreen(operation); }}
+              onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
+              onTouchEnd={(event) => {
+                const endX = event.changedTouches[0]?.clientX ?? null;
+                if (touchStartX === null || endX === null) return;
+                const delta = endX - touchStartX;
+                if (Math.abs(delta) > 54) {
+                  event.stopPropagation();
+                  nativeFeedback(8);
+                  setSwipedOperationId(swiped ? null : operation.id);
+                }
+                setTouchStartX(null);
+              }}
+            >
               <div className={styles.compactRowHead}>
                 <div>
                   <strong>{operation.clients?.name ?? "Sin cliente"}</strong>
                   <span>{operation.package_count} bultos · {operation.operation_shipments.length} guías</span>
                 </div>
-                <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}>{logisticsLabels[operation.logistics_status]}</span>
+                <span className={`${styles.badge} ${statusClass(operation.logistics_status)}`}><span aria-hidden="true" className={styles.statusDot}>{statusGlyph(operation.logistics_status)}</span>{logisticsLabels[operation.logistics_status]}</span>
               </div>
               <div className={styles.compactRowMeta}>
                 <span>{operation.provider_name}{operation.note ? ` · ${operation.note}` : ""}</span>
@@ -1171,19 +1220,29 @@ export function ControlBultosView() {
                 <span className={`${styles.miniChip} ${styles[guideStateTone(operation)] ?? styles.info}`}>{guideStateLabel(operation)}</span>
                 <span className={`${styles.miniChip} ${cobroStateClass(account)}`}>{cobroStateLabel(account)}</span>
               </div>
+              <div className={styles.operationProgress} aria-label={`Avance: ${operationProgressLabel(operation.logistics_status)}`}>
+                <div><span style={{ width: `${progress}%` }} /></div>
+                <small>{operationProgressLabel(operation.logistics_status)}</small>
+              </div>
+              {swiped ? <div className={styles.swipeActionBar} onClick={(event) => event.stopPropagation()}>
+                <button type="button" onClick={() => { startEdit(operation); setSwipedOperationId(null); }} disabled={!canEdit}>Editar</button>
+                <button type="button" onClick={() => { setActionsOperation(operation); setSwipedOperationId(null); }}>Estado</button>
+                <button type="button" onClick={() => { startShipment(operation); setSwipedOperationId(null); }} disabled={!canEdit}>{hasGuideWork(operation) ? "Guía" : "+ Guía"}</button>
+                <button type="button" onClick={() => { startPayment(operation); setSwipedOperationId(null); }} disabled={!canCollect}>Cobrar</button>
+              </div> : null}
               <div className={styles.compactNext}>
                 <span>{operationMissingLabel(operation, account)}</span>
-                <button type="button" aria-label="Abrir acciones" onClick={(event) => { event.stopPropagation(); setActionsOperation(operation); }}>•••</button>
+                <button type="button" aria-label="Abrir acciones" onClick={(event) => { event.stopPropagation(); nativeFeedback(8); setActionsOperation(operation); }}>•••</button>
               </div>
             </article>;
-          }) : <Card className={styles.empty}>No hay operaciones para estos filtros.</Card>}
+          }) : <Card className={styles.empty}>No hay pedidos activos para estos filtros. Tocá + para crear uno.</Card>}
         </div>
       </div>
 
       {sideOperation ? <aside className={styles.desktopDetail}>
         <div className={styles.cardHead}>
           <div><p>Ficha rápida</p><h3>{sideOperation.clients?.name ?? "Sin cliente"}</h3></div>
-          <span className={`${styles.badge} ${statusClass(sideOperation.logistics_status)}`}>{logisticsLabels[sideOperation.logistics_status]}</span>
+          <span className={`${styles.badge} ${statusClass(sideOperation.logistics_status)}`}><span aria-hidden="true" className={styles.statusDot}>{statusGlyph(sideOperation.logistics_status)}</span>{logisticsLabels[sideOperation.logistics_status]}</span>
         </div>
         <div className={styles.detailGrid}>
           <div><span>Pedido</span><strong>{sideOperation.public_code}</strong></div>
@@ -1569,10 +1628,15 @@ export function ControlBultosView() {
 
     {actionsOperation ? <div className={styles.panelOverlay}><section className={`${styles.panel} ${styles.bottomSheet}`}>
       <div className={styles.panelHead}><div><p>Acciones rápidas</p><h3>{actionsOperation.clients?.name ?? actionsOperation.public_code}</h3></div><button type="button" onClick={() => setActionsOperation(null)}>Cerrar</button></div>
+      <div className={styles.contextHint}>
+        <span>{operationMissingLabel(actionsOperation, accounts.find((item) => item.clientId === actionsOperation.client_id))}</span>
+        <strong>{guideStateLabel(actionsOperation)} · {cobroStateLabel(accounts.find((item) => item.clientId === actionsOperation.client_id))}</strong>
+      </div>
       <div className={styles.quickActionList}>
         <Button variant="secondary" onClick={() => { startEdit(actionsOperation); setActionsOperation(null); }} disabled={!canEdit}>Editar pedido</Button>
-        <Button variant="secondary" onClick={() => { setDetailOperation(actionsOperation); setActionsOperation(null); }}>Ver ficha y guías</Button>
-        <Button variant="secondary" onClick={() => { startShipment(actionsOperation); setActionsOperation(null); }} disabled={!canEdit}>Nueva guía</Button>
+        <Button variant="secondary" onClick={() => { startShipment(actionsOperation); setActionsOperation(null); }} disabled={!canEdit}>{guideActionLabel(actionsOperation)}</Button>
+        <Button variant="secondary" onClick={() => { startPayment(actionsOperation); setActionsOperation(null); }} disabled={!canCollect}>Registrar cobro</Button>
+        <Button variant="ghost" onClick={() => { copyWhatsAppOperation(actionsOperation); setActionsOperation(null); }}>WhatsApp cliente</Button>
         <Button variant="ghost" onClick={() => { openOperationScreen(actionsOperation, "cuenta"); setActionsOperation(null); }}>Ficha cliente</Button>
         <Button variant="ghost" onClick={() => { copyClientLink(actionsOperation); setActionsOperation(null); }}>Copiar link cliente</Button>
         <Button variant="ghost" onClick={() => { startMoneyOnAccount(actionsOperation); setActionsOperation(null); }}>Dinero a cuenta</Button>
@@ -1581,7 +1645,7 @@ export function ControlBultosView() {
       <div className={styles.statusUpdateBlock}>
         <strong>Cambiar estado</strong>
         <div className={styles.statusStepGrid}>
-          {logisticsStatusOptions.map((option) => <button key={option.value} type="button" className={actionsOperation.logistics_status === option.value ? styles.statusStepActive : ""} onClick={() => { changeStatus(actionsOperation.id, option.value); if (leavesMesaOnStatus(option.value)) setActionsOperation(null); }}>{option.label}</button>)}
+          {logisticsStatusOptions.map((option) => <button key={option.value} type="button" className={actionsOperation.logistics_status === option.value ? styles.statusStepActive : ""} onClick={() => { changeStatus(actionsOperation.id, option.value); if (leavesMesaOnStatus(option.value)) setActionsOperation(null); }}><span aria-hidden="true" className={styles.statusDot}>{statusGlyph(option.value)}</span>{option.label}</button>)}
         </div>
         <small>Al marcar Recibido, sale de Mesa y queda en historial del cliente.</small>
       </div>

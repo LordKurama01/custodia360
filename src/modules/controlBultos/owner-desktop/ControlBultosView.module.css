@@ -3528,3 +3528,228 @@
   text-align: left;
   padding-inline: .58rem;
 }
+
+/* v33 Experiencia app nativa: acciones táctiles, feedback y lectura rápida sin módulos nuevos. */
+.statusDot {
+  display: inline-grid;
+  place-items: center;
+  min-width: .9rem;
+  height: .9rem;
+  margin-right: .28rem;
+  border-radius: 999px;
+  color: currentColor;
+  background: rgba(255,255,255,.09);
+  font-size: .58rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.operationProgress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .46rem;
+}
+
+.operationProgress div {
+  height: .28rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.075);
+}
+
+.operationProgress div span {
+  display: block;
+  height: 100%;
+  min-width: .35rem;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(141, 215, 42, .78), rgba(94, 211, 132, .78));
+}
+
+.operationProgress small {
+  color: rgba(214,226,239,.58);
+  font-size: .58rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.swipeActionBar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .3rem;
+  padding: .34rem;
+  border: 1px solid rgba(141,215,42,.15);
+  border-radius: .72rem;
+  background: rgba(141,215,42,.04);
+}
+
+.swipeActionBar button {
+  min-height: 1.92rem;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: .58rem;
+  color: rgba(236,246,231,.88);
+  background: rgba(255,255,255,.034);
+  font: inherit;
+  font-size: .62rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.swipeActionBar button:first-child {
+  color: #07100d;
+  background: linear-gradient(145deg, #afea61, #7fc526);
+  border-color: rgba(255,255,255,.14);
+}
+
+.swipeActionBar button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.operationCardSwiped {
+  border-color: rgba(141,215,42,.18) !important;
+  background:
+    radial-gradient(circle at 100% 0, rgba(141,215,42,.045), transparent 32%),
+    linear-gradient(180deg, rgba(14,27,45,.96), rgba(6,15,28,.99)) !important;
+}
+
+.contextHint {
+  display: grid;
+  gap: .14rem;
+  padding: .52rem .58rem;
+  border: 1px solid rgba(141,215,42,.14);
+  border-radius: .78rem;
+  background: rgba(141,215,42,.045);
+}
+
+.contextHint span {
+  color: #dfffba;
+  font-size: .74rem;
+  font-weight: 950;
+}
+
+.contextHint strong {
+  color: rgba(214,226,239,.62);
+  font-size: .66rem;
+  font-weight: 760;
+}
+
+.refreshPill {
+  display: none;
+}
+
+.skeletonStack {
+  display: grid;
+  gap: .52rem;
+  margin-top: .62rem;
+}
+
+.skeletonStack span {
+  min-height: 4.1rem;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: .86rem;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.035), rgba(255,255,255,.075), rgba(255,255,255,.035));
+  background-size: 180% 100%;
+  animation: c360Skeleton 1.2s ease-in-out infinite;
+}
+
+@keyframes c360Skeleton {
+  0% { background-position: 120% 0; }
+  100% { background-position: -80% 0; }
+}
+
+@media (max-width: 767px) {
+  .success,
+  .error {
+    position: fixed !important;
+    left: .72rem;
+    right: .72rem;
+    top: .72rem;
+    z-index: 1400;
+    margin: 0 !important;
+    border-radius: .82rem !important;
+    box-shadow: 0 16px 42px rgba(0,0,0,.42) !important;
+  }
+
+  .refreshPill {
+    position: fixed;
+    left: 50%;
+    bottom: calc(106px + env(safe-area-inset-bottom));
+    z-index: 69;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.1rem;
+    padding: 0 .82rem;
+    border: 1px solid rgba(255,255,255,.075);
+    border-radius: 999px;
+    color: rgba(236,246,231,.78);
+    background: rgba(6,15,28,.82);
+    backdrop-filter: blur(14px);
+    font: inherit;
+    font-size: .62rem;
+    font-weight: 900;
+    transform: translateX(-50%);
+    box-shadow: 0 12px 34px rgba(0,0,0,.36);
+  }
+
+  .refreshPill:disabled {
+    opacity: .62;
+  }
+
+  .operationProgress {
+    gap: .34rem;
+  }
+
+  .operationProgress div {
+    height: .24rem;
+  }
+
+  .operationProgress small {
+    font-size: .52rem;
+  }
+
+  .swipeActionBar {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .24rem;
+    padding: .28rem;
+    border-radius: .64rem;
+  }
+
+  .swipeActionBar button {
+    min-height: 1.78rem;
+    padding-inline: .1rem;
+    font-size: .56rem;
+  }
+
+  .statusStepGrid button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: .18rem;
+  }
+
+  .contextHint {
+    padding: .46rem .52rem;
+    border-radius: .68rem;
+  }
+
+  .contextHint span {
+    font-size: .68rem;
+  }
+
+  .contextHint strong {
+    font-size: .60rem;
+  }
+
+  .skeletonStack {
+    gap: .36rem;
+    margin-top: .38rem;
+  }
+
+  .skeletonStack span {
+    min-height: 3.15rem;
+    border-radius: .76rem;
+  }
+}

@@ -109,3 +109,27 @@ export function guideActionLabel(operation: ControlOperation) {
 export function hasGuideWork(operation: ControlOperation) {
   return !operation.operation_shipments.length || operation.operation_shipments.some((shipment) => !shipment.guide_number);
 }
+
+export function isArchivedOperationStatus(status: LogisticsStatus) {
+  return mesaExitStatuses.has(status);
+}
+
+export function mesaExitReason(status: LogisticsStatus) {
+  if (status === "retirado") return "Salió de Mesa por estado: Retirado";
+  if (status === "despachado") return "Salió de Mesa por estado: Despachado";
+  if (status === "recibido") return "Salió de Mesa por estado: Recibido";
+  return "Operación fuera de Mesa";
+}
+
+export function auditActionLabel(action: string) {
+  const map: Record<string, string> = {
+    operation_created: "Creó pedido",
+    operation_updated: "Modificó pedido",
+    logistics_status_changed: "Cambió estado",
+    shipment_saved: "Guardó guía",
+    payment_created: "Registró cobro",
+    special_movement_created: "Registró movimiento",
+    operation_removed: "Eliminó operación",
+  };
+  return map[action] ?? action.replaceAll("_", " ");
+}

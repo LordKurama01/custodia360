@@ -6,6 +6,7 @@ import type {
   ControlBultosData,
   ControlClient,
   ControlOperation,
+  ControlOperationEvent,
   ControlProvider,
   OperationFormInput,
   PaymentInput,
@@ -13,7 +14,7 @@ import type {
   ShipmentInput,
   SpecialMovementInput,
 } from "../types";
-import { DEFAULT_DOLLAR_RATE, calculateGuideCharge, isViaCargo } from "../types";
+import { DEFAULT_DOLLAR_RATE, calculateGuideCharge, isViaCargo, logisticsLabels } from "../types";
 
 const operationSelect = `
   *,
@@ -55,6 +56,66 @@ function makeId(prefix: string) {
 
 function makePublicCode(prefix = "C360") {
   return `${prefix}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+}
+
+
+type OperationEventDraft = Partial<Omit<ControlOperationEvent, "action">> & Pick<ControlOperationEvent, "action">;
+
+function demoActor() {
+  return { id: "demo-owner", name: "Jeremías", role: "Owner" };
+}
+
+function actionLabel(action: string) {
+  const labels: Record<string, string> = {
+    operation_created: "Creó pedido",
+    operation_updated: "Modificó pedido",
+    logistics_status_changed: "Cambió estado",
+    shipment_saved: "Guardó guía",
+    payment_created: "Registró cobro",
+    special_movement_created: "Registró movimiento",
+    operation_removed: "Eliminó operación",
+  };
+  return labels[action] ?? action.replaceAll("_", " ");
+}
+
+function makeEvent(operation: ControlOperation | null, draft: OperationEventDraft): ControlOperationEvent {
+  const actor = demoActor();
+  return {
+    id: draft.id ?? makeId("event"),
+    operation_id: draft.operation_id ?? operation?.id ?? null,
+    client_id: draft.client_id ?? operation?.client_id ?? null,
+    client_name: draft.client_name ?? operation?.clients?.name ?? null,
+    operation_code: draft.operation_code ?? operation?.public_code ?? null,
+    action: draft.action,
+    action_label: draft.action_label || actionLabel(draft.action),
+    from_status: draft.from_status ?? null,
+    to_status: draft.to_status ?? null,
+    actor_id: draft.actor_id ?? actor.id,
+    actor_name: draft.actor_name || actor.name,
+    actor_role: draft.actor_role ?? actor.role,
+    note: draft.note ?? null,
+    created_at: draft.created_at ?? nowIso(),
+  };
+}
+
+function appendEvent(data: ControlBultosData, event: ControlOperationEvent) {
+  return {
+    ...data,
+    operation_events: [event, ...(data.operation_events ?? [])].slice(0, 300),
+  };
+}
+
+function seedOperationEvents(operations: ControlOperation[]): ControlOperationEvent[] {
+  return operations.map((operation) => makeEvent(operation, {
+    operation_id: operation.id,
+    client_id: operation.client_id,
+    action: "logistics_status_changed",
+    action_label: "Cambio de estado inicial",
+    from_status: null,
+    to_status: operation.logistics_status,
+    note: `Estado actual: ${logisticsLabels[operation.logistics_status]}`,
+    created_at: operation.updated_at ?? operation.created_at,
+  }));
 }
 
 function roundMoney(value: number) {
@@ -444,7 +505,7 @@ function getDemoSeed(): ControlBultosData {
     }),
   ];
 
-  return { clients, operations, providers };
+  return { clients, operations, providers, operation_events: seedOperationEvents(operations) };
 }
 function readDemoData(): ControlBultosData {
   if (typeof window === "undefined") return getDemoSeed();
@@ -461,6 +522,7 @@ function readDemoData(): ControlBultosData {
       clients: parsed.clients ?? [],
       operations: (parsed.operations ?? []).map((operation) => recalculateOperation(normalizeOperation(operation))),
       providers: parsed.providers ?? [],
+      operation_events: parsed.operation_events ?? seedOperationEvents((parsed.operations ?? []).map((operation) => recalculateOperation(normalizeOperation(operation)))),
     };
   } catch {
     return getDemoSeed();
@@ -473,6 +535,7 @@ function writeDemoData(data: ControlBultosData) {
     clients: data.clients,
     operations: data.operations.map((operation) => recalculateOperation(operation)),
     providers: data.providers ?? [],
+    operation_events: data.operation_events ?? [],
   }));
 }
 
@@ -518,18 +581,45 @@ export async function getControlBultosData(): Promise<ControlBultosData> {
   if (isDemoMode()) return readDemoData();
 
   const supabase = createSupabaseBrowserClient();
-  const [clientsResult, operationsResult] = await Promise.all([
+  const [clientsResult, operationsResult, auditResult, profilesResult] = await Promise.all([
     supabase.from("clients").select("*").eq("active", true).order("name", { ascending: true }),
     supabase.from("operations").select(operationSelect).order("operation_date", { ascending: false }).order("created_at", { ascending: false }),
+    supabase.from("audit_logs").select("*").eq("entity_type", "operation").order("created_at", { ascending: false }).limit(250),
+    supabase.from("profiles").select("id, full_name, email, role"),
   ]);
 
   requireNoError(clientsResult.error, "No se pudieron cargar clientes.");
   requireNoError(operationsResult.error, "No se pudieron cargar operaciones.");
 
+  const operations = ((operationsResult.data ?? []) as unknown as ControlOperation[]).map(normalizeOperation);
+  const operationMap = new Map(operations.map((operation) => [operation.id, operation]));
+  const profileMap = new Map((profilesResult.data ?? []).map((profile: { id: string; full_name: string | null; email: string; role: string }) => [profile.id, profile]));
+  const operationEvents: ControlOperationEvent[] = (auditResult.data ?? []).map((row) => {
+    const operation = row.entity_id ? operationMap.get(row.entity_id) ?? null : null;
+    const beforeData = row.before_data && typeof row.before_data === "object" && !Array.isArray(row.before_data) ? row.before_data as Record<string, Json> : null;
+    const afterData = row.after_data && typeof row.after_data === "object" && !Array.isArray(row.after_data) ? row.after_data as Record<string, Json> : null;
+    const actor = row.actor_id ? profileMap.get(row.actor_id) : null;
+    return makeEvent(operation, {
+      id: row.id,
+      operation_id: row.entity_id,
+      client_id: operation?.client_id ?? (typeof afterData?.client_id === "string" ? afterData.client_id : null),
+      action: row.action,
+      action_label: actionLabel(row.action),
+      from_status: beforeData?.logistics_status as ControlOperationEvent["from_status"],
+      to_status: afterData?.logistics_status as ControlOperationEvent["to_status"],
+      actor_id: row.actor_id,
+      actor_name: actor?.full_name || actor?.email || "Usuario autorizado",
+      actor_role: actor?.role ?? null,
+      note: row.action === "logistics_status_changed" ? "Cambio de estado registrado" : null,
+      created_at: row.created_at,
+    });
+  });
+
   return {
     clients: (clientsResult.data ?? []) as ControlClient[],
-    operations: ((operationsResult.data ?? []) as unknown as ControlOperation[]).map(normalizeOperation),
+    operations,
     providers: readProviderDirectory(),
+    operation_events: operationEvents,
   };
 }
 
@@ -633,7 +723,7 @@ export async function createOperation(input: OperationFormInput) {
       operation_payments: [],
       special_movements: [],
     });
-    writeDemoData({ ...data, operations: [operation, ...data.operations] });
+    writeDemoData(appendEvent({ ...data, operations: [operation, ...data.operations] }, makeEvent(operation, { action: "operation_created", action_label: "Creó pedido", to_status: operation.logistics_status, note: "Pedido creado desde alta rápida" })));
     return operation;
   }
 
@@ -666,6 +756,7 @@ export async function updateOperation(operationId: string, input: OperationFormI
   if (isDemoMode()) {
     const data = readDemoData();
     const client = data.clients.find((item) => item.id === input.client_id);
+    const before = data.operations.find((operation) => operation.id === operationId) ?? null;
     const operations = data.operations.map((operation) => operation.id === operationId ? recalculateOperation({
       ...operation,
       client_id: input.client_id,
@@ -680,8 +771,13 @@ export async function updateOperation(operationId: string, input: OperationFormI
       updated_by: "demo-owner",
       clients: client ? { id: client.id, name: client.name, phone: client.phone, default_price_per_package: client.default_price_per_package, private_code: client.private_code } : null,
     }) : operation);
-    writeDemoData({ ...data, operations });
-    return operations.find((item) => item.id === operationId) ?? null;
+    const updated = operations.find((item) => item.id === operationId) ?? null;
+    const action = before?.logistics_status !== updated?.logistics_status ? "logistics_status_changed" : "operation_updated";
+    const note = before?.logistics_status !== updated?.logistics_status
+      ? `Estado ${before ? logisticsLabels[before.logistics_status] : "-"} → ${updated ? logisticsLabels[updated.logistics_status] : "-"}`
+      : "Pedido modificado: bultos, valor, proveedor, pase o descripción";
+    writeDemoData(updated ? appendEvent({ ...data, operations }, makeEvent(updated, { action, action_label: actionLabel(action), from_status: before?.logistics_status ?? null, to_status: updated.logistics_status, note })) : { ...data, operations });
+    return updated;
   }
 
   const supabase = createSupabaseBrowserClient();
@@ -706,16 +802,26 @@ export async function updateOperation(operationId: string, input: OperationFormI
     .single();
 
   requireNoError(error, "No se pudo editar la operacion.");
-  await recordAudit("operation_updated", "operation", operationId, data as Json, before as Json);
+  const beforeStatus = before?.logistics_status as OperationFormInput["logistics_status"] | undefined;
+  const nextStatus = (data as { logistics_status?: OperationFormInput["logistics_status"] } | null)?.logistics_status;
+  await recordAudit(beforeStatus && nextStatus && beforeStatus !== nextStatus ? "logistics_status_changed" : "operation_updated", "operation", operationId, data as Json, before as Json);
   return normalizeOperation(data as unknown as ControlOperation);
 }
 
 export async function updateLogisticsStatus(operationId: string, logisticsStatus: OperationFormInput["logistics_status"]) {
   if (isDemoMode()) {
     const data = readDemoData();
+    const before = data.operations.find((operation) => operation.id === operationId) ?? null;
     const operations = data.operations.map((operation) => operation.id === operationId ? recalculateOperation({ ...operation, logistics_status: logisticsStatus, updated_by: "demo-owner" }) : operation);
-    writeDemoData({ ...data, operations });
-    return operations.find((item) => item.id === operationId) ?? null;
+    const updated = operations.find((item) => item.id === operationId) ?? null;
+    writeDemoData(updated ? appendEvent({ ...data, operations }, makeEvent(updated, {
+      action: "logistics_status_changed",
+      action_label: "Cambió estado",
+      from_status: before?.logistics_status ?? null,
+      to_status: logisticsStatus,
+      note: `Estado ${before ? logisticsLabels[before.logistics_status] : "-"} → ${logisticsLabels[logisticsStatus]}`,
+    })) : { ...data, operations });
+    return updated;
   }
 
   const supabase = createSupabaseBrowserClient();
@@ -778,8 +884,15 @@ export async function saveShipment(input: ShipmentInput) {
       };
       return recalculateOperation({ ...operation, operation_shipments: [...operation.operation_shipments, shipment] });
     });
-    writeDemoData({ ...data, operations });
-    return operations.find((item) => item.id === input.operation_id)?.operation_shipments.at(-1) ?? null;
+    const updated = operations.find((item) => item.id === input.operation_id) ?? null;
+    const saved = updated?.operation_shipments.at(-1) ?? null;
+    writeDemoData(updated ? appendEvent({ ...data, operations }, makeEvent(updated, {
+      action: "shipment_saved",
+      action_label: "Guardó guía",
+      to_status: updated.logistics_status,
+      note: saved ? `Guía ${saved.guide_number || "sin número"} · ${saved.company || "sin empresa"}` : "Guía cargada",
+    })) : { ...data, operations });
+    return saved;
   }
 
   const supabase = createSupabaseBrowserClient();
@@ -868,8 +981,15 @@ export async function createPayment(input: PaymentInput) {
         special_movements: nextSpecialMovements,
       });
     });
-    writeDemoData({ ...data, operations });
-    return operations.find((item) => item.id === input.operation_id)?.operation_payments.at(-1) ?? null;
+    const updated = operations.find((item) => item.id === input.operation_id) ?? null;
+    const paymentSaved = updated?.operation_payments.at(-1) ?? null;
+    writeDemoData(updated ? appendEvent({ ...data, operations }, makeEvent(updated, {
+      action: "payment_created",
+      action_label: "Registró cobro",
+      to_status: updated.logistics_status,
+      note: paymentSaved ? `${paymentSaved.concept} · ${paymentSaved.currency} ${paymentSaved.amount}` : "Cobro registrado",
+    })) : { ...data, operations });
+    return paymentSaved;
   }
 
   const supabase = createSupabaseBrowserClient();
@@ -926,7 +1046,13 @@ export async function createSpecialMovement(input: SpecialMovementInput) {
     const operations = data.operations.map((operation) => operation.id === input.operation_id
       ? recalculateOperation({ ...operation, special_movements: [...(operation.special_movements ?? []), movement] })
       : operation);
-    writeDemoData({ ...data, operations });
+    const updated = operations.find((item) => item.id === input.operation_id) ?? null;
+    writeDemoData(updated ? appendEvent({ ...data, operations }, makeEvent(updated, {
+      action: "special_movement_created",
+      action_label: "Registró movimiento",
+      to_status: updated.logistics_status,
+      note: `${movement.provider_name} · ${movement.currency} ${movement.amount}`,
+    })) : { ...data, operations });
     return movement;
   }
 

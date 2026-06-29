@@ -4315,3 +4315,123 @@
     display: none !important;
   }
 }
+
+/* v36: historial operativo + confirmaciones nativas. Bloque visual aislado. */
+.generalHistoryCard {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(147, 255, 37, 0.12);
+  background: linear-gradient(180deg, rgba(12, 20, 22, 0.92), rgba(6, 10, 12, 0.96));
+  border-radius: 1rem;
+  padding: .82rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.eventRow,
+.archiveRow {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .65rem;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: .82rem;
+  padding: .72rem .78rem;
+  margin-top: .52rem;
+}
+
+.eventRow div,
+.archiveRow div {
+  min-width: 0;
+  display: grid;
+  gap: .18rem;
+}
+
+.eventRow strong,
+.archiveRow strong {
+  min-width: 0;
+  color: rgba(246, 255, 247, .96);
+  font-size: .84rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventRow span,
+.archiveRow span,
+.eventRow small,
+.archiveRow small {
+  min-width: 0;
+  color: rgba(222, 234, 224, .64);
+  font-size: .7rem;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventRow small,
+.archiveRow small {
+  color: rgba(147, 255, 37, .64);
+}
+
+.eventRow b,
+.archiveRow b {
+  justify-self: end;
+  max-width: 7.8rem;
+  border: 1px solid rgba(147, 255, 37, .16);
+  border-radius: 999px;
+  padding: .28rem .5rem;
+  color: rgba(246, 255, 247, .86);
+  background: rgba(147, 255, 37, .055);
+  font-size: .68rem;
+  font-weight: 750;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archiveRow {
+  border-color: rgba(147, 255, 37, .15);
+}
+
+@media (max-width: 767px) {
+  .generalHistoryCard {
+    border-radius: .92rem;
+    padding: .7rem;
+  }
+
+  .eventRow,
+  .archiveRow {
+    grid-template-columns: minmax(0, 1fr);
+    padding: .66rem .7rem;
+  }
+
+  .eventRow b,
+  .archiveRow b {
+    justify-self: start;
+    max-width: 100%;
+  }
+
+  .eventRow strong,
+  .archiveRow strong,
+  .eventRow span,
+  .archiveRow span,
+  .eventRow small,
+  .archiveRow small {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+}
+
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .generalHistoryCard {
+    padding: 1rem;
+  }
+}

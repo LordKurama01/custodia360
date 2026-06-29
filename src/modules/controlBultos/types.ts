@@ -54,6 +54,33 @@ export type SpecialMovement = {
   updated_at: string;
 };
 
+
+export type OperationAuditAction =
+  | "operation_created"
+  | "operation_updated"
+  | "logistics_status_changed"
+  | "shipment_saved"
+  | "payment_created"
+  | "special_movement_created"
+  | "operation_removed";
+
+export type ControlOperationEvent = {
+  id: string;
+  operation_id: string | null;
+  client_id: string | null;
+  client_name?: string | null;
+  operation_code?: string | null;
+  action: OperationAuditAction | string;
+  action_label: string;
+  from_status?: LogisticsStatus | null;
+  to_status?: LogisticsStatus | null;
+  actor_id: string | null;
+  actor_name: string;
+  actor_role?: string | null;
+  note?: string | null;
+  created_at: string;
+};
+
 export type ControlOperation = OperationRow & {
   clients: Pick<ClientRow, "id" | "name" | "phone" | "default_price_per_package" | "private_code"> | null;
   operation_shipments: ControlShipment[];
@@ -65,6 +92,7 @@ export type ControlBultosData = {
   clients: ControlClient[];
   operations: ControlOperation[];
   providers: ControlProvider[];
+  operation_events?: ControlOperationEvent[];
 };
 
 export type OperationFormInput = {

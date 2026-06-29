@@ -11,7 +11,7 @@ import { Card } from "@/shared/components/Card";
 import { Field, Input, Select, Textarea } from "@/shared/components/Fields";
 import { formatDate, formatMoney } from "@/shared/lib/format";
 import { calculateOperationDraftTotal, calculateOperationTotals, toNumber } from "../lib/calculations";
-import { guideActionLabel, guideStateLabel, guideStateTone, hasGuideWork, leavesMesaOnStatus, operationProgress, operationProgressLabel, shouldShowOnMesa, statusGlyph, statusVisualClass } from "../lib/operationUi";
+import { auditActionLabel, guideActionLabel, guideStateLabel, guideStateTone, hasGuideWork, isArchivedOperationStatus, leavesMesaOnStatus, mesaExitReason, operationProgress, operationProgressLabel, shouldShowOnMesa, statusGlyph, statusVisualClass } from "../lib/operationUi";
 import {
   createOperation,
   createPayment,
@@ -27,6 +27,7 @@ import type {
   ClientQuickInput,
   ControlBultosData,
   ControlOperation,
+  ControlOperationEvent,
   ControlShipment,
   OperationFormInput,
   PaymentInput,
@@ -91,6 +92,8 @@ type ClientAccount = {
   specialPending: SpecialMovement[];
   credits: SpecialMovement[];
   payments: ControlOperation["operation_payments"];
+  operationEvents: ControlOperationEvent[];
+  archivedOperations: ControlOperation[];
   passUsdPending: number;
   guideArsPending: number;
   specialArsPending: number;
@@ -228,6 +231,34 @@ function operationMissingLabel(operation: ControlOperation, account?: ClientAcco
   return "Listo para seguir";
 }
 
+function actorRoleLabel(role?: string | null) {
+  const labels: Record<string, string> = {
+    owner: "Owner",
+    admin: "Admin",
+    operator: "Operario",
+    collector: "Cobrador",
+    viewer: "Consulta",
+  };
+  return role ? labels[role] ?? role : "Usuario";
+}
+
+function eventStatusLine(event: ControlOperationEvent) {
+  if (event.from_status || event.to_status) {
+    const from = event.from_status ? logisticsLabels[event.from_status] : "Inicio";
+    const to = event.to_status ? logisticsLabels[event.to_status] : "Sin estado";
+    return `${from} → ${to}`;
+  }
+  return event.note || auditActionLabel(event.action);
+}
+
+function operationArchivePendingLabel(operation: ControlOperation, account?: ClientAccount | null) {
+  if (!operation.operation_shipments.length) return "Falta guía";
+  if (operation.operation_shipments.some((shipment) => !shipment.guide_number)) return "Falta completar guía";
+  if ((account?.passUsdPending ?? 0) > 0) return "Falta cobrar";
+  if ((account?.guideArsPending ?? 0) > 0) return "Guía a cobrar";
+  return "Sin pendientes";
+}
+
 function shipmentPassStatus(shipment: ControlShipment): AccountPass["status"] {
   if (shipment.pass_payment_status === "pagado") return "pagado";
   if (shipment.pass_payment_status === "parcial") return "parcial";
@@ -306,6 +337,8 @@ function createEmptyAccount(clientId: string, clientName: string, phone: string 
     specialPending: [],
     credits: [],
     payments: [],
+    operationEvents: [],
+    archivedOperations: [],
     passUsdPending: 0,
     guideArsPending: 0,
     specialArsPending: 0,
@@ -313,7 +346,7 @@ function createEmptyAccount(clientId: string, clientName: string, phone: string 
   };
 }
 
-function buildClientAccounts(operations: ControlOperation[], clients: ControlBultosData["clients"] = []): ClientAccount[] {
+function buildClientAccounts(operations: ControlOperation[], clients: ControlBultosData["clients"] = [], events: ControlOperationEvent[] = []): ClientAccount[] {
   const map = new Map<string, ClientAccount>();
 
   clients.forEach((client) => {
@@ -325,6 +358,7 @@ function buildClientAccounts(operations: ControlOperation[], clients: ControlBul
     const account = map.get(clientId) ?? createEmptyAccount(clientId, operation.clients?.name ?? "Sin cliente", operation.clients?.phone ?? null);
 
     account.operations.push(operation);
+    if (isArchivedOperationStatus(operation.logistics_status)) account.archivedOperations.push(operation);
     account.payments.push(...operation.operation_payments);
 
     operation.operation_shipments.forEach((shipment) => {
@@ -355,6 +389,13 @@ function buildClientAccounts(operations: ControlOperation[], clients: ControlBul
     map.set(clientId, account);
   });
 
+  events.forEach((event) => {
+    if (!event.client_id) return;
+    const account = map.get(event.client_id);
+    if (!account) return;
+    account.operationEvents.push(event);
+  });
+
   return Array.from(map.values()).map((account) => ({
     ...account,
     operations: account.operations.sort((a, b) => new Date(b.operation_date).getTime() - new Date(a.operation_date).getTime()),
@@ -363,6 +404,8 @@ function buildClientAccounts(operations: ControlOperation[], clients: ControlBul
     specialArsPending: account.specialPending.reduce((sum, item) => item.currency === "ARS" ? sum + item.amount : sum, 0),
     creditArs: account.credits.reduce((sum, item) => item.currency === "ARS" ? sum + item.amount : sum, 0),
     payments: account.payments.sort((a, b) => new Date(b.paid_at).getTime() - new Date(a.paid_at).getTime()),
+    operationEvents: account.operationEvents.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    archivedOperations: account.archivedOperations.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
   })).sort((a, b) => {
     const aOpen = a.passUsdPending + a.guideArsPending / DEFAULT_DOLLAR_RATE + a.specialArsPending / DEFAULT_DOLLAR_RATE;
     const bOpen = b.passUsdPending + b.guideArsPending / DEFAULT_DOLLAR_RATE + b.specialArsPending / DEFAULT_DOLLAR_RATE;
@@ -447,6 +490,11 @@ export function ControlBultosView() {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(pattern);
     }
+  };
+
+  const confirmNative = (title: string, detail: string) => {
+    nativeFeedback(6);
+    return window.confirm(`${title}\n\n${detail}`);
   };
 
   const refreshNative = async () => {
@@ -583,9 +631,11 @@ export function ControlBultosView() {
   }, [data.operations, filters]);
 
   const mesaOperations = useMemo(() => filteredOperations.filter(shouldShowOnMesa), [filteredOperations]);
-  const archivedOperations = useMemo(() => data.operations.filter((operation) => operation.logistics_status === "recibido"), [data.operations]);
+  const archivedOperations = useMemo(() => data.operations.filter((operation) => isArchivedOperationStatus(operation.logistics_status)), [data.operations]);
 
-  const accounts = useMemo(() => buildClientAccounts(data.operations, data.clients), [data.operations, data.clients]);
+  const operationEvents = data.operation_events ?? [];
+  const generalHistory = useMemo(() => [...operationEvents].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 30), [operationEvents]);
+  const accounts = useMemo(() => buildClientAccounts(data.operations, data.clients, operationEvents), [data.operations, data.clients, operationEvents]);
   const selectedAccount = accounts.find((account) => account.clientId === selectedAccountId) ?? accounts[0] ?? null;
   const sideSourceOperations = activeTab === "seguimiento" ? mesaOperations : filteredOperations;
   const sideOperation = sideSourceOperations.find((operation) => operation.id === focusedOperationId) ?? sideSourceOperations[0] ?? null;
@@ -862,6 +912,7 @@ export function ControlBultosView() {
     if (!canEdit) return setError("Tu rol no permite crear o editar operaciones.");
     if (!operationForm.client_id) return setError("Selecciona un cliente.");
     if (!operationForm.provider_name.trim()) return setError("El local/proveedor es obligatorio.");
+    if (editingId && !confirmNative("¿Seguro que deseás modificar este pedido?", "Se actualizarán bultos, valor, proveedor, pase, estado o descripción. El cambio quedará registrado en historial operativo.")) return;
     setSaving(true);
     setError("");
     try {
@@ -936,6 +987,7 @@ export function ControlBultosView() {
   const submitShipment = async () => {
     if (!shipmentOperation) return;
     if (!canEdit) return setError("Tu rol no permite cargar guías.");
+    if (!confirmNative("¿Seguro que deseás guardar esta guía?", "La guía quedará vinculada al pedido y el movimiento será visible en el historial.")) return;
     setSaving(true);
     setError("");
     try {
@@ -963,6 +1015,7 @@ export function ControlBultosView() {
     if (!canCollect) return setError("Tu rol no permite cargar pagos.");
     const amount = paymentForm.amount || (paymentForm.currency === "USD" ? selectedPassTotalUsd : selectedPassTotalArs);
     if (!amount || amount <= 0) return setError("El monto debe ser mayor a cero.");
+    if (!confirmNative("¿Seguro que deseás registrar este cobro?", "El cobro impactará en la cuenta del cliente y quedará auditado con usuario y fecha.")) return;
     setSaving(true);
     setError("");
     try {
@@ -988,6 +1041,7 @@ export function ControlBultosView() {
   const submitSpecialMovement = async () => {
     if (!specialOperation) return;
     if (!canEdit) return setError("Tu rol no permite cargar pedidos especiales.");
+    if (!confirmNative("¿Seguro que deseás registrar este movimiento?", "El movimiento quedará asociado al pedido y visible en la ficha del cliente.")) return;
     setSaving(true);
     setError("");
     try {
@@ -1031,6 +1085,13 @@ export function ControlBultosView() {
 
   const changeStatus = async (operationId: string, value: LogisticsStatus) => {
     if (!canEdit) return setError("Tu rol no permite cambiar estados.");
+    const operation = data.operations.find((item) => item.id === operationId);
+    if (!operation || operation.logistics_status === value) return;
+    const leavesMesa = leavesMesaOnStatus(value);
+    const detail = leavesMesa
+      ? `El pedido pasará de ${logisticsLabels[operation.logistics_status]} a ${logisticsLabels[value]}, saldrá de Mesa y quedará en Archivo/Historial con usuario y fecha.`
+      : `El pedido pasará de ${logisticsLabels[operation.logistics_status]} a ${logisticsLabels[value]}.`;
+    if (!confirmNative("¿Seguro que deseás cambiar el estado?", detail)) return;
     setSaving(true);
     setError("");
     try {
@@ -1368,6 +1429,18 @@ export function ControlBultosView() {
       <button type="button" className={styles.settingsRow} onClick={() => setQuickPanel("cliente")}><span>＋</span><div><strong>Nuevo contacto</strong><small>Alta rápida de cliente o proveedor.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/contacto-legal"}><span>?</span><div><strong>Soporte</strong><small>Ayuda, contacto legal y datos del sistema.</small></div><i>›</i></button>
       <button type="button" className={styles.settingsRow} onClick={() => location.href = "/login"}><span>↩</span><div><strong>Salir</strong><small>Cerrar el espacio operativo.</small></div><i>›</i></button>
+      <div className={styles.generalHistoryCard}>
+        <div className={styles.sectionTitleRow}><strong>Historial general</strong><span>{generalHistory.length}</span></div>
+        {generalHistory.slice(0, 8).map((event) => <div key={event.id} className={styles.eventRow}>
+          <div>
+            <strong>{event.actor_name} · {event.action_label || auditActionLabel(event.action)}</strong>
+            <span>{event.client_name ?? "Cliente"} · {event.operation_code ?? "Pedido"} · {eventStatusLine(event)}</span>
+            <small>{actorRoleLabel(event.actor_role)} · {formatDate(event.created_at)}</small>
+          </div>
+          <b>{event.to_status ? logisticsLabels[event.to_status] : "Evento"}</b>
+        </div>)}
+        {!generalHistory.length ? <p className={styles.emptyText}>Aún no hay movimientos auditados.</p> : null}
+      </div>
     </section> : null}
 
     {clientDetailAccount ? <div className={styles.panelOverlay}>
@@ -1379,7 +1452,7 @@ export function ControlBultosView() {
         <div className={styles.clientScreenTotals}>
           <div><span>Pendiente</span><strong>{moneyUsd(clientDetailAccount.passUsdPending)}</strong></div>
           <div><span>A cuenta</span><strong>{formatMoney(clientDetailAccount.creditArs)}</strong></div>
-          <div><span>Archivo</span><strong>{clientDetailAccount.paidPasses.length + clientDetailAccount.payments.length}</strong></div>
+          <div><span>Archivo</span><strong>{clientDetailAccount.archivedOperations.length + clientDetailAccount.operationEvents.length}</strong></div>
         </div>
         <nav className={styles.innerTabs} aria-label="Detalle del cliente">
           <button type="button" className={clientDetailTab === "resumen" ? styles.innerTabActive : ""} onClick={() => setClientDetailTab("resumen")}>Resumen</button>
@@ -1428,11 +1501,29 @@ export function ControlBultosView() {
         </div> : null}
 
         {clientDetailTab === "historial" ? <div className={styles.screenList}>
-          <div className={styles.sectionTitleRow}><strong>Archivo</strong><span>{clientDetailAccount.paidPasses.length + clientDetailAccount.payments.length}</span></div>
+          <div className={styles.sectionTitleRow}><strong>Archivo operativo</strong><span>{clientDetailAccount.archivedOperations.length + clientDetailAccount.operationEvents.length}</span></div>
+          {clientDetailAccount.archivedOperations.map((operation) => {
+            const lastEvent = clientDetailAccount.operationEvents.find((event) => event.operation_id === operation.id && event.to_status === operation.logistics_status);
+            return <div key={operation.id} className={`${styles.screenRowStatic} ${styles.archiveRow}`}>
+              <div>
+                <strong>{operation.public_code} · {logisticsLabels[operation.logistics_status]}</strong>
+                <span>{mesaExitReason(operation.logistics_status)} · {operation.provider_name} · {operation.package_count} bultos · {operationArchivePendingLabel(operation, clientDetailAccount)}</span>
+                <small>{lastEvent ? `Marcado por ${lastEvent.actor_name} (${actorRoleLabel(lastEvent.actor_role)}) · ${formatDate(lastEvent.created_at)}` : `Actualizado ${formatDate(operation.updated_at)}`}</small>
+              </div>
+              <b>{canSeeMoney ? moneyUsd(toNumber(operation.pass_amount)) : "Historial"}</b>
+            </div>;
+          })}
+          {clientDetailAccount.operationEvents.map((event) => <div key={event.id} className={styles.eventRow}>
+            <div>
+              <strong>{event.action_label || auditActionLabel(event.action)}</strong>
+              <span>{event.operation_code ?? "Pedido"} · {eventStatusLine(event)}</span>
+              <small>{event.actor_name} · {actorRoleLabel(event.actor_role)} · {formatDate(event.created_at)}</small>
+            </div>
+            <b>{event.to_status ? logisticsLabels[event.to_status] : "Evento"}</b>
+          </div>)}
           {clientDetailAccount.paidPasses.map((item) => <div key={item.id} className={styles.screenRowStatic}><div><strong>{item.guideNumber}</strong><span>Pagado · {item.provider} · {item.company}</span></div><b>{moneyUsd(item.amountUsd)}</b></div>)}
           {clientDetailAccount.payments.map((payment) => <div key={payment.id} className={styles.screenRowStatic}><div><strong>{formatDate(payment.paid_at)}</strong><span>{payment.concept} · {paymentMethodLabels[payment.method]}</span></div><b>{payment.currency === "ARS" ? formatMoney(payment.amount) : moneyUsd(payment.amount)}</b></div>)}
-          {clientDetailAccount.operations.filter((operation) => operation.logistics_status === "recibido").map((operation) => <div key={operation.id} className={styles.screenRowStatic}><div><strong>{operation.public_code}</strong><span>Recibido · {operation.provider_name} · {operation.package_count} bultos</span></div><b>Archivado</b></div>)}
-          {!clientDetailAccount.paidPasses.length && !clientDetailAccount.payments.length && !clientDetailAccount.operations.some((operation) => operation.logistics_status === "recibido") ? <p className={styles.emptyText}>Todavía no hay archivo cerrado.</p> : null}
+          {!clientDetailAccount.archivedOperations.length && !clientDetailAccount.operationEvents.length && !clientDetailAccount.paidPasses.length && !clientDetailAccount.payments.length ? <p className={styles.emptyText}>Todavía no hay historial operativo.</p> : null}
         </div> : null}
 
         <div className={styles.stickyClientActions}>

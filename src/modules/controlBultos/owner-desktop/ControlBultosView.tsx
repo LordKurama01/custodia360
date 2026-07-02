@@ -1181,9 +1181,21 @@ export function ControlBultosView() {
     </nav>
 
     {activeTab === "seguimiento" ? <section className={styles.kpiStrip}>
-      <Card className={styles.kpi}><span>Pendiente</span><strong>{canSeeMoney ? moneyUsd(kpis.passUsd) : "-"}</strong><small>{canSeeMoney ? formatMoney(kpis.passUsd * DEFAULT_DOLLAR_RATE) : ""}</small></Card>
-      <Card className={styles.kpi}><span>Reintegrar</span><strong>{canSeeMoney ? formatMoney(kpis.guideArs) : "-"}</strong><small>{kpis.pendingPasses} pases</small></Card>
-      <Card className={styles.kpi}><span>A cuenta</span><strong>{canSeeMoney ? formatMoney(kpis.creditArs) : "-"}</strong><small>Dinero en caja</small></Card>
+      <Card className={styles.kpi}>
+        <div className={styles.kpiLabel}><span aria-hidden="true" className={styles.kpiIcon}>⏱</span><span>Pendiente</span></div>
+        <strong>{canSeeMoney ? moneyUsd(kpis.passUsd) : "-"}</strong>
+        <small>{canSeeMoney ? formatMoney(kpis.passUsd * DEFAULT_DOLLAR_RATE) : ""}</small>
+      </Card>
+      <Card className={styles.kpi}>
+        <div className={styles.kpiLabel}><span aria-hidden="true" className={styles.kpiIcon}>↩</span><span>Reintegrar</span></div>
+        <strong>{canSeeMoney ? formatMoney(kpis.guideArs) : "-"}</strong>
+        <small>{kpis.pendingPasses} pases</small>
+      </Card>
+      <Card className={styles.kpi}>
+        <div className={styles.kpiLabel}><span aria-hidden="true" className={styles.kpiIcon}>$</span><span>A cuenta</span></div>
+        <strong>{canSeeMoney ? formatMoney(kpis.creditArs) : "-"}</strong>
+        <small>Dinero en caja</small>
+      </Card>
     </section> : null}
 
     {activeTab !== "mas" ? <Card className={styles.searchCard}>

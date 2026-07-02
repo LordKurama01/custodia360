@@ -4435,3 +4435,226 @@
     padding: 1rem;
   }
 }
+
+/* v36 QA visual: Mesa production-ready, desktop aislado y mobile blindado. */
+.kpiLabel {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: .44rem;
+  color: rgba(218, 230, 244, .78);
+  font-size: .68rem;
+  font-weight: 920;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.kpiIcon {
+  flex: 0 0 auto;
+  width: 1.42rem;
+  height: 1.42rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: .52rem;
+  color: rgba(238, 247, 255, .88);
+  background: rgba(255, 255, 255, .055);
+  border: 1px solid rgba(255, 255, 255, .08);
+  font-size: .78rem;
+  line-height: 1;
+}
+
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .contentGrid {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) clamp(300px, 25vw, 340px) !important;
+    gap: .82rem !important;
+    align-items: start !important;
+    overflow: hidden !important;
+  }
+
+  .operationList {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .tableShell {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .tableHead,
+  .tableRow {
+    min-width: 860px !important;
+    width: 100% !important;
+    grid-template-columns:
+      minmax(12rem, 1.25fr)
+      minmax(7.25rem, .68fr)
+      minmax(7.8rem, .7fr)
+      minmax(4.7rem, .36fr)
+      minmax(7.4rem, .66fr)
+      minmax(10.2rem, auto) !important;
+    gap: .46rem !important;
+  }
+
+  .tableHead > *,
+  .tableRow > *,
+  .clientCell,
+  .moneyCell,
+  .nextActionCell {
+    min-width: 0 !important;
+  }
+
+  .tableRow strong,
+  .tableRow span,
+  .tableRow small,
+  .clientCell strong,
+  .clientCell span,
+  .moneyCell strong,
+  .moneyCell small,
+  .nextActionCell strong,
+  .nextActionCell small {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .rowActions {
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: .28rem !important;
+    justify-content: stretch !important;
+  }
+
+  .rowActions button {
+    min-width: 0 !important;
+    width: 100% !important;
+    padding-inline: .34rem !important;
+    color: rgba(232, 241, 252, .78) !important;
+    background: rgba(255, 255, 255, .036) !important;
+    border-color: rgba(255, 255, 255, .075) !important;
+    box-shadow: none !important;
+  }
+
+  .rowActions button:hover:not(:disabled) {
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, .14) !important;
+    background: rgba(255, 255, 255, .058) !important;
+  }
+
+  .rowActions button:first-child {
+    color: #07100d !important;
+    border-color: rgba(154, 255, 0, .28) !important;
+    background: linear-gradient(145deg, #b7ef66, #7fc526) !important;
+  }
+
+  .rowActions button:nth-child(2) {
+    color: rgba(232, 241, 252, .78) !important;
+    background: rgba(255, 255, 255, .036) !important;
+    border-color: rgba(255, 255, 255, .075) !important;
+  }
+
+  .desktopDetail {
+    width: 100% !important;
+    max-width: 340px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .kpi {
+    min-width: 0 !important;
+    border: 1px solid rgba(255, 255, 255, .082) !important;
+    background:
+      radial-gradient(circle at 100% 0, rgba(255, 255, 255, .035), transparent 34%),
+      linear-gradient(180deg, rgba(15, 29, 48, .96), rgba(7, 17, 30, .985)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+  }
+
+  .kpi strong {
+    margin-top: .1rem;
+  }
+
+  .filterChips .chipActive,
+  .statusTabs .statusTabActive,
+  .innerTabs .innerTabActive,
+  .contactSwitch button[aria-pressed="true"] {
+    color: #07100d !important;
+    background: linear-gradient(145deg, #b7ef66, #7fc526) !important;
+    box-shadow: none !important;
+  }
+
+  .topBar p,
+  .cardHead p,
+  .panelHead p,
+  .clientSheetHead p {
+    color: rgba(207, 226, 246, .66) !important;
+  }
+
+  .nextActionCell strong,
+  .compactNext span,
+  .compactRowMeta strong,
+  .screenRow b,
+  .screenRowStatic b,
+  .ledgerItem b {
+    color: rgba(224, 237, 252, .88) !important;
+    text-shadow: none !important;
+  }
+
+  .statusDespachado,
+  .ok {
+    color: #bff3cc !important;
+    background: rgba(44, 175, 103, .105) !important;
+    border-color: rgba(44, 175, 103, .23) !important;
+  }
+
+  .statusDepositoA,
+  .info {
+    color: #bfdafe !important;
+    background: rgba(59, 130, 246, .105) !important;
+    border-color: rgba(59, 130, 246, .25) !important;
+  }
+
+  .badge {
+    box-shadow: none !important;
+  }
+}
+
+@media (max-width: 960px), (pointer: coarse) and (max-width: 1200px) {
+  .contentGrid,
+  .operationList,
+  .mobileOperationCards,
+  .kpiStrip,
+  .searchCard {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .kpiLabel {
+    gap: .28rem;
+    font-size: .54rem;
+    letter-spacing: .04em;
+  }
+
+  .kpiIcon {
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: .38rem;
+    font-size: .58rem;
+  }
+
+  .tableShell,
+  .desktopDetail {
+    display: none !important;
+  }
+}

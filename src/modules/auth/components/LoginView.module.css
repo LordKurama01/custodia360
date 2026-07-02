@@ -225,3 +225,59 @@
     border-radius: .78rem;
   }
 }
+
+/* v36 QA visual: login como acceso privado, centrado vertical y compacto. */
+.shell {
+  gap: clamp(.65rem, 1.8vw, 1rem) !important;
+}
+
+.loginGrid {
+  min-height: 0;
+  align-self: stretch;
+  align-content: center !important;
+  align-items: center !important;
+  padding-block: clamp(.25rem, 2vw, 1.2rem) clamp(.9rem, 2.8vw, 1.8rem);
+}
+
+.copyPanel {
+  gap: .72rem !important;
+}
+
+.copyPanel p,
+.copy p {
+  color: rgba(211, 236, 196, .82) !important;
+}
+
+.card {
+  border-color: rgba(255,255,255,.095) !important;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(154,255,0,.055), transparent 32%),
+    linear-gradient(180deg, rgba(13, 27, 45, .78), rgba(6, 16, 29, .92)) !important;
+  box-shadow:
+    0 22px 64px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.googleButton {
+  background: linear-gradient(145deg, #b7ef66, #7fc526) !important;
+  box-shadow: 0 12px 26px rgba(127,197,38,.13) !important;
+}
+
+.backLink:hover {
+  color: rgba(255,255,255,.94);
+  border-color: rgba(255,255,255,.16);
+  background: rgba(255,255,255,.055);
+}
+
+@media (min-width: 1024px) {
+  .loginGrid {
+    transform: translateY(-.45rem);
+  }
+}
+
+@media (max-width: 760px) {
+  .loginGrid {
+    align-content: center !important;
+    padding-block: .2rem .9rem !important;
+  }
+}

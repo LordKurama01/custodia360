@@ -178,9 +178,9 @@ export function OwnerDesktopShell({ title, children }: { title: string; children
       </div>
 
       <nav className={styles.nav}>
-        {groups.map((group) => <div key={group.title} className={`${styles.navGroup} ${group.mode === "future" ? styles.futureGroup : ""}`}>
-          <div className={styles.groupTitle}>{group.title}{group.mode === "future" ? <small>stand-by</small> : null}</div>
-          {group.items.map(([label, href]) => group.mode === "future" ? <span key={href} className={styles.futureLink} aria-disabled="true">{label}<em>En construcción</em></span> : <Link key={href} href={href} onClick={() => dispatchBultosTab(href)} className={isActive(pathname, href, currentHash) ? styles.active : ""}>{label}</Link>)}
+        {groups.filter((group) => group.mode !== "future").map((group) => <div key={group.title} className={styles.navGroup}>
+          <div className={styles.groupTitle}>{group.title}</div>
+          {group.items.map(([label, href]) => <Link key={href} href={href} onClick={() => dispatchBultosTab(href)} className={isActive(pathname, href, currentHash) ? styles.active : ""}>{label}</Link>)}
         </div>)}
       </nav>
 

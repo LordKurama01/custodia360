@@ -471,6 +471,7 @@ export function ControlBultosView() {
   const [specialForm, setSpecialForm] = useState<SpecialMovementInput>(emptySpecialMovementForm());
   const [detailOperation, setDetailOperation] = useState<ControlOperation | null>(null);
   const [actionsOperation, setActionsOperation] = useState<ControlOperation | null>(null);
+  const [statusPickerOperation, setStatusPickerOperation] = useState<ControlOperation | null>(null);
   const [focusedOperationId, setFocusedOperationId] = useState<string | null>(null);
   const [filters, setFilters] = useState({ query: "", logistics_status: "", financial_status: "" });
   const [commandOpen, setCommandOpen] = useState(false);
@@ -544,6 +545,7 @@ export function ControlBultosView() {
       if (event.key === "Escape") {
         setCommandOpen(false);
         setActionsOperation(null);
+        setStatusPickerOperation(null);
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -1737,6 +1739,7 @@ export function ControlBultosView() {
       </div>
       <div className={styles.quickActionList}>
         <Button variant="secondary" onClick={() => { startEdit(actionsOperation); setActionsOperation(null); }} disabled={!canEdit}>Editar pedido</Button>
+        <Button variant="secondary" onClick={() => { setStatusPickerOperation(actionsOperation); }} disabled={!canEdit}>Estado</Button>
         <Button variant="secondary" onClick={() => { startShipment(actionsOperation); setActionsOperation(null); }} disabled={!canEdit}>{guideActionLabel(actionsOperation)}</Button>
         <Button variant="secondary" onClick={() => { startPayment(actionsOperation); setActionsOperation(null); }} disabled={!canCollect}>Registrar cobro</Button>
         <Button variant="ghost" onClick={() => { copyWhatsAppOperation(actionsOperation); setActionsOperation(null); }}>WhatsApp cliente</Button>
@@ -1745,13 +1748,26 @@ export function ControlBultosView() {
         <Button variant="ghost" onClick={() => { startMoneyOnAccount(actionsOperation); setActionsOperation(null); }}>Dinero a cuenta</Button>
         <Button variant="ghost" onClick={() => { startSpecial(actionsOperation); setActionsOperation(null); }}>Trabajo extra</Button>
       </div>
-      <div className={styles.statusUpdateBlock}>
-        <strong>Cambiar estado</strong>
-        <div className={styles.statusStepGrid}>
-          {logisticsStatusOptions.map((option) => <button key={option.value} type="button" className={actionsOperation.logistics_status === option.value ? styles.statusStepActive : ""} onClick={() => { changeStatus(actionsOperation.id, option.value); if (leavesMesaOnStatus(option.value)) setActionsOperation(null); }}><span aria-hidden="true" className={styles.statusDot}>{statusGlyph(option.value)}</span>{option.label}</button>)}
-        </div>
-        <small>Al marcar Recibido, sale de Mesa y queda en historial del cliente.</small>
+    </section></div> : null}
+
+    {statusPickerOperation ? <div className={styles.panelOverlay}><section className={`${styles.panel} ${styles.bottomSheet} ${styles.statusPickerSheet}`}>
+      <div className={styles.panelHead}><div><p>Estado</p><h3>{statusPickerOperation.clients?.name ?? statusPickerOperation.public_code}</h3></div><button type="button" onClick={() => setStatusPickerOperation(null)}>Cerrar</button></div>
+      <div className={styles.currentStatusLine}>
+        <span>Actual</span>
+        <strong><span aria-hidden="true" className={styles.statusDot}>{statusGlyph(statusPickerOperation.logistics_status)}</span>{logisticsLabels[statusPickerOperation.logistics_status]}</strong>
       </div>
+      <div className={styles.stateSelectList}>
+        {logisticsStatusOptions.map((option) => {
+          const exitsMesa = leavesMesaOnStatus(option.value);
+          const selected = statusPickerOperation.logistics_status === option.value;
+          return <button key={option.value} type="button" className={`${styles.stateSelectButton} ${selected ? styles.stateSelectButtonActive : ""}`} onClick={() => { void changeStatus(statusPickerOperation.id, option.value).then(() => { setStatusPickerOperation(null); if (exitsMesa) setActionsOperation(null); }); }} disabled={!canEdit || selected || saving}>
+            <span aria-hidden="true" className={styles.statusDot}>{statusGlyph(option.value)}</span>
+            <b>{option.label}</b>
+            {exitsMesa ? <small>Sale de Mesa</small> : <small>Activo</small>}
+          </button>;
+        })}
+      </div>
+      <p className={styles.statusPickerNote}>Retirado, Despachado y Recibido salen de Mesa y quedan en historial del cliente.</p>
     </section></div> : null}
 
     {detailOperation ? <div className={styles.panelOverlay}><section className={styles.panel}>

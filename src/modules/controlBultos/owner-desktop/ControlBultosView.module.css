@@ -4658,3 +4658,193 @@
     display: none !important;
   }
 }
+
+/* v36.1 mobile premium cleanup: acciones rápidas, contactos y controles inferiores */
+.statusPickerSheet {
+  gap: .72rem !important;
+}
+
+.currentStatusLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  padding: .62rem .7rem;
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: .78rem;
+  background: rgba(255, 255, 255, .03);
+}
+
+.currentStatusLine span {
+  color: rgba(207, 226, 246, .58);
+  font-size: .68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.currentStatusLine strong {
+  display: inline-flex;
+  align-items: center;
+  gap: .42rem;
+  color: rgba(244, 250, 255, .9);
+  font-size: .82rem;
+}
+
+.stateSelectList {
+  display: grid;
+  gap: .42rem;
+}
+
+.stateSelectButton {
+  width: 100%;
+  min-height: 2.8rem;
+  padding: .55rem .65rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .55rem;
+  border: 1px solid rgba(255, 255, 255, .075);
+  border-radius: .8rem;
+  background: rgba(255, 255, 255, .032);
+  color: rgba(238, 246, 255, .88);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stateSelectButton b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .82rem;
+}
+
+.stateSelectButton small {
+  color: rgba(207, 226, 246, .54);
+  font-size: .62rem;
+  font-weight: 850;
+}
+
+.stateSelectButton:disabled {
+  cursor: default;
+  opacity: .68;
+}
+
+.stateSelectButtonActive {
+  border-color: rgba(183, 255, 60, .22);
+  background: rgba(183, 255, 60, .075);
+  color: #dfffba;
+}
+
+.statusPickerNote {
+  margin: 0;
+  color: rgba(207, 226, 246, .58);
+  font-size: .7rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 767px) {
+  .quickActionList {
+    gap: .48rem !important;
+  }
+
+  .quickActionList button {
+    min-height: 2.55rem !important;
+    border-radius: .82rem !important;
+  }
+
+  .statusUpdateBlock {
+    display: none !important;
+  }
+
+  .mobileFabAction {
+    width: 52px !important;
+    height: 52px !important;
+    right: 24px !important;
+    bottom: calc(132px + env(safe-area-inset-bottom)) !important;
+    font-size: 1.65rem !important;
+    box-shadow: 0 18px 42px rgba(154, 255, 0, .20) !important;
+  }
+
+  .refreshPill {
+    bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+    min-height: 1.9rem !important;
+    padding: 0 .72rem !important;
+    color: rgba(207, 226, 246, .58) !important;
+    background: rgba(6, 15, 28, .58) !important;
+    border-color: rgba(255, 255, 255, .055) !important;
+    box-shadow: none !important;
+  }
+
+  .screenList {
+    gap: .72rem !important;
+  }
+
+  .contactSwitch {
+    padding: .22rem !important;
+    border-radius: .92rem !important;
+    background: rgba(255, 255, 255, .026) !important;
+    border: 1px solid rgba(255, 255, 255, .055) !important;
+  }
+
+  .contactSwitch button {
+    min-height: 2.18rem !important;
+    border-radius: .72rem !important;
+    color: rgba(225, 236, 248, .62) !important;
+    font-size: .72rem !important;
+    letter-spacing: -.01em !important;
+  }
+
+  .contactSwitch .innerTabActive,
+  .contactSwitch button[aria-pressed="true"] {
+    color: rgba(245, 255, 235, .92) !important;
+    background: rgba(183, 255, 60, .115) !important;
+    border: 1px solid rgba(183, 255, 60, .18) !important;
+    box-shadow: none !important;
+  }
+
+  .screenRow,
+  .screenRowStatic {
+    min-height: 4.15rem !important;
+    padding: .82rem .86rem !important;
+    border-radius: 1rem !important;
+    background:
+      radial-gradient(circle at 100% 0, rgba(255, 255, 255, .032), transparent 32%),
+      linear-gradient(180deg, rgba(15, 29, 48, .92), rgba(7, 17, 30, .98)) !important;
+    border-color: rgba(255, 255, 255, .07) !important;
+  }
+
+  .screenRow strong,
+  .screenRowStatic strong {
+    font-size: .95rem !important;
+    letter-spacing: -.025em !important;
+  }
+
+  .screenRow span,
+  .screenRowStatic span {
+    font-size: .70rem !important;
+    line-height: 1.35 !important;
+    color: rgba(207, 226, 246, .56) !important;
+  }
+
+  .screenRow b,
+  .screenRowStatic b {
+    color: rgba(221, 244, 198, .86) !important;
+    font-size: .82rem !important;
+  }
+
+  .screenRow i {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: .72rem !important;
+    background: rgba(255, 255, 255, .035) !important;
+    border: 1px solid rgba(255, 255, 255, .065) !important;
+  }
+
+  .stateSelectButton {
+    min-height: 2.65rem;
+    border-radius: .78rem;
+  }
+}

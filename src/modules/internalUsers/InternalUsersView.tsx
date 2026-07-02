@@ -157,10 +157,10 @@ export function InternalUsersView() {
     <section className={styles.hero}>
       <div>
         <p>Usuarios internos</p>
-        <h2>Allowlist y roles</h2>
-        <span>Autoriza emails antes del primer login. Cuando el usuario entra con Google, se crea su profile con el rol definido.</span>
+        <h2>Accesos y roles</h2>
+        <span>Habilitá Gmail autorizados y asigná permisos internos.</span>
       </div>
-      <strong>{canManage ? "Owner/Admin" : "Solo lectura"}</strong>
+      <strong>{canManage ? "Administra" : "Solo lectura"}</strong>
     </section>
 
     {message ? <div className={styles.success}>{message}</div> : null}
@@ -168,7 +168,12 @@ export function InternalUsersView() {
 
     <section className={styles.grid}>
       <Card className={styles.formCard}>
-        <h2>Agregar email autorizado</h2>
+        <div className={styles.cardHead}>
+          <div>
+            <p>Nuevo acceso</p>
+            <h2>Autorizar email</h2>
+          </div>
+        </div>
         <div className={styles.form}>
           <Field label="Email Gmail">
             <Input value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="usuario@gmail.com" disabled={!canManage || saving} />
@@ -185,54 +190,108 @@ export function InternalUsersView() {
         </div>
       </Card>
 
-      <Card>
-        <h2>Allowlist pendiente / autorizada</h2>
-        <DataTable>
-          <thead><tr><th>Email</th><th>Nombre</th><th>Rol</th><th>Activo</th></tr></thead>
-          <tbody>
-            {authorizedUsers.map((user) => <tr key={user.email}>
-              <td><strong>{user.email}</strong></td>
-              <td>{user.full_name ?? "-"}</td>
-              <td>
+      <Card className={styles.listCard}>
+        <div className={styles.cardHead}>
+          <div>
+            <p>Antes del login</p>
+            <h2>Allowlist</h2>
+          </div>
+          <span>{authorizedUsers.length}</span>
+        </div>
+        {authorizedUsers.length ? <>
+          <div className={styles.tableOnly}>
+            <DataTable>
+              <thead><tr><th>Email</th><th>Nombre</th><th>Rol</th><th>Activo</th></tr></thead>
+              <tbody>
+                {authorizedUsers.map((user) => <tr key={user.email}>
+                  <td><strong>{user.email}</strong></td>
+                  <td>{user.full_name ?? "-"}</td>
+                  <td>
+                    <Select value={user.role} onChange={(event) => updateAuthorizedUser(user.email, { role: event.target.value as InternalRole })} disabled={!canManage || saving}>
+                      {roles.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
+                    </Select>
+                  </td>
+                  <td>
+                    <Select value={user.active ? "true" : "false"} onChange={(event) => updateAuthorizedUser(user.email, { active: event.target.value === "true" })} disabled={!canManage || saving}>
+                      <option value="true">Activo</option>
+                      <option value="false">Inactivo</option>
+                    </Select>
+                  </td>
+                </tr>)}
+              </tbody>
+            </DataTable>
+          </div>
+          <div className={styles.mobileList}>
+            {authorizedUsers.map((user) => <article key={user.email} className={styles.userCard}>
+              <div>
+                <strong>{user.full_name ?? user.email}</strong>
+                <span>{user.email}</span>
+              </div>
+              <div className={styles.userControls}>
                 <Select value={user.role} onChange={(event) => updateAuthorizedUser(user.email, { role: event.target.value as InternalRole })} disabled={!canManage || saving}>
                   {roles.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
                 </Select>
-              </td>
-              <td>
                 <Select value={user.active ? "true" : "false"} onChange={(event) => updateAuthorizedUser(user.email, { active: event.target.value === "true" })} disabled={!canManage || saving}>
                   <option value="true">Activo</option>
                   <option value="false">Inactivo</option>
                 </Select>
-              </td>
-            </tr>)}
-          </tbody>
-        </DataTable>
+              </div>
+            </article>)}
+          </div>
+        </> : <div className={styles.emptyState}><strong>Sin emails autorizados</strong><span>Agregá un Gmail para habilitar el primer ingreso.</span></div>}
       </Card>
     </section>
 
     <Card className={styles.profiles}>
-      <h2>Profiles creados</h2>
+      <div className={styles.cardHead}>
+        <div>
+          <p>Después del login</p>
+          <h2>Perfiles creados</h2>
+        </div>
+        <span>{profiles.length}</span>
+      </div>
       {loading ? <p>Cargando usuarios...</p> : null}
-      <DataTable>
-        <thead><tr><th>Email</th><th>Nombre</th><th>Rol</th><th>Estado</th></tr></thead>
-        <tbody>
-          {profiles.map((profile) => <tr key={profile.id}>
-            <td><strong>{profile.email}</strong></td>
-            <td>{profile.full_name ?? "-"}</td>
-            <td>
+      {profiles.length ? <>
+        <div className={styles.tableOnly}>
+          <DataTable>
+            <thead><tr><th>Email</th><th>Nombre</th><th>Rol</th><th>Estado</th></tr></thead>
+            <tbody>
+              {profiles.map((profile) => <tr key={profile.id}>
+                <td><strong>{profile.email}</strong></td>
+                <td>{profile.full_name ?? "-"}</td>
+                <td>
+                  <Select value={profile.role} onChange={(event) => updateProfile(profile, { role: event.target.value as InternalRole })} disabled={!canManage || saving}>
+                    {roles.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
+                  </Select>
+                </td>
+                <td>
+                  <Select value={profile.active ? "true" : "false"} onChange={(event) => updateProfile(profile, { active: event.target.value === "true" })} disabled={!canManage || saving}>
+                    <option value="true">Activo</option>
+                    <option value="false">Inactivo</option>
+                  </Select>
+                </td>
+              </tr>)}
+            </tbody>
+          </DataTable>
+        </div>
+        <div className={styles.mobileList}>
+          {profiles.map((profile) => <article key={profile.id} className={styles.userCard}>
+            <div>
+              <strong>{profile.full_name ?? profile.email}</strong>
+              <span>{profile.email}</span>
+            </div>
+            <div className={styles.userControls}>
               <Select value={profile.role} onChange={(event) => updateProfile(profile, { role: event.target.value as InternalRole })} disabled={!canManage || saving}>
                 {roles.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
               </Select>
-            </td>
-            <td>
               <Select value={profile.active ? "true" : "false"} onChange={(event) => updateProfile(profile, { active: event.target.value === "true" })} disabled={!canManage || saving}>
                 <option value="true">Activo</option>
                 <option value="false">Inactivo</option>
               </Select>
-            </td>
-          </tr>)}
-        </tbody>
-      </DataTable>
+            </div>
+          </article>)}
+        </div>
+      </> : <div className={styles.emptyState}><strong>Sin perfiles creados</strong><span>Se crean cuando el usuario autorizado entra con Google.</span></div>}
     </Card>
   </OwnerDesktopShell>;
 }

@@ -1,75 +1,64 @@
-# Custodia360 v24 — Pulido senior entregable
+<p align="left"><img src="https://raw.githubusercontent.com/LordKurama01/theprestige-group/main/branding/tpg-diamondgold.png" alt="Diamante original de The Prestige Group" width="56" /> <strong>The Prestige Group</strong></p>
 
-# Custodia360 v20 — Pulido Premium Operativo
+# Custodia360 — Gestión de operaciones, guías y cobros
 
-Versión de cierre para dejar el sistema final sin referencias visibles a demo y con ingreso usable ahora.
+**Una mesa de trabajo para organizar movimientos, contactos y tareas operativas.**
 
-## Cambios principales
+Custodia360 reúne flujos cotidianos de una operación que administra bultos o movimientos, guías, proveedores, clientes y cobros, con una interfaz orientada a la operación diaria.
 
-- Landing pública más corta y comercial.
-- Login separado de la landing, más seco y operativo.
-- Botón de ingreso no envía a URLs externas rotas.
-- Si Supabase/Google OAuth todavía no está configurado, permite acceso operativo a Mesa.
-- Si Supabase/Google OAuth está configurado con variables reales, valida Gmail y perfil.
-- Se mantiene la arquitectura final: Mesa principal arriba, Contactos, Cobros, Guías y Más.
-- WhatsApp no aparece en landing ni en owner/admin general.
-- El texto visible ya no presenta el sistema como muestra ni prueba.
+## El problema que resuelve
 
-## Flujo de ingreso
+Cuando pedidos, contactos, entregas y pagos se siguen en conversaciones y planillas separadas, se pierde visibilidad sobre qué está pendiente, quién debe actuar y qué se cobró.
 
-1. Usuario entra a `/`.
-2. Toca `Ingresar`.
-3. En `/login` toca `Continuar con Gmail`.
-4. Si hay Supabase real, inicia OAuth.
-5. Si no hay Supabase real, entra a `/owner/bultos` para operación inicial.
+## Áreas del producto
 
-## Variables
+| Área | Propósito |
+| --- | --- |
+| **Mesa** | Vista de trabajo y seguimiento de movimientos |
+| **Contactos** | Clientes y proveedores |
+| **Cobros** | Registro y consulta de cobros y adelantos |
+| **Guías** | Guías activas y pendientes de confirmación |
+| **Más** | Configuración y funciones administrativas |
 
-- `NEXT_PUBLIC_LOCAL_ACCESS=true`: acceso operativo inicial.
-- `NEXT_PUBLIC_LOCAL_ACCESS=false`: exige Supabase real cuando esté configurado.
-- `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`: OAuth real.
+La documentación del repositorio describe también el seguimiento de pedidos, estados, acciones contextuales en móvil y distintos roles. Esas descripciones no sustituyen las pruebas funcionales.
 
-## Regla comercial
+## Arquitectura y desarrollo
 
-No agregar módulos nuevos. Esta versión afina entrada, landing, acceso y arquitectura visual para vender/operar como producto final.
+Aplicación web basada en **Next.js 15, React 19 y TypeScript**, con referencias a integración de datos y autenticación mediante Supabase en el código del proyecto.
 
+```bash
+npm install
+npm run dev
+```
 
-## V22 — Landing Comercial Premium
-- Landing pública rearmada como pieza comercial corta.
-- Un solo botón visible: Ingresar al sistema.
-- Sin secciones largas ni botones repetidos.
-- Login operativo queda separado.
+Validaciones disponibles en el `package.json`:
 
+```bash
+npm run typecheck
+npm run build
+```
 
-## v23 — Pasada fina entregable
+**Importante:** esta modificación del README no ejecuta ni acredita esas pruebas. No se garantiza que estén completas la autenticación, las restricciones por rol o la configuración productiva.
 
-Pulido visual final: navegación mobile más fina, ficha cliente compacta, botón `+` menos invasivo, Más sin vacío y ajustes de densidad para dejar el sistema más presentable sin sumar funciones.
+## Documentación relevante
 
-### v25 — Pulido visual senior final
+- [Mapa de flujos](FLOW_MAP.md)
+- [Roles y permisos](ROLES_AND_PERMISSIONS.md)
+- [Auditoría funcional histórica](PRODUCT_AUDIT.md)
+- [Cambios de experiencia móvil](CAMBIOS_V36_1_MOBILE_PREMIUM.md)
+- [Instrucciones de continuidad](AGENTS.md)
+- [Bitácora acumulativa](BITACORA.md)
 
-Pasada visual fina sobre la app operativa: navegación inferior más limpia, Mesa central sin halo, verde reducido, mejor brillo, cards más premium y módulos más entregables. Sin funciones nuevas.
+Las notas de versiones históricas permanecen en documentos existentes y en el historial Git. Esta portada se concentra en lo que un tercero necesita entender primero.
 
-## v26 — Ajuste fino final entregable
+## Seguridad y estado
 
-- Nav inferior más limpio y sin halo extraño alrededor del botón central Mesa.
-- Verde reducido en botones, tabs, FAB y estados.
-- Buscador mobile deja de ser sticky para evitar solapamientos en Guías/Mesa.
-- Guías, Cobros, Contactos y Más con más padding, menos ruido y cards más compactas.
-- Acciones rápidas en grilla 2 columnas para usar mejor el espacio mobile.
-- Ficha cliente y paneles con menos peso visual y mejor proporción.
+La documentación histórica incluye configuraciones de acceso local utilizadas durante el desarrollo. **No deben darse por aptas para producción** sin revisar autenticación, autorización y aislamiento de datos. Esta reorganización no cambia ese comportamiento, y no publica instrucciones de acceso operativo en el README principal.
 
-## v27 — Alta cliente desde movimiento
-- Nuevo movimiento permite crear cliente si no aparece en el selector.
-- El cliente creado vuelve seleccionado automáticamente al movimiento.
+**Siguiente validación técnica:** auditar accesos y roles, ejecutar typecheck/build, y probar los flujos críticos en un entorno controlado antes de afirmar disponibilidad productiva.
 
+[**Portfolio del grupo**](https://github.com/LordKurama01/theprestige-group)
 
-## v28 — Cobros final + acciones contextuales
+---
 
-- Cobros queda con resumen superior: Pendiente, Pagos, En caja y Guías a cobrar.
-- Debajo quedan las acciones/vistas: Registrar cobro, Registrar adelanto, Guías para cobrar y Trabajos extras.
-- El botón `+` ahora cambia según pantalla: Mesa, Contactos, Cobros y Guías. En Más queda oculto.
-- Se evita mezclar dinero a cuenta como pendiente común.
-
-### v29 — Pedidos, proveedores y flujo real
-
-Versión con flujo operativo real: alta de pedidos, proveedores, estados desde Mesa, archivo automático al marcar recibido y botón `+` contextual por pantalla.
+<sub><img src="https://raw.githubusercontent.com/LordKurama01/theprestige-group/main/branding/tpg-diamondgold.png" alt="" width="18" /> The Prestige Group · Software y operaciones.</sub>
